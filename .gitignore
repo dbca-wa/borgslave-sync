@@ -1,0 +1,12 @@
+.hg
+.hgignore
+.sync_status
+dumps
+publish
+previews
+venv
+gmon.out
+*.swp
+*.pyc
+*.env
+*.orig

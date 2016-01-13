@@ -1,0 +1,22 @@
+<wmsStore>
+    <name>{{name}}</name>
+    <enabled>true</enabled>
+    <capabilitiesURL><![CDATA[{{capability_url}}]]></capabilitiesURL>
+    <workspace>{{workspace}}</workspace>
+    {% if username  %}
+    <user>{{username}}</user>
+    {% if password %}
+    <password>{{password}}</password>
+    {% endif %}
+    {% endif %}
+    {% if geoserver_setting.get("max_connections",-1) != -1 %}
+    <maxConnections>{{geoserver_setting.max_connections}}</maxConnections>
+    {% endif %}
+    {% if geoserver_setting.get("read_timeout",-1) != -1 %}
+    <readTimeout>{{geoserver_setting.read_timeout}}</readTimeout>
+    {% endif %}
+    {% if geoserver_setting.get("connect_timeout",-1) != -1 %}
+    <connectTimeout>{{geoserver_setting.connect_timeout}}</connectTimeout>
+    {% endif %}
+    <metadata/>
+</wmsStore>

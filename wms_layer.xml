@@ -1,0 +1,12 @@
+<wmsLayer>
+    <name>{{name}}</name>
+    {% if native_name %}<nativeName>{{native_name}}</nativeName>{% endif %}
+    {% if title %}<title>{{title}}</title>{% endif %}
+    {% if abstract %}<abstract>{{abstract}}</abstract>{% endif %}
+    <enabled>true</enabled>
+    <keywords>
+    {% for a in applications %}
+        <string>{{a}}</string>
+    {% endfor %}
+    </keywords>
+</wmsLayer>

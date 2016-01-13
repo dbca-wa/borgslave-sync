@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seedRequest>
+    <name>{{layer.workspace}}:{{layer.name}}</name>
+    <gridSetId>{{gridset}}</gridSetId>
+    <zoomStart>0</zoomStart>
+    <zoomStop>24</zoomStop>
+    <format>{{format}}</format>
+    <threadCount>1</threadCount>
+    <type>truncate</type>
+</seedRequest>

@@ -1,0 +1,25 @@
+<layerGroup>
+    <name>{{name}}</name>
+    <mode>SINGLE</mode>
+    <title>{{title}}</title>
+    <abstractTxt>{{abstract}}</abstractTxt>
+    <workspace>
+        <name>{{workspace}}</name>
+    </workspace>
+    <publishables>
+    {% for l in layers %}
+    {% if l.get("type","") == "wms_layer" %}
+        <published type="layer">
+            <name>{{l.name}}</name>
+        </published>
+    {% elif l.get("type","") == "group" %}
+        <published type="layerGroup">
+            <name>{{l.name}}</name>
+        </published>
+    {% endif %}
+    {% endfor %}
+    </publishables>
+    <!--bounds>
+        <crs>{{srs}}</crs>
+    </bounds-->
+</layerGroup>

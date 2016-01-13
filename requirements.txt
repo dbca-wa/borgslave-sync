@@ -1,0 +1,8 @@
+python-hglib
+-e git+https://github.com/scottp-dpaw/gsconfig.git@wms_creds_fix#egg=gsconfig
+jinja2
+honcho
+requests
+xmltodict
+pytz
+subprocess32
