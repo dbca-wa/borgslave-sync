@@ -55,7 +55,7 @@ SKIP_RULES = os.environ.get("SKIP_RULES", "false").lower() in ["true","yes"]
 SKIP_DB = os.environ.get("SKIP_DB", "false").lower() in ["true","yes"]
 SKIP_GS = os.environ.get("SKIP_GS", "false").lower() in ["true","yes"]
 
-FEATURE_FILTER = eval(os.environ.get("FEATURE_FILTER",None) or ("lambda job:job.get('allow_authenticated',False)" if SYNC_SERVER else "lambda job: True" ))
+FEATURE_FILTER = eval(os.environ.get("FEATURE_FILTER",None) or ("lambda job:job.get('auth_level',-1) in [0,1]" if SYNC_SERVER else "lambda job: True" ))
 WMS_FILTER = eval(os.environ.get("WMS_FILTER",None) or ("lambda job: False" if SYNC_SERVER else "lambda job: True"))
 LAYERGROUP_FILTER = eval(os.environ.get("LAYERGROUP_FILTER",None) or ("lambda job: False" if SYNC_SERVER else "lambda job: True"))
 
