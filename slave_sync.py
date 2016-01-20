@@ -54,11 +54,10 @@ import os
 import traceback
 import sys
 import hglib
-from datetime import datetime
 
 from slave_sync_env import (
     PATH,HG_NODE,LISTEN_CHANNELS,
-    STATE_PATH
+    STATE_PATH,now
 )
 from slave_sync_status import SlaveSyncStatus
 
@@ -284,7 +283,7 @@ def get_tasks(pull_status):
                     pull_status.get_task_status(file_name).set_message("message","Failed to read file content, ignored.")
                     pull_status.get_task_status(file_name).set_message("action",action)
                     pull_status.get_task_status(file_name).succeed()
-                    pull_status.get_task_status(file_name).last_process_time = datetime.now()
+                    pull_status.get_task_status(file_name).last_process_time = now()
                     continue
 
             sync_job = parse_job(file_name,action,file_content)
@@ -359,7 +358,7 @@ def get_tasks(pull_status):
                         pull_status.get_task_status(file_name).set_message("action",action)
                         pull_status.get_task_status(file_name).set_message("message","Preprocess the file failed. err = {0}".format(message))
                         pull_status.get_task_status(file_name).failed()
-                        pull_status.get_task_status(file_name).last_process_time = datetime.now()
+                        pull_status.get_task_status(file_name).last_process_time = now()
                         next_job = True
                         break
 
@@ -385,12 +384,12 @@ def get_tasks(pull_status):
 
             pull_status.get_task_status(file_name).set_message("action",action)
             pull_status.get_task_status(file_name).succeed()
-            pull_status.get_task_status(file_name).last_process_time = datetime.now()
+            pull_status.get_task_status(file_name).last_process_time = now()
         except:
             pull_status.get_task_status(file_name).failed()
             message = traceback.format_exc()
             pull_status.get_task_status(file_name).set_message("message",message)
-            pull_status.get_task_status(file_name).last_process_time = datetime.now()
+            pull_status.get_task_status(file_name).last_process_time = now()
             logger.error("Add the tasks for ({0}) failed.{1}".format(file_name,traceback.format_exc()))
 
 if __name__ == "__main__":

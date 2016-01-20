@@ -8,7 +8,7 @@ import time
 from jinja2 import Template
 
 from slave_sync_task import ordered_sync_task_type
-from slave_sync_env import SYNC_STATUS_PATH
+from slave_sync_env import SYNC_STATUS_PATH,now,DEFAULT_TIMEZONE
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def date_from_str(d_str):
     convert a string date to date object;return None if failed
     """
     try:
-        return datetime.strptime(d_str,"%Y-%m-%d %H:%M:%S.%f")
+        return datetime.strptime(d_str,"%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=DEFAULT_TIMEZONE)
     except:
         pass
 
@@ -35,7 +35,7 @@ class SlaveSyncStatus(object):
     @classmethod
     def get_bitbucket_status(cls):
         if not hasattr(cls,"_bitbucket_status"):
-            cls._bitbucket_status = SlaveSyncStatus("bitbucket","sync",str(datetime.now()))
+            cls._bitbucket_status = SlaveSyncStatus("bitbucket","sync",str(now()))
 
         return cls._bitbucket_status
 
@@ -398,7 +398,7 @@ class SlaveSyncTaskStatus(dict):
             self["stages"][stage] = {}
 
         self["stages"][stage]['status'] = False
-        self["stages"][stage]['last_process_time'] = date_to_str(datetime.now())
+        self["stages"][stage]['last_process_time'] = date_to_str(now())
         self._modified = True
     
     def stage_succeed(self,stage):
@@ -411,7 +411,7 @@ class SlaveSyncTaskStatus(dict):
             self["stages"][stage] = {}
 
         self["stages"][stage]['status'] = True
-        self["stages"][stage]['last_process_time'] = date_to_str(datetime.now())
+        self["stages"][stage]['last_process_time'] = date_to_str(now())
         self._modified = True
 
     def has_stage_message(self,stage):

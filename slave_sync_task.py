@@ -1,9 +1,8 @@
 import traceback
 from slave_sync_env import (
     SKIP_AUTH,SKIP_GS,SKIP_DB,SKIP_RULES,
-    FEATURE_FILTER,WMS_FILTER,LAYERGROUP_FILTER,
+    FEATURE_FILTER,WMS_FILTER,LAYERGROUP_FILTER,now
 )
-from datetime import datetime
 
 TASK_TYPE_INDEX = 0
 JOB_DEF_INDEX = 1
@@ -200,8 +199,8 @@ def execute_task(sync_job,task_metadata,task_logger):
         return
 
     task_logger.info("Begin to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared" if task_status.shared else ""))
-    sync_job['status'].last_process_time = datetime.now()
-    task_status.last_process_time = datetime.now()
+    sync_job['status'].last_process_time = now()
+    task_status.last_process_time = now()
     try:
         task_metadata[TASK_HANDLER_INDEX](sync_job,task_metadata,task_status)
         if not task_status.get_message("message"):
