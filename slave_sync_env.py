@@ -5,6 +5,7 @@ import socket
 import pytz
 from jinja2 import Environment,FileSystemLoader
 from geoserver.catalog import Catalog
+from datetime import datetime
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 
