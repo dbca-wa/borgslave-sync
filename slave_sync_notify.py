@@ -15,7 +15,7 @@ from slave_sync_task import (
     empty_gwc_layer_job,empty_gwc_group_job,
 )
 from slave_sync_env import (
-    CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME
+    CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,now
 )
 
 PATH = os.path.dirname(os.path.realpath(__file__))
@@ -99,7 +99,7 @@ class SlaveServerSyncNotify(object):
         if feedback_disabled: return
         if not hasattr(cls,"_listen_channels"):
             cls._listen_channels = ",".join(LISTEN_CHANNELS)
-        last_poll_time = datetime.utcfromtimestamp(time.mktime(datetime.now().timetuple())).replace(tzinfo=pytz.UTC)
+        last_poll_time = now()
         sql = """
 DO 
 $$BEGIN
@@ -123,7 +123,7 @@ END$$;
     @classmethod
     def send_last_sync_time(cls,pull_status):
         if feedback_disabled: return
-        last_sync_time = datetime.utcfromtimestamp(time.mktime(datetime.now().timetuple())).replace(tzinfo=pytz.UTC)
+        last_sync_time = now()
         last_sync_message = str(pull_status).replace("'","''")
         sql = """
 DO 
@@ -151,7 +151,7 @@ END$$;
             sync_succeed = task["status"].is_succeed
             sync_message = str(task["status"]).replace("'","''")
 
-            sync_time = task["status"].last_process_time or datetime.now()
+            sync_time = task["status"].last_process_time or now()
             if sync_succeed:
                 if remove:
                     #remove publish succeed.

@@ -2,10 +2,13 @@ import os
 import traceback
 import json
 import socket
+import pytz
 from jinja2 import Environment,FileSystemLoader
 from geoserver.catalog import Catalog
 
 PATH = os.path.dirname(os.path.realpath(__file__))
+
+DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
 STATE_PATH = os.path.split(CODE_PATH)[0]
@@ -103,3 +106,9 @@ def get_version():
         version = "0.0"
 
     return version
+
+def now():
+    """
+    Return current time
+    """
+    return datetime.now(DEFAULT_TIMEZONE)
