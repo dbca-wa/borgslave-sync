@@ -80,7 +80,7 @@ Required settings are as follows:
 
     #Feature filter,lambda function. 
     #if both FEATURE_FILTER and SYNC_SERVER are missing, default value is "lambda job: True"
-    #if both FEATURE_FILTER is are missing, but SYNC_SERVER is not missing, default value is "lambda job:job.get('allow_authenticated',False)"
+    #if FEATURE_FILTER is  missing, but SYNC_SERVER is not missing, default value is "lambda job:job.get('auth_level',-1) in [0,1]"
     FEATURE_FILTER="xxx"
 
     #Wms filter,lambda function. 
