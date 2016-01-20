@@ -112,4 +112,4 @@ def now():
     """
     Return current time
     """
-    return datetime.now(DEFAULT_TIMEZONE)
+    return DEFAULT_TIMEZONE.localize(datetime.now())
