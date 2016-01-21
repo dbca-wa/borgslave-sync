@@ -20,7 +20,7 @@ def date_from_str(d_str):
     convert a string date to date object;return None if failed
     """
     try:
-        return datetime.strptime(d_str,"%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=DEFAULT_TIMEZONE)
+        return DEFAULT_TIMEZONE.localize(datetime.strptime(d_str,"%Y-%m-%d %H:%M:%S.%f"))
     except:
         pass
 
