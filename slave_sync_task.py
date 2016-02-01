@@ -143,14 +143,14 @@ update_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name
 remove_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","remove",json_task,valid_feature)
 
 #task definition for feature's metadata
-required_metadata_attrs = ("name","workspace","schema","action")
-valid_metadata_feature_job = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and all(key in l for key in required_metadata_attrs)
+required_metadata_feature_attrs = ("name","workspace","schema","action")
+valid_metadata_feature_job = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and all(key in l for key in required_metadata_feature_attrs)
 
 update_metadata_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","meta",json_task,valid_metadata_feature_job)
 
 #task definition for empty feature's gwc
-required_empty_gwc_attrs = ("name","workspace","action")
-valid_empty_gwc_job = lambda l: FEATURE_FILTER(l) and all(key in l for key in required_empty_gwc_attrs)
+required_empty_gwc_feature_attrs = ("name","workspace","action")
+valid_empty_gwc_feature_job = lambda l: FEATURE_FILTER(l) and all(key in l for key in required_empty_gwc_feature_attrs)
 
 empty_gwc_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","empty_gwc",json_task,valid_empty_gwc_feature_job)
 
