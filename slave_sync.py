@@ -156,9 +156,14 @@ def parse_job(file_name,action,file_content):
 
     task["job_file"] = file_name
     if action == "remove":
-        task["action"] = action
+        if task.get("action","publish") != "publish":
+            #a auxiliary task file is removed. no action is required.
+            task["action"] = 'none'
+        else:
+            task["action"] = action
     elif "action" not in task:
-        task["action"] = action
+        #set the action to default action 'publish'
+        task["action"] = 'publish'
     return task
 
 def sync():
@@ -288,6 +293,13 @@ def get_tasks(pull_status):
 
             sync_job = parse_job(file_name,action,file_content)
             action = sync_job["action"]
+            if action == 'none':
+                #no action is required
+                pull_status.get_task_status(file_name).set_message("message","No action is required.")
+                pull_status.get_task_status(file_name).set_message("action","None")
+                pull_status.get_task_status(file_name).succeed()
+                pull_status.get_task_status(file_name).last_process_time = now()
+                continue
 
             #tasks will be added only after if a sync job has some unexecuted task or unsuccessful task.
             job_failed = False
