@@ -7,7 +7,7 @@ from slave_sync_env import (
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER
 )
 from slave_sync_task import (
-    update_feature_job,update_feature_metadata_job,db_feature_task_filter,
+    update_feature_job,update_metadata_feature_job,db_feature_task_filter,
     gs_style_task_filter,gs_spatial_task_filter
 )
 
@@ -116,6 +116,6 @@ def send_layer_preview(sync_job,task_metadata,task_status):
 tasks_metadata = [
                     ("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
                     ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
-                    ("load_gs_stylefile"  , update_feature_metadata_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                    ("load_gs_stylefile"  , update_metadata_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("send_layer_preview"  , update_feature_job, send_layer_preview_task_filter, task_name, send_layer_preview),
 ]

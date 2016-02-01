@@ -11,7 +11,7 @@ from slave_sync_env import (
     gs,env
 )
 from slave_sync_task import (
-    update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
+    update_feature_job,update_metadata_feature_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
     update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job
 )
 
@@ -151,30 +151,30 @@ def create_workspace(sync_job,task_metadata,task_status):
 
 tasks_metadata = [
                     ("create_datastore", update_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
-                    ("create_datastore", update_feature_metadata_job, gs_feature_task_filter      , task_store_name  , create_datastore),
+                    ("create_datastore", update_metadata_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
 
                     ("delete_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
-                    ("delete_feature"  , update_feature_metadata_job, gs_feature_task_filter      , task_feature_name, delete_feature),
+                    ("delete_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , remove_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
 
                     ("delete_style"    , update_feature_job, gs_style_task_filter, task_style_name  , delete_style),
-                    ("delete_style"    , update_feature_metadata_job, gs_style_task_filter, task_style_name  , delete_style),
+                    ("delete_style"    , update_metadata_feature_job, gs_style_task_filter, task_style_name  , delete_style),
 
                     ("create_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
-                    ("create_feature"  , update_feature_metadata_job, gs_feature_task_filter      , task_feature_name, create_feature),
+                    ("create_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
 
                     ("create_style"    , update_feature_job, gs_style_task_filter, task_style_name  , create_style),
-                    ("create_style"    , update_feature_metadata_job, gs_style_task_filter, task_style_name  , create_style),
+                    ("create_style"    , update_metadata_feature_job, gs_style_task_filter, task_style_name  , create_style),
 
                     ("update_access_rules", update_access_rules_job, None, "update_access_rules", update_access_rules),
 
                     ("create_workspace"   , update_wmsstore_job    , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_layergroup_job  , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
-                    ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
+                    ("create_workspace"   , update_metadata_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
 
                     ("geoserver_reload"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
                     ("geoserver_reload"   , update_feature_job     , gs_feature_task_filter , "reload_geoserver"   , reload_geoserver),
-                    ("geoserver_reload"   , update_feature_metadata_job     , gs_feature_task_filter , "reload_geoserver"   , reload_geoserver),
+                    ("geoserver_reload"   , update_metadata_feature_job     , gs_feature_task_filter , "reload_geoserver"   , reload_geoserver),
 ]
 

@@ -10,8 +10,8 @@ from slave_sync_env import (
 )
 
 from slave_sync_task import (
-    update_wmslayer_job,update_layergroup_job,update_feature_job,update_feature_metadata_job,gs_task_filter,gs_feature_task_filter,gs_spatial_task_filter,
-    empty_gwc_layer_job,empty_gwc_group_job,
+    update_wmslayer_job,update_layergroup_job,update_feature_job,update_metadata_feature_job,gs_task_filter,gs_feature_task_filter,gs_spatial_task_filter,
+    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job
 )
 
 logger = logging.getLogger(__name__)
@@ -55,8 +55,9 @@ tasks_metadata = {
                 ("update_gwc", update_wmslayer_job  , gs_task_filter        , task_name, update_gwc),
                 ("update_gwc", update_layergroup_job, gs_task_filter        , task_name, update_gwc),
                 ("update_gwc", update_feature_job   , gs_spatial_task_filter, task_name, update_gwc),
-                ("update_gwc", update_feature_metadata_job   , gs_spatial_task_filter, task_name, update_gwc),
+                ("update_gwc", update_metadata_feature_job   , gs_spatial_task_filter, task_name, update_gwc),
                 ("empty_gwc", empty_gwc_layer_job  , gs_task_filter        , task_name, empty_gwc),
                 ("empty_gwc", empty_gwc_group_job  , gs_task_filter        , task_name, empty_gwc),
+                ("empty_gwc", empty_gwc_feature_job  , gs_task_filter        , task_name, empty_gwc),
 }
 
