@@ -8,11 +8,11 @@ from datetime import datetime,date,timedelta
 import time
 
 from slave_sync_task import (
-    update_feature_job,update_feature_metadata_job,remove_feature_job,update_auth_job,update_access_rules_job,
+    update_feature_job,update_metadata_feature_job,remove_feature_job,update_auth_job,update_access_rules_job,
     update_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_wmsstore_job,
     update_layergroup_job,remove_layergroup_job,
     JOB_DEF_INDEX,JOB_TYPE_INDEX,jobname,
-    empty_gwc_layer_job,empty_gwc_group_job,
+    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job
 )
 from slave_sync_env import (
     CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,now
@@ -278,7 +278,7 @@ tasks_metadata = [
                     ("send_notify", remove_feature_job, None, task_name, send_remove_feature_notify),
 
 
-                    ("send_notify", update_feature_metadata_job   , None, task_name,send_job_notify),
+                    ("send_notify", update_metadata_feature_job   , None, task_name,send_job_notify),
                     ("send_notify", update_auth_job   , None, "update_roles",send_job_notify),
                     ("send_notify", update_access_rules_job, None, "update_access_rules", send_job_notify),
                     ("send_notify", update_wmsstore_job,None, task_name, send_job_notify),
@@ -288,6 +288,7 @@ tasks_metadata = [
                     ("send_notify", remove_wmslayer_job, None, task_name, send_job_notify),
                     ("send_notify", empty_gwc_layer_job  , None, task_name, send_job_notify),
                     ("send_notify", empty_gwc_group_job  , None, task_name, send_job_notify),
+                    ("send_notify", empty_gwc_feature_job  , None, task_name, send_job_notify),
 
                     ("send_notify", update_layergroup_job, None, task_name, send_job_notify),
                     ("send_notify", remove_layergroup_job, None, task_name, send_job_notify),

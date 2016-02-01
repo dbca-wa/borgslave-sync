@@ -95,11 +95,11 @@ db_feature_task_filter = lambda sync_job: not SKIP_DB and sync_job.get("sync_pos
 
 #task definition for update access rules
 valid_rules = lambda sync_job: not SKIP_RULES
-update_access_rules_job = ("access rules","geoserver access rules",True,None,"update",lambda file_name: file_name == "layers.properties",valid_rules)
+update_access_rules_job = ("access rules","geoserver access rules",True,None,"publish",lambda file_name: file_name == "layers.properties",valid_rules)
 
 #task definition for update auth
 valid_auth = lambda sync_job: not SKIP_AUTH
-update_auth_job = ("auth","postgres and geoserver auth",False,None,"update",lambda file_name: file_name == "slave_roles.sql",valid_auth)
+update_auth_job = ("auth","postgres and geoserver auth",False,None,"publish",lambda file_name: file_name == "slave_roles.sql",valid_auth)
 
 #task definition for wms store and layers
 required_store_attrs = ("name", "workspace","capability_url","username","password","action")
@@ -112,8 +112,8 @@ valid_layer = lambda l: WMS_FILTER(l) and all(key in l for key in required_layer
 required_layer_remove_attrs = ("name", "workspace", "store","action")
 valid_layer_remove = lambda l: WMS_FILTER(l) and all(key in l for key in required_layer_remove_attrs)
 
-update_wmsstore_job = ("wms store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","update",json_task,valid_store)
-update_wmslayer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","update",json_task,valid_layer)
+update_wmsstore_job = ("wms store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","publish",json_task,valid_store)
+update_wmslayer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","publish",json_task,valid_layer)
 remove_wmslayer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","remove",json_task,valid_layer_remove)
 remove_wmsstore_job = ("wms store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","remove",json_task,valid_store_remove)
 
@@ -124,7 +124,7 @@ valid_group = lambda l: LAYERGROUP_FILTER(l) and all(key in l for key in require
 required_group_remove_attrs = ("name", "workspace","action")
 valid_group_remove = lambda l: LAYERGROUP_FILTER(l) and all(key in l for key in required_group_remove_attrs)
 
-update_layergroup_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layergroups","update",json_task,valid_group)
+update_layergroup_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layergroups","publish",json_task,valid_group)
 remove_layergroup_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layergroups","remove",json_task,valid_group_remove)
 
 required_empty_gwc_layer_attrs = ("name", "workspace","store","action")
@@ -139,15 +139,20 @@ empty_gwc_group_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["
 required_feature_attrs = ("name", "schema", "data_schema", "outdated_schema", "workspace", "dump_path","action")
 valid_feature = lambda l: FEATURE_FILTER(l) and not l["job_file"].endswith(".meta.json") and all(key in l for key in required_feature_attrs)
 
-update_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","update",json_task,valid_feature)
+update_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","publish",json_task,valid_feature)
 remove_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","remove",json_task,valid_feature)
 
-#task definition for features metadata
-required_feature_metadata_attrs = ("name","workspace","schema","action")
-valid_feature_metadata = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and all(key in l for key in required_feature_metadata_attrs)
+#task definition for feature's metadata
+required_metadata_attrs = ("name","workspace","schema","action")
+valid_metadata_feature_job = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and all(key in l for key in required_metadata_attrs)
 
-update_feature_metadata_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","update",json_task,valid_feature_metadata)
+update_metadata_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","meta",json_task,valid_metadata_feature_job)
 
+#task definition for empty feature's gwc
+required_empty_gwc_attrs = ("name","workspace","action")
+valid_empty_gwc_job = lambda l: FEATURE_FILTER(l) and all(key in l for key in required_empty_gwc_attrs)
+
+empty_gwc_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","empty_gwc",json_task,valid_empty_gwc_feature_job)
 
 def get_http_response_exception(http_response):
     """
