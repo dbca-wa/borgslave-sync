@@ -154,6 +154,10 @@ def parse_job(file_name,action,file_content):
     else:
         task = {"job_file_content":file_content}
 
+    #backward compatibility. set the action for meta.json file
+    if "action" not in task and file_name.endswith(".meta.json"):
+	task["action"] = "meta"
+
     task["job_file"] = file_name
     if action == "remove":
         if task.get("action","publish") != "publish":

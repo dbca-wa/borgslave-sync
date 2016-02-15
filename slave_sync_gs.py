@@ -6,7 +6,7 @@ import os
 import geoserver_catalog_extension
 from slave_sync_env import (
     GEOSERVER_DATASTORE_NAMESPACE,GEOSERVER_PGSQL_CONNECTION_DEFAULTS,GEOSERVER_WORKSPACE_NAMESPACE,GEOSERVER_DEFAULT_CRS,GEOSERVER_DATA_DIR,
-    GEOSERVER_PGSQL_HOST, GEOSERVER_PGSQL_DATABASE, GEOSERVER_PGSQL_USERNAME,
+    GEOSERVER_PGSQL_HOST, GEOSERVER_PGSQL_PORT, GEOSERVER_PGSQL_DATABASE, GEOSERVER_PGSQL_USERNAME,
     CACHE_PATH,
     gs,env
 )
@@ -72,7 +72,7 @@ def create_feature(sync_job,task_metadata,task_status):
     This is not a critical task. 
     """
     # try and fetch the layer's CRS from PostGIS
-    getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
+    getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
     getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     getcrs_output = getcrs.communicate()
     if not getcrs_output[0]:
