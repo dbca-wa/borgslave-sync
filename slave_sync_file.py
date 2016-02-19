@@ -3,7 +3,7 @@ import os
 import subprocess
 
 from slave_sync_env import (
-    BORG_SSH,CACHE_PATH,env,SLAVE_NAME,PUBLISH_PATH,
+    BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER
 )
 from slave_sync_task import (
@@ -68,26 +68,35 @@ def download_file(remote_path,local_path,task_status,md5=None):
         check_file_md5(local_md5_cmd,md5,task_status)
 
 def load_table_dumpfile(sync_job,task_metadata,task_status):
-    output_name = os.path.join(CACHE_PATH, "{}.tar".format(sync_job["name"]))
+    data_file = sync_job.get('data',None)
+    if not data_file:
+        raise Exception("Can't find data file in json file.")
     if SYNC_SERVER:
         #download from local slave
-        download_file("{0}:{1}/{2}.tar".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),output_name,task_status,sync_job.get("data_md5",None))
+        download_file("{0}:{1}/{2}.tar".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),data_file['local_file'],task_status,data_file.get("md5",None))
 	task_status.set_message("message","Succeed to download table data from slave server {0}".format(SYNC_SERVER))
     else:
         #download from borg master
-        download_file(sync_job["dump_path"],output_name,task_status,None)
+        download_file(data_file["file"],data_file['local_file'],task_status,data_file.get('md5',None))
 	task_status.set_message("message","Succeed to download table data from master.")
 
 def load_gs_stylefile(sync_job,task_metadata,task_status):
-    output_name = os.path.join(CACHE_PATH, "{}.sld".format(sync_job["name"]))
-    if SYNC_SERVER:
-        #download from local slave
-        download_file("{0}:{1}/{2}.sld".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),output_name,task_status,sync_job.get("style_md5",None))
-	task_status.set_message("message","Succeed to download style file from slave server {0}".format(SYNC_SERVER))
-    else:
-        #download from borg master
-        download_file(sync_job["style_path"],output_name,task_status,None)
-	task_status.set_message("message","Succeed to download style file from master.")
+    style_files = sync_job.get('styles',None)
+    if not style_files: 
+        return
+    for name,style_file in style_files.iteritems():
+        if SYNC_SERVER:
+            #download from local slave
+            
+            if name == "builtin":
+                download_file("{}:{}/{}.sld".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),style_file['local_file'],task_status,style_file.get("md5",None))
+            else:
+                download_file("{}:{}/{}.{}.sld".format(SYNC_SERVER,SYNC_PATH,sync_job["name"],name),style_file['local_file'],task_status,style_file.get("md5",None))
+            task_status.set_message("message","Succeed to download style file from slave server {0}".format(SYNC_SERVER))
+        else:
+            #download from borg master
+            download_file(style_file["file"],style_file['local_file'],task_status,style_file.get("md5",None))
+            task_status.set_message("message","Succeed to download style file from master.")
 
 
 upload_cmd = ["rsync", "-azR" ,"-e", BORG_SSH,None,None]

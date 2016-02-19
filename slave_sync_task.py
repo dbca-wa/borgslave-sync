@@ -23,6 +23,7 @@ taskname = lambda task,task_metadata: task_metadata[TASK_NAME_INDEX](task) if ha
 jobname = lambda task,task_metadata: task_metadata[JOB_DEF_INDEX][JOB_NAME_INDEX](task) if hasattr(task_metadata[JOB_DEF_INDEX][JOB_NAME_INDEX],"__call__") else task_metadata[JOB_DEF_INDEX][JOB_NAME_INDEX]
 
 sync_tasks = {
+    "prepare": {},
     "update_auth": {},
     "update_access_rules": {},
     
@@ -72,7 +73,8 @@ ordered_sync_task_type = [
             "load_table_dumpfile","load_gs_stylefile",
             "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","create_access_view","drop_outdated_table",
             "create_workspace",
-            "create_datastore","delete_feature","delete_style",
+            "delete_feature",
+            "create_datastore",
             "update_wmsstore","update_wmslayer","update_layergroup","remove_layergroup","remove_wmslayer","remove_wmsstore",
             "geoserver_reload",
             "create_feature","create_style",
@@ -87,7 +89,7 @@ gs_task_filter = lambda sync_job: not SKIP_GS
 
 gs_spatial_task_filter = lambda sync_job: not SKIP_GS and sync_job.get("sync_geoserver_data",True) and sync_job.get("spatial_data",False)
 gs_feature_task_filter = lambda sync_job: not SKIP_GS and sync_job.get("sync_geoserver_data",True)
-gs_style_task_filter = lambda sync_job : not SKIP_GS and sync_job.get("sync_geoserver_data",True) and "style_path" in sync_job
+gs_style_task_filter = lambda sync_job : not SKIP_GS and sync_job.get("sync_geoserver_data",True) and any((key in sync_job) for key in ["styles","style_path"])
 
 db_task_filter = lambda sync_job: not SKIP_DB
 db_feature_task_filter = lambda sync_job: not SKIP_DB and sync_job.get("sync_postgres_data",True)
@@ -136,8 +138,9 @@ empty_gwc_layer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["n
 empty_gwc_group_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layergroups","empty_gwc",json_task,valid_empty_gwc_group)
 
 #task definition for features
-required_feature_attrs = ("name", "schema", "data_schema", "outdated_schema", "workspace", "dump_path","action")
-valid_feature = lambda l: FEATURE_FILTER(l) and not l["job_file"].endswith(".meta.json") and all(key in l for key in required_feature_attrs)
+required_feature_attrs_20160217 = ("name", "schema", "data_schema", "outdated_schema", "workspace", "dump_path","action")
+required_feature_attrs = ("name", "schema", "data_schema", "outdated_schema", "workspace", "data","action")
+valid_feature = lambda l: FEATURE_FILTER(l) and not l["job_file"].endswith(".meta.json") and any(all(key in l for key in feature_attrs) for feature_attrs in [required_feature_attrs,required_feature_attrs_20160217])
 
 update_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","publish",json_task,valid_feature)
 remove_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","remove",json_task,valid_feature)

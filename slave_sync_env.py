@@ -29,6 +29,9 @@ if not os.path.exists(PREVIEW_ROOT_PATH):   os.makedirs(PREVIEW_ROOT_PATH)
 SYNC_STATUS_PATH = os.path.join(PATH,'.sync_status') 
 if not os.path.exists(SYNC_STATUS_PATH):   os.makedirs(SYNC_STATUS_PATH)
 
+
+DEBUG = bool(os.environ.get("DEBUG","false").lower() in ["true","yes","on"])
+INCLUDE = [f for f in os.environ.get("INCLUDE","").split(",") if f.strip()]
 HG_NODE = os.environ.get("HG_NODE", "0")
 BORG_SSH = os.environ.get("BORG_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")
 CODE_BRANCH = os.environ.get("CODE_BRANCH","default")

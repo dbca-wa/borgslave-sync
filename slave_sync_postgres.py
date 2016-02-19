@@ -108,8 +108,7 @@ END$$;
 restore_cmd = ["pg_restore", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p" , GEOSERVER_PGSQL_PORT , "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-F", "T","-O","-x","--no-tablespaces",None]
 def restore_table(sync_job,task_metadata,task_status):
     # load PostgreSQL dump into db with pg_restore
-    output_name = os.path.join(CACHE_PATH, "{}.tar".format(sync_job["name"]))
-    restore_cmd[len(restore_cmd) - 1] = output_name
+    restore_cmd[len(restore_cmd) - 1] = sync_job["data"]["local_file"]
     logger.info("Executing {}...".format(repr(restore_cmd)))
     restore = subprocess.Popen(restore_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     restore_output = restore.communicate()
