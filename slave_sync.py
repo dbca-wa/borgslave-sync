@@ -188,8 +188,8 @@ def parse_job(file_name,action,file_content):
 def sync():
     if DEBUG:
         logger.info("Run in debug mode.")
-    if INCLUDE:
-        logger.info("Only the files({}) will be processed.".format(",".join(INCLUDE)))
+        if INCLUDE:
+            logger.info("Only the files({}) will be processed.".format(",".join(INCLUDE)))
 	
     try:
         for init_method in module_init_handlers:
