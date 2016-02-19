@@ -24,6 +24,14 @@ task_store_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],GEOSER
 task_feature_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_job['name'])
 task_style_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_job['name'])
 
+def geoserver_style_name(sync_job,style_name):
+    if not style_name:
+        return None
+    elif style_name == "builtin":
+        return sync_job['name']
+    else:
+        return "{}.{}".format(sync_job['name'],style_name)
+
 def get_datastore(sync_job):
     d_gs = gs.get_store(store_name(sync_job))
 
@@ -58,14 +66,58 @@ def create_datastore(sync_job,task_metadata,task_status):
         raise Exception("Create data store for workspace({0}) in geoserver failed.".format(sync_job['workspace']))
 
 def delete_feature(sync_job,task_metadata,task_status):
-    l_gs = gs.get_layer("{}:{}".format(sync_job['workspace'], sync_job['name']))
+    feature_name = "{}:{}".format(sync_job['workspace'], sync_job['name'])
+    l_gs = gs.get_layer(feature_name)
+    styles = {}
+    feature_exist = False
+    #try to find associated feature's private styles
     if l_gs:
+        #delete alternate styles
+        feature_exist = True
+        for s_gs in l_gs.styles or {}:
+            if s_gs.name.startswith(sync_job['name']):
+                #the alternate style is only used by this feature, save it for delete.
+                styles[s_gs.name] = s_gs
+
+        #try to delete default style
+        if l_gs.default_style and l_gs.default_style.name.startswith(sync_job['name']):
+            #has default style and default style is only used by this feature, save it for delete it.
+            styles[l_gs.default_style.name] = l_gs.default_style
+
+    #try to find feature's private styles but failed to attach to the feature
+    for name,style in sync_job["styles"].iteritems():
+        style_name = geoserver_style_name(sync_job,name)
+        if style_name in styles:
+            continue
+        s_gs = gs.get_style(name=style_name, workspace=sync_job["workspace"])
+        if s_gs:
+            styles[style_name] = s_gs
+
+    #delete the feature
+    if l_gs:
+        #delete feature
         gs.delete(l_gs)
 
-def delete_style(sync_job,task_metadata,task_status):
-    s_gs = gs.get_style(name=sync_job["name"], workspace=sync_job["workspace"])
-    if s_gs:
-        gs.delete(s_gs)
+    #delete the styles
+    for style in styles.itervalues():
+        gs.delete(style)
+
+    if feature_exist:
+        if  styles:
+            task_status.set_message("message",os.linesep.join([
+                "Succeed to delete feature ({})".format(feature_name),
+                "Succeed to delete private styles ({}).".format(", ".join([name for name in styles.iterkeys()]))
+                ]))
+        else:
+            task_status.set_message("message","Succeed to delete feature ({}).".format(feature_name))
+    else:
+        if styles:
+            task_status.set_message("message",os.linesep.join([
+                "Feature ({}) doesn't exist.".format(feature_name),
+                "Succeed to delete private styles ({}).".format(", ".join([name for name in styles.iterkeys()]))
+                ]))
+        else:
+            task_status.set_message("message","Feature ({}) doesn't exist.".format(feature_name))
 
 def create_feature(sync_job,task_metadata,task_status):
     """
@@ -107,24 +159,70 @@ def create_style(sync_job,task_metadata,task_status):
     """
     This is not a critical task. 
     """
-    try:
-        output_name = os.path.join(CACHE_PATH, "{}.sld".format(sync_job["name"]))
-        with open(output_name) as f:
-            sld_data = f.read()
+    default_style = None
+    created_styles = []
+    failed_messages = []
+    style_name = None
+    messages = []
+    default_style_name = geoserver_style_name(sync_job,sync_job.get('default_style',None))
+    #create styles
+    for name,style in sync_job["styles"].iteritems():
+        style_name = geoserver_style_name(sync_job,name)
 
-        # kludge to match for SLD 1.1
-        style_format = "sld10"
-        if "version=\"1.1.0\"" in sld_data:
-            style_format = "sld11"
-        gs.create_style(name=sync_job['name'], data=sld_data, workspace=sync_job['workspace'], style_format=style_format)
-        s_gs = gs.get_style(name=sync_job['name'], workspace=sync_job['workspace'])
-        feature = get_feature(sync_job)
-        feature.default_style = s_gs
-        gs.save(feature)
-    except:
-        message = traceback.format_exc()
-        task_status.set_message("message",message)
-        logger.error("Create style failed ({0}) failed.{1}".format(task_style_name(sync_job),message))
+        try:
+            with open(style['local_file']) as f:
+                sld_data = f.read()
+
+            # kludge to match for SLD 1.1
+            style_format = "sld10"
+            if "version=\"1.1.0\"" in sld_data:
+                style_format = "sld11"
+
+            gs.create_style(name=style_name, data=sld_data, workspace=sync_job['workspace'], style_format=style_format)
+            s_gs = gs.get_style(name=style_name, workspace=sync_job['workspace'])
+            if s_gs.name == default_style_name:
+                default_style = s_gs
+            else:
+                created_styles.append(s_gs)
+
+        except:
+            message = traceback.format_exc()
+            logger.error("Create style failed ({}) failed. {}".format(task_style_name(sync_job),message))
+            failed_messages.append("Failed to create style {}. {}".format(style_name,message))
+    
+    if not default_style and created_styles :
+        #default style is not set, set the default style to the first created styles.
+        default_style = created_styles[0]
+        del created_styles[0]
+
+    if default_style:
+        if created_styles:
+            messages.append("Succeed to create styles ({}, {}).".format(default_style.name, ", ".join([s.name for s in created_styles])))
+        else:
+            messages.append("Succeed to create style ({}).".format(default_style.name))
+    
+    #try to set feature's styles
+    if default_style:
+        try:
+            feature = get_feature(sync_job)
+            feature.default_style = default_style
+            if created_styles:
+                feature.styles = created_styles
+
+            gs.save(feature)
+            messages.append("Succeed to set default style ({}).".format(default_style.name))
+            if created_styles:
+                messages.append("Succeed to set alternative styles ({}).".format(", ".join([s.name for s in created_styles])))
+        except:
+            message = traceback.format_exc()
+            logger.error("Failed to set default style({}) and alternative styles ({}).{}".format(default_style.name, ", ".join([s.name for s in created_styles]),message))
+            failed_messages.append("Failed to set default style ({}) and alternative styles ({}). {}".format(default_style.name, ", ".join([s.name for s in created_styles]),message))
+
+    #set messages
+    if default_style:
+        task_status.set_message("message",os.linesep.join(messages + failed_messages))
+    else:
+        task_status.set_message("message","No style are required to create.")
 
 def update_access_rules(sync_job,task_metadata,task_status):
     with open(os.path.join(GEOSERVER_DATA_DIR,"security","layers.properties"),"wb") as access_file:
@@ -156,9 +254,6 @@ tasks_metadata = [
                     ("delete_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , remove_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
-
-                    ("delete_style"    , update_feature_job, gs_style_task_filter, task_style_name  , delete_style),
-                    ("delete_style"    , update_metadata_feature_job, gs_style_task_filter, task_style_name  , delete_style),
 
                     ("create_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
                     ("create_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
