@@ -18,6 +18,8 @@ def prepare_feature(sync_job,task_metadata):
     if 'data' in sync_job:
         #have data file. populate the local cached file
         sync_job['data']['local_file'] = os.path.join(CACHE_PATH, "{}.tar".format(sync_job["name"]))
+    else:
+        sync_job['data'] = {}
 
     #prepare the style file properties
     if 'style_path' in sync_job:
@@ -31,6 +33,8 @@ def prepare_feature(sync_job,task_metadata):
                 sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.sld".format(sync_job["name"]))
             else:
                 sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.sld".format(sync_job["name"],name))
+    else:
+        sync_job['styles'] = {}
 
 
 
