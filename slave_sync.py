@@ -57,7 +57,7 @@ import hglib
 
 from slave_sync_env import (
     PATH,HG_NODE,LISTEN_CHANNELS,
-    STATE_PATH,now
+    STATE_PATH,now,DEBUG,INCLUDE
 )
 from slave_sync_status import SlaveSyncStatus
 
@@ -67,6 +67,7 @@ from slave_sync_task import (
     execute_task,taskname
 
 )
+import slave_sync_prepare
 import slave_sync_gs_wms
 import slave_sync_gs_layergroup
 import slave_sync_gs
@@ -89,6 +90,9 @@ sync_tasks_metadata = {}
 notify_tasks_metadata = []
 notify_tasks = []
 
+prepare_tasks_metadata = []
+prepare_tasks = []
+
 module_init_handlers = []
 module_reset_handlers = []
 
@@ -105,6 +109,11 @@ plugin_modules = [
 notify_modules = [
     slave_sync_notify
 ]
+prepare_modules = [
+    slave_sync_prepare
+]
+
+ignore_files = 0
 
 for key in sync_tasks.keys():
     sync_tasks_metadata[key] = []
@@ -126,6 +135,12 @@ for m in notify_modules:
         for task_metadata in m.tasks_metadata:
             if task_metadata[TASK_TYPE_INDEX] != "send_notify": continue
             notify_tasks_metadata.append(task_metadata)
+
+for m in prepare_modules:
+    if hasattr(m,"tasks_metadata"): 
+        for task_metadata in m.tasks_metadata:
+            if task_metadata[TASK_TYPE_INDEX] != "prepare": continue
+            prepare_tasks_metadata.append(task_metadata)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -171,6 +186,11 @@ def parse_job(file_name,action,file_content):
     return task
 
 def sync():
+    if DEBUG:
+        logger.info("Run in debug mode.")
+        if INCLUDE:
+            logger.info("Only the files({}) will be processed.".format(",".join(INCLUDE)))
+	
     try:
         for init_method in module_init_handlers:
             init_method()
@@ -191,11 +211,18 @@ def sync():
         for task in notify_tasks:
             logger.info("Task : {0}  {1} = {2}".format("send_notify",taskname(task[0],task[1]),task[0]['job_file']))
 
-        expected_executed_tasks = -1
-        executed_task = 0
+        #prepare tasks
+        for task in prepare_tasks:
+            logger.info("Begin to prepare task ({0}).".format(taskname(task[0],task[1])))
+            try:
+                task[1][TASK_HANDLER_INDEX](*task)
+                logger.info("Succeed to prepare task ({0}).".format(taskname(task[0],task[1])))
+            except:
+                logger.error("Failed to prepare task ({0}). {1}".format(taskname(task[0],task[1]),traceback.format_exc()))
+
+        #execute tasks
         for task_type in ordered_sync_task_type:
             for task in sync_tasks[task_type].values():    
-                if executed_task == expected_executed_tasks: break
                 if isinstance(task,list):
                     #shared task
                     for shared_task in task:
@@ -204,14 +231,13 @@ def sync():
                     #unshared task
                     execute_task(*task)
 
-                executed_task += 1
-            if executed_task == expected_executed_tasks: break
-
         if SlaveSyncStatus.all_succeed():
             logger.info("All done!")
         else:
             raise Exception("Some files({0}) are processed failed.".format(' , '.join([s.file for s in SlaveSyncStatus.get_failed_status_objects()])))
 
+        if ignore_files:
+            raise Exception("{} files are ignored in debug mode,rollback!".format(ignore_files))
         #raise Exception("Rollback for testing")
         return
     finally:
@@ -271,10 +297,14 @@ def is_sync_task(sync_job,segments,action,task_metadata):
                     
 
 def get_tasks(pull_status):
+    global ignore_files
     changes = get_changeset()
     next_job = False
     for file_name, revision in changes.iteritems():
-        #intermediate variable for rollback.
+        if DEBUG and INCLUDE and file_name not in INCLUDE:
+            #debug mode, file_name is not in INCLUDE
+            ignore_files += 1
+            continue
         tasks = {}
         try:
             segments = file_name.split('/',2)
@@ -389,7 +419,14 @@ def get_tasks(pull_status):
                 sync_tasks[key].update(val)
             
             if tasks:
-                #this job has some sync tasks to do, try to add a notify task
+                #this job has some sync tasks to do, 
+                #try to add a prepare task
+                for task_metadata in prepare_tasks_metadata:
+                    if is_sync_task(sync_job,segments,action,task_metadata):
+                        prepare_tasks.append((sync_job,task_metadata))
+                        break
+
+                #try to add a notify task
                 for task_metadata in notify_tasks_metadata:
                     if is_sync_task(sync_job,segments,action,task_metadata):
                         notify_tasks.append((sync_job,task_metadata))
