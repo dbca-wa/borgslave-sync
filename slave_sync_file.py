@@ -19,7 +19,7 @@ send_layer_preview_task_filter = lambda sync_job: gs_spatial_task_filter(sync_jo
 task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"])
 
 download_cmd = ["rsync", "-Paz", "-e", BORG_SSH,None,None]
-md5_cmd = BORG_SSH.split() + [SYNC_SERVER,"md5sum",None]
+md5_cmd = BORG_SSH.split() + [None,"md5sum",None]
 local_md5_cmd = ["md5sum",None]
 
 def check_file_md5(md5_cmd,md5,task_status):
@@ -46,8 +46,17 @@ def download_file(remote_path,local_path,task_status,md5=None):
         if remote_path.find("@") > 0:
             #remote_path includes user@server prefix,remote that prefix
             remote_file_path = remote_path.split(":",1)[1]
-        md5_cmd[len(md5_cmd) - 1] = remote_file_path
-        check_file_md5(md5_cmd,md5,task_status)
+        if SYNC_SERVER:
+            md5_cmd[len(md5_cmd) - 1] = remote_file_path
+            md5_cmd[len(md5_cmd) - 3] = SYNC_SERVER
+            check_file_md5(md5_cmd,md5,task_status)
+        elif remote_path.find("@") > 0:
+            md5_cmd[len(md5_cmd) - 1] = remote_file_path
+            md5_cmd[len(md5_cmd) - 3] = remote_path.split(":",1)[0]
+            check_file_md5(md5_cmd,md5,task_status)
+        else:
+            local_md5_cmd[len(local_md5_cmd) - 1] = remote_file_path
+            check_file_md5(local_md5_cmd,md5,task_status)
 
     # sync over PostgreSQL dump with rsync
     download_cmd[len(download_cmd) - 2] = remote_path
