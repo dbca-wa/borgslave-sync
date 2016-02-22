@@ -42,5 +42,5 @@ def prepare_feature(sync_job,task_metadata):
 tasks_metadata = [
                     ("prepare", update_feature_job, None, task_name, prepare_feature),
                     ("prepare", remove_feature_job, None, task_name, prepare_feature),
-                    ("prepare", update_metadata_feature_job   , None, prepare_feature),
+                    ("prepare", update_metadata_feature_job   , None, task_name, prepare_feature),
 ]
