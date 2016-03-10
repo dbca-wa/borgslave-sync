@@ -12,7 +12,7 @@ from slave_sync_task import (
     update_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_wmsstore_job,
     update_layergroup_job,remove_layergroup_job,
     JOB_DEF_INDEX,JOB_TYPE_INDEX,jobname,
-    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job
+    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job,update_workspace_job
 )
 from slave_sync_env import (
     CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,now
@@ -292,5 +292,7 @@ tasks_metadata = [
 
                     ("send_notify", update_layergroup_job, None, task_name, send_job_notify),
                     ("send_notify", remove_layergroup_job, None, task_name, send_job_notify),
+
+                    ("send_notify", update_workspace_job, None, lambda task: task["schema"], send_job_notify),
 ]
 
