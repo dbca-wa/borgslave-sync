@@ -161,7 +161,7 @@ empty_gwc_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["n
 required_update_workspace_attrs = ("schema","auth_level","action","data_schema","outdated_schema")
 valid_update_workspace_job = lambda l: FEATURE_FILTER(l) and all(key in l for key in required_update_workspace_attrs)
 
-update_workspace_job = ("feature",lambda j:j["workspace"],True,"workspaces","publish",json_task,valid_update_workspace_job)
+update_workspace_job = ("workspace",lambda j:j["schema"],True,"workspaces","publish",json_task,valid_update_workspace_job)
 
 def get_http_response_exception(http_response):
     """

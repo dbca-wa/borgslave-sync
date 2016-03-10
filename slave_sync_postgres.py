@@ -50,29 +50,47 @@ def create_postgis_extension(sync_job,task_metadata,task_status):
     if psql.returncode != 0 or psql_output[1].find("ERROR") >= 0:
         raise Exception("{0}:{1}".format(psql.returncode,task_status.get_message("message")))
 
-CREATE_SSO_ROLE = """$$BEGIN
-IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = 'sso_access')  THEN
-    CREATE ROLE "sso_access" WITH LOGIN; 
+CREATE_SSO_ROLE = """DO
+$$BEGIN
+IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '{2}')  THEN
+    CREATE ROLE "{2}" WITH NOINHERIT LOGIN; 
+    GRANT "{2}" TO "{3}";
 END IF;
-GRANT ALL ON SCHEMA "{0}" TO "sso_access" ;
+GRANT USAGE ON SCHEMA "{1}" TO "{2}" ;
+GRANT SELECT ON ALL TABLES IN SCHEMA "{1}" TO "{2}";
+ALTER DEFAULT PRIVILEGES IN SCHEMA "{1}" GRANT SELECT ON TABLES TO "{2}";
 
-DROP ROLE IF EXISTS "{0}"; 
+IF '{1}' != 'public' AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{1}' )THEN
+    ALTER DEFAULT PRIVILEGES IN SCHEMA "{1}" REVOKE SELECT ON TABLES FROM "{1}";
+    REVOKE ALL ON DATABASE "{0}"FROM "{1}";
+    REVOKE ALL ON SCHEMA "{1}" FROM "{1}";
+    REVOKE ALL ON ALL TABLES IN SCHEMA "{1}" FROM "{1}";
+    DROP OWNED BY "{1}";
+    DROP ROLE IF EXISTS "{1}"; 
+END IF;
 END$$;
-DO
 """
-CREATE_RESTRICTED_ROLE = """$$BEGIN
-IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = 'sso_access')  THEN
-    CREATE ROLE "sso_access" WITH LOGIN; 
-END IF;
 
-IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '{0}')  THEN
-    CREATE ROLE "{0}" WITH INHERIT ROLE "sso_access"; 
+CREATE_RESTRICTED_ROLE = """DO
+$$BEGIN
+IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '{2}')  THEN
+    CREATE ROLE "{2}" WITH NOINHERIT LOGIN; 
+    GRANT "{2}" TO "{3}";
 END IF;
-GRANT ALL ON SCHEMA "{0}" to "{0}" ;
+REVOKE ALL ON SCHEMA "{1}" FROM "{2}" ;
+REVOKE ALL ON ALL TABLES IN SCHEMA "{1}" FROM "{2}";
+ALTER DEFAULT PRIVILEGES IN SCHEMA "{1}" REVOKE SELECT ON TABLES FROM "{2}";
 
-REVOKE ALL ON SCHEMA "{0}" FROM "sso_access" ;
+IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '{1}')  THEN
+    CREATE ROLE "{1}" WITH INHERIT LOGIN; 
+    GRANT "{2}" TO "{1}";
+    GRANT "{1}" TO "{3}";
+END IF;
+GRANT USAGE ON SCHEMA "{1}" TO "{1}" ;
+GRANT SELECT ON ALL TABLES IN SCHEMA "{1}" TO "{1}";
+ALTER DEFAULT PRIVILEGES IN SCHEMA "{1}" GRANT SELECT ON TABLES TO "{1}";
+
 END$$;
-DO
 """
 def create_schema(sync_job,task_metadata,task_status):
     #create schema
@@ -89,7 +107,7 @@ def create_schema(sync_job,task_metadata,task_status):
         raise Exception("Failed to create schema. {0}:{1}".format(psql.returncode,task_status.get_message("message")))
 
     #create or alter role
-    auth_level = task.get('auth_level',1)
+    auth_level = sync_job.get('auth_level',1)
     create_role_sql = None
     if auth_level == 2:
         create_role_sql = CREATE_RESTRICTED_ROLE
@@ -99,8 +117,8 @@ def create_schema(sync_job,task_metadata,task_status):
     if create_role_sql:
         #need authorization, create or alter a role
         psql_cmd[len(psql_cmd) - 2] = "-c"
-        psql_cmd[len(psql_cmd) - 1] = create_role_sql.format(sync_job["schema"])
-        
+        psql_cmd[len(psql_cmd) - 1] = create_role_sql.format(GEOSERVER_PGSQL_DATABASE,sync_job["schema"],"sso_access",GEOSERVER_PGSQL_USERNAME)
+
         psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         psql_output = psql.communicate()
         if psql_output[1] and psql_output[1].strip():
