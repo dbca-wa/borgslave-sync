@@ -9,7 +9,7 @@ from slave_sync_env import (
     env
 )
 from slave_sync_task import (
-    update_auth_job,update_feature_job,db_feature_task_filter,remove_feature_job
+    update_auth_job,update_feature_job,db_feature_task_filter,remove_feature_job,update_workspace_job
 )
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,32 @@ def create_postgis_extension(sync_job,task_metadata,task_status):
     if psql.returncode != 0 or psql_output[1].find("ERROR") >= 0:
         raise Exception("{0}:{1}".format(psql.returncode,task_status.get_message("message")))
 
+CREATE_SSO_ROLE = """$$BEGIN
+IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = 'sso_access')  THEN
+    CREATE ROLE "sso_access" WITH LOGIN; 
+END IF;
+GRANT ALL ON SCHEMA "{0}" TO "sso_access" ;
+
+DROP ROLE IF EXISTS "{0}"; 
+END$$;
+DO
+"""
+CREATE_RESTRICTED_ROLE = """$$BEGIN
+IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = 'sso_access')  THEN
+    CREATE ROLE "sso_access" WITH LOGIN; 
+END IF;
+
+IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '{0}')  THEN
+    CREATE ROLE "{0}" WITH INHERIT ROLE "sso_access"; 
+END IF;
+GRANT ALL ON SCHEMA "{0}" to "{0}" ;
+
+REVOKE ALL ON SCHEMA "{0}" FROM "sso_access" ;
+END$$;
+DO
+"""
 def create_schema(sync_job,task_metadata,task_status):
+    #create schema
     psql_cmd[len(psql_cmd) - 2] = "-c"
     psql_cmd[len(psql_cmd) - 1] = ";".join(["CREATE SCHEMA IF NOT EXISTS \"{0}\"".format(s) for s in [sync_job["schema"],sync_job["data_schema"],sync_job["outdated_schema"]] if s])
     
@@ -61,7 +86,30 @@ def create_schema(sync_job,task_metadata,task_status):
         task_status.set_message("message",psql_output[1])
 
     if psql.returncode != 0 or psql_output[1].find("ERROR") >= 0:
-        raise Exception("{0}:{1}".format(psql.returncode,task_status.get_message("message")))
+        raise Exception("Failed to create schema. {0}:{1}".format(psql.returncode,task_status.get_message("message")))
+
+    #create or alter role
+    auth_level = task.get('auth_level',1)
+    create_role_sql = None
+    if auth_level == 2:
+        create_role_sql = CREATE_RESTRICTED_ROLE
+    else:
+        create_role_sql = CREATE_SSO_ROLE
+
+    if create_role_sql:
+        #need authorization, create or alter a role
+        psql_cmd[len(psql_cmd) - 2] = "-c"
+        psql_cmd[len(psql_cmd) - 1] = create_role_sql.format(sync_job["schema"])
+        
+        psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        psql_output = psql.communicate()
+        if psql_output[1] and psql_output[1].strip():
+            logger.info("stderr: {}".format(psql_output[1]))
+            task_status.set_message("message",psql_output[1])
+    
+        if psql.returncode != 0 or psql_output[1].find("ERROR") >= 0:
+            raise Exception("Failed to create role. {0}:{1}".format(psql.returncode,task_status.get_message("message")))
+    
 
 def move_outdated_table(sync_job,task_metadata,task_status):
 
@@ -166,7 +214,8 @@ def drop_table(sync_job,task_metadata,task_status):
 tasks_metadata = [
                     ("update_auth"                      , update_auth_job   , None      , "update_roles", update_auth),
                     ("create_postgis_extension"         , update_feature_job, db_feature_task_filter, "postgis_extension"   , create_postgis_extension),
-                    ("create_db_schema"                 , update_feature_job, db_feature_task_filter, schema_name   , create_schema),
+                    ("create_db_schema"                 , update_feature_job , db_feature_task_filter, schema_name   , create_schema),
+                    ("create_db_schema"                 , update_workspace_job,db_feature_task_filter, schema_name   , create_schema),
                     ("move_outdated_table"              , update_feature_job, db_feature_task_filter, table_name    , move_outdated_table),
                     ("restore_table"                    , update_feature_job, db_feature_task_filter, table_name    , restore_table),
                     ("create_access_view"               , update_feature_job, db_feature_task_filter, table_name    , create_access_view),
