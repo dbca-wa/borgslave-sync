@@ -24,7 +24,7 @@ jobname = lambda task,task_metadata: task_metadata[JOB_DEF_INDEX][JOB_NAME_INDEX
 
 sync_tasks = {
     "prepare": {},
-    "update_auth": {},
+    #"update_auth": {},
     "update_access_rules": {},
     
     "create_postgis_extension": {},
