@@ -139,15 +139,17 @@ empty_gwc_group_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["
 
 #task definition for features
 required_feature_attrs_20160217 = ("name", "schema", "data_schema", "outdated_schema", "workspace", "dump_path","action")
-required_feature_attrs = ("name", "schema", "data_schema", "outdated_schema", "workspace", "data","action")
-valid_feature = lambda l: FEATURE_FILTER(l) and not l["job_file"].endswith(".meta.json") and any(all(key in l for key in feature_attrs) for feature_attrs in [required_feature_attrs,required_feature_attrs_20160217])
+required_feature_attrs_20160318 = ("name", "schema", "data_schema", "outdated_schema", "workspace", "data","action")
+required_feature_attrs = ("meta","action")
+valid_feature = lambda l: FEATURE_FILTER(l) and not l["job_file"].endswith(".meta.json") and any(all(key in l for key in feature_attrs) for feature_attrs in [required_feature_attrs,required_feature_attrs_20160318,required_feature_attrs_20160217])
 
 update_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","publish",json_task,valid_feature)
 remove_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","remove",json_task,valid_feature)
 
 #task definition for feature's metadata
-required_metadata_feature_attrs = ("name","workspace","schema","action")
-valid_metadata_feature_job = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and all(key in l for key in required_metadata_feature_attrs)
+required_metadata_feature_attrs_20160318 = ("name","workspace","schema","action")
+required_metadata_feature_attrs = ("job_id","meta","action")
+valid_metadata_feature_job = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and any(all(key in l for key in feature_attrs) for feature_attrs in [required_metadata_feature_attrs,required_metadata_feature_attrs_20160318])
 
 update_metadata_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","meta",json_task,valid_metadata_feature_job)
 
@@ -188,6 +190,43 @@ def get_task(task_type,task_name):
     except:
         return None
 
+def execute_notify_task(sync_job,task_metadata,task_logger):
+    """
+    execute the notify task, based on tasks_metadata
+    """
+    task_name = taskname(sync_job,task_metadata)
+
+    task_logger.info("Begin to process the task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"]))
+    try:
+        task_metadata[TASK_HANDLER_INDEX](sync_job,task_metadata,task_status)
+        task_logger.info("Succeed to process the task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"]))
+    except:
+        message = traceback.format_exc()
+        task_logger.error("Failed to Process the task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message))
+
+def execute_prepare_task(sync_job,task_metadata,task_logger):
+    """
+    execute the prepare task, based on tasks_metadata
+    """
+    task_name = taskname(sync_job,task_metadata)
+    task_status = sync_job['status'].get_task_status(task_metadata[TASK_TYPE_INDEX])
+
+    task_logger.info("Begin to process the task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"]))
+    sync_job['status'].last_process_time = now()
+    task_status.last_process_time = now()
+    try:
+        task_metadata[TASK_HANDLER_INDEX](sync_job,task_metadata,task_status)
+        if not task_status.get_message("message"):
+            task_status.set_message("message","succeed")
+        task_status.succeed()
+        task_logger.info("Succeed to process the task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"]))
+    except:
+        task_status.failed()
+        sync_job['status'].execute_succeed = False
+        message = traceback.format_exc()
+        task_status.set_message("message",message)
+        task_logger.error("Failed to Process the task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message))
+
 def execute_task(sync_job,task_metadata,task_logger):
     """
     execute the task, based on tasks_metadata
@@ -212,7 +251,7 @@ def execute_task(sync_job,task_metadata,task_logger):
             sync_job['status'].set_task_status(task_metadata[TASK_TYPE_INDEX],SlaveSyncTaskStatus())
         return
 
-    task_logger.info("Begin to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared" if task_status.shared else ""))
+    task_logger.info("Begin to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared " if task_status.shared else ""))
     sync_job['status'].last_process_time = now()
     task_status.last_process_time = now()
     try:
@@ -220,11 +259,11 @@ def execute_task(sync_job,task_metadata,task_logger):
         if not task_status.get_message("message"):
             task_status.set_message("message","succeed")
         task_status.succeed()
-        task_logger.info("Succeed to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared" if task_status.shared else ""))
+        task_logger.info("Succeed to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared " if task_status.shared else ""))
     except:
         task_status.failed()
         sync_job['status'].execute_succeed = False
         message = traceback.format_exc()
         task_status.set_message("message",message)
-        task_logger.error("Failed to Process the {4}task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message,"shared" if task_status.shared else ""))
+        task_logger.error("Failed to Process the {4}task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message,"shared " if task_status.shared else ""))
 

@@ -220,14 +220,15 @@ Synchronize file from repository
            
         else:
             message = self.header_template.render({"task":self._info,"is_succeed":self.is_succeed})
-            for task_type in ordered_sync_task_type:
-                if task_type not in self._info["tasks"]: continue
-                task_status = self._info["tasks"][task_type]
-                if not task_status.run: continue
-                task_index += 1
-                message += os.linesep + (self.task_header_template_2 if task_status.has_message() else self.task_header_template_1 ).render({"task_index":task_index,"task_type":task_type,"task_status":task_status})
-                for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).iteritems():
-                    message += os.linesep +  (self.stage_template_2 if stage_status.has_message() else self.stage_template_1 ).render({"stage_name":stage_name, "stage_status":stage_status})
+            for task_typs in [["load_metadata","prepare"],ordered_sync_task_type]:
+                for task_type in task_types:
+                    if task_type not in self._info["tasks"]: continue
+                    task_status = self._info["tasks"][task_type]
+                    if not task_status.run: continue
+                    task_index += 1
+                    message += os.linesep + (self.task_header_template_2 if task_status.has_message() else self.task_header_template_1 ).render({"task_index":task_index,"task_type":task_type,"task_status":task_status})
+                    for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).iteritems():
+                        message += os.linesep +  (self.stage_template_2 if stage_status.has_message() else self.stage_template_1 ).render({"stage_name":stage_name, "stage_status":stage_status})
            
         return message
 

@@ -134,13 +134,13 @@ for m in notify_modules:
     if hasattr(m,"tasks_metadata"): 
         for task_metadata in m.tasks_metadata:
             if task_metadata[TASK_TYPE_INDEX] != "send_notify": continue
-            notify_tasks_metadata.append(task_metadata)
+            notify_tasks_metadata.append((task_metadata,m.logger if hasattr(m,"logger") else logger))
 
 for m in prepare_modules:
     if hasattr(m,"tasks_metadata"): 
         for task_metadata in m.tasks_metadata:
             if task_metadata[TASK_TYPE_INDEX] != "prepare": continue
-            prepare_tasks_metadata.append(task_metadata)
+            prepare_tasks_metadata.appenda((task_metadata,m.logger if hasattr(m,"logger") else logger))
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -213,12 +213,7 @@ def sync():
 
         #prepare tasks
         for task in prepare_tasks:
-            logger.info("Begin to prepare task ({0}).".format(taskname(task[0],task[1])))
-            try:
-                task[1][TASK_HANDLER_INDEX](*task)
-                logger.info("Succeed to prepare task ({0}).".format(taskname(task[0],task[1])))
-            except:
-                logger.error("Failed to prepare task ({0}). {1}".format(taskname(task[0],task[1]),traceback.format_exc()))
+            execute_prepare_task(*task)
 
         #execute tasks
         for task_type in ordered_sync_task_type:
@@ -245,12 +240,8 @@ def sync():
         SlaveSyncStatus.save_all()
         #send notify
         for task in notify_tasks:
-            logger.info("Begin to send notify for task ({0}).".format(taskname(task[0],task[1])))
-            try:
-                task[1][TASK_HANDLER_INDEX](*task)
-                logger.info("Succeed to send notify for task ({0}).".format(taskname(task[0],task[1])))
-            except:
-                logger.error("Failed to send notify for task ({0}). {1}".format(taskname(task[0],task[1]),traceback.format_exc()))
+            execute_notify_task(*task)
+
         #clear all tasks
         for k in sync_tasks.keys():
             sync_tasks[k].clear()
@@ -397,9 +388,9 @@ def get_tasks(pull_status):
                         sync_job['status'].get_task_status(task_type).set_message("message","Preprocess the file failed. err = {0}".format(message))
                         sync_job['status'].get_task_status(task_type).failed()
                         #this job is failed, try to add a notify task
-                        for notify_metadata in notify_tasks_metadata:
+                        for notify_metadata,notify_logger in notify_tasks_metadata:
                             if is_sync_task(sync_job,segments,action,notify_metadata):
-                                notify_tasks.append((sync_job,notify_metadata))
+                                notify_tasks.append((sync_job,notify_metadata,notify_logger))
                                 break
                         pull_status.get_task_status(file_name).set_message("action",action)
                         pull_status.get_task_status(file_name).set_message("message","Preprocess the file failed. err = {0}".format(message))
@@ -421,15 +412,15 @@ def get_tasks(pull_status):
             if tasks:
                 #this job has some sync tasks to do, 
                 #try to add a prepare task
-                for task_metadata in prepare_tasks_metadata:
+                for task_metadata,task_logger in prepare_tasks_metadata:
                     if is_sync_task(sync_job,segments,action,task_metadata):
-                        prepare_tasks.append((sync_job,task_metadata))
+                        prepare_tasks.append((sync_job,task_metadata,task_logger))
                         break
 
                 #try to add a notify task
-                for task_metadata in notify_tasks_metadata:
+                for task_metadata,task_logger in notify_tasks_metadata:
                     if is_sync_task(sync_job,segments,action,task_metadata):
-                        notify_tasks.append((sync_job,task_metadata))
+                        notify_tasks.append((sync_job,task_metadata,task_logger))
                         break
                 pull_status.get_task_status(file_name).set_message("message","Ready to synchronize")
             else :
