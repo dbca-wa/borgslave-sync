@@ -1,9 +1,10 @@
 import logging
 import os
 import subprocess
+import json
 
 from slave_sync_env import (
-    BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,
+    BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER
 )
 from slave_sync_task import (
@@ -75,6 +76,48 @@ def download_file(remote_path,local_path,task_status,md5=None):
         #check file md5 after downloading
         local_md5_cmd[len(local_md5_cmd) - 1] = local_path
         check_file_md5(local_md5_cmd,md5,task_status)
+
+def load_metafile(sync_job):
+    meta_file = sync_job.get('meta',None)
+    if not meta_file:
+        #no meta file, all meta datas are embeded into the sync_job
+        return
+
+    task_status = sync_job['status'].get_task_status("load_metdata")
+
+    if task_status.is_succeed: 
+        #this task has been executed successfully,
+        #load the json file and add the meta data into sync_job
+        local_meta_file = task_status.get_message("meta_file")
+        with open(local_meta_file,"r") as f:
+            meta_data = json.loads(f.read())
+        sync_job.update(meta_data)
+        sync_job['meta']['local_file'] = local_meta_file
+        return
+
+    logger.info("Begin to load meta data for job({})".format(sync_job['job_file']))
+    #download from borg master
+    temp_file = os.path.join(CACHE_PATH,"job.meta.json")
+    download_file(meta_file["file"],temp_file,task_status,meta_file.get('md5',None))
+    meta_data = None
+    with open(temp_file,"r") as f:
+        meta_data = json.loads(f.read())
+    sync_job.update(meta_data)
+    local_meta_file = os.path.join(CACHE_PATH,"{}.meta.json".format(sync_job["name"]))
+    try:
+        os.remove(local_meta_file)
+    except:
+        #file not exist, ignore
+        pass
+    #rename to meta file
+    os.rename(temp_file,local_meta_file)
+    sync_job['meta']['local_file'] = local_meta_file
+    task_status.set_message("message","Succeed to download meta data from master.")
+    task_status.set_message("meta_file",local_meta_file)
+    task_status.succeed()
+
+def previous(rev):
+    return str(int(hg.log(rev)[0][0])-1)
 
 def load_table_dumpfile(sync_job,task_metadata,task_status):
     data_file = sync_job.get('data',None)

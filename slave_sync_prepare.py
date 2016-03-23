@@ -1,4 +1,6 @@
 import os
+import logging
+import json
 
 from slave_sync_env import (
     CACHE_PATH
@@ -7,9 +9,11 @@ from slave_sync_task import (
     update_feature_job,update_metadata_feature_job,remove_feature_job,
 )
 
+logger = logging.getLogger(__name__)
+
 task_name = lambda task: "{0}:{1}".format(task["workspace"],task["name"])
 
-def prepare_feature(sync_job,task_metadata):
+def prepare_feature(sync_job,task_metadata,task_status):
     #prepare the data file properties
     if "dump_path" in sync_job:
         #old version before 20160217,reform it to current version
@@ -35,8 +39,6 @@ def prepare_feature(sync_job,task_metadata):
                 sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.sld".format(sync_job["name"],name))
     else:
         sync_job['styles'] = {}
-
-
 
 
 tasks_metadata = [

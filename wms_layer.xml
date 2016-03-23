@@ -8,5 +8,8 @@
     {% for a in applications %}
         <string>{{a}}</string>
     {% endfor %}
+    {% for k in keywords %}
+        <string>{{k}}</string>
+    {% endfor %}
     </keywords>
 </wmsLayer>
