@@ -264,13 +264,13 @@ END$$;
 task_name = lambda task: "{0}:{1}".format(task["workspace"],task["name"])
 
 
-def send_update_feature_notify(sync_job,task_metadata,task_status):
+def send_update_feature_notify(sync_job,task_metadata):
     SlaveServerSyncNotify.send_feature_sync_status(sync_job,False)
     
-def send_remove_feature_notify(sync_job,task_metadata,task_status):
+def send_remove_feature_notify(sync_job,task_metadata):
     SlaveServerSyncNotify.send_feature_sync_status(sync_job,True)
     
-def send_job_notify(sync_job,task_metadata,task_status):
+def send_job_notify(sync_job,task_metadata):
     SlaveServerSyncNotify.send_job_sync_status(sync_job,task_metadata)
     
 tasks_metadata = [
