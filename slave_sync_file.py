@@ -83,7 +83,7 @@ def load_metafile(sync_job):
         #no meta file, all meta datas are embeded into the sync_job
         return
 
-    task_status = sync_job['status'].get_task_status("load_metdata")
+    task_status = sync_job['status'].get_task_status("load_metadata")
 
     if task_status.is_succeed: 
         #this task has been executed successfully,
