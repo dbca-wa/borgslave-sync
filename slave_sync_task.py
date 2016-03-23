@@ -195,6 +195,7 @@ def execute_notify_task(sync_job,task_metadata,task_logger):
     execute the notify task, based on tasks_metadata
     """
     task_name = taskname(sync_job,task_metadata)
+    task_status = sync_job['status'].get_task_status(task_metadata[TASK_TYPE_INDEX])
 
     task_logger.info("Begin to process the task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"]))
     try:

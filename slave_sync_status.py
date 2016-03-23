@@ -118,6 +118,8 @@ class SlaveSyncStatus(object):
             return self._info['tasks'][name]
         except:
             self._info['tasks'][name] = SlaveSyncTaskStatus({})
+            #new task, need to run
+            self._info['tasks'][name].run = True
             return self._info['tasks'][name]
 
     def set_task_status(self,name,task_status):
@@ -220,7 +222,7 @@ Synchronize file from repository
            
         else:
             message = self.header_template.render({"task":self._info,"is_succeed":self.is_succeed})
-            for task_typs in [["load_metadata","prepare"],ordered_sync_task_type]:
+            for task_types in [["load_metadata","prepare"],ordered_sync_task_type]:
                 for task_type in task_types:
                     if task_type not in self._info["tasks"]: continue
                     task_status = self._info["tasks"][task_type]
