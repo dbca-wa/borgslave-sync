@@ -123,34 +123,36 @@ def create_feature(sync_job,task_metadata,task_status):
     """
     This is not a critical task. 
     """
-    # try and fetch the layer's CRS from PostGIS
-    getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
-    getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    getcrs_output = getcrs.communicate()
-    if not getcrs_output[0]:
-        crs = GEOSERVER_DEFAULT_CRS
-        message = 'No CRS found for {}.{}, using default of {}'.format(sync_job["schema"], sync_job["name"], crs)
-        task_status.set_message("message",message)
-        logger.info(message)
-    else:
-        srid = getcrs_output[0].decode('utf-8').strip()
-        crs = 'EPSG:{}'.format(srid)
-        if len(srid) == 6 and srid.startswith('90'):
+    crs = sync_job.get("crs",None)
+    if not crs:
+        # try and fetch the layer's CRS from PostGIS
+        getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
+        getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        getcrs_output = getcrs.communicate()
+        if not getcrs_output[0]:
             crs = GEOSERVER_DEFAULT_CRS
-            message = 'Layer {}.{} has the non-standard SRID {}! Check the Borg Collector definition for this input and force a standard CRS if necessary. For now, the layer will be published with default CRS {}'.format(sync_job["schema"], sync_job["name"], srid, crs)
-            logger.warn(message)
+            message = 'No CRS found for {}.{}, using default of {}'.format(sync_job["schema"], sync_job["name"], crs)
             task_status.set_message("message",message)
-        else:
-            message = 'Found CRS for {}.{}: {}'.format(sync_job["schema"], sync_job["name"], crs)
             logger.info(message)
-            task_status.set_message("message",message)
+        else:
+            srid = getcrs_output[0].decode('utf-8').strip()
+            crs = 'EPSG:{}'.format(srid)
+            if len(srid) == 6 and srid.startswith('90'):
+                crs = GEOSERVER_DEFAULT_CRS
+                message = 'Layer {}.{} has the non-standard SRID {}! Check the Borg Collector definition for this input and force a standard CRS if necessary. For now, the layer will be published with default CRS {}'.format(sync_job["schema"], sync_job["name"], srid, crs)
+                logger.warn(message)
+                task_status.set_message("message",message)
+            else:
+                message = 'Found CRS for {}.{}: {}'.format(sync_job["schema"], sync_job["name"], crs)
+                logger.info(message)
+                task_status.set_message("message",message)
 
-    gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,keywords = sync_job.get('applications',None), title=sync_job.get('title', None), abstract=sync_job.get('abstract', None))
+    gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), title=sync_job.get('title', None), abstract=sync_job.get('abstract', None))
     name = task_feature_name(sync_job)
     l_gs = gs.get_layer(name)
     if not l_gs:
         gs.reload()
-        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),GEOSERVER_DEFAULT_CRS,keywords = sync_job.get('applications',None), title=sync_job.get('title', None), abstract=sync_job.get('abstract', None))
+        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),GEOSERVER_DEFAULT_CRS,keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), title=sync_job.get('title', None), abstract=sync_job.get('abstract', None))
         l_gs = gs.get_layer(name)
         if not l_gs:
             raise Exception("Layer({0}) not registering.".format(name))
