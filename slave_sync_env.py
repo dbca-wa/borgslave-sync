@@ -35,7 +35,7 @@ INCLUDE = [f for f in os.environ.get("INCLUDE","").split(",") if f.strip()]
 HG_NODE = os.environ.get("HG_NODE", "0")
 BORG_SSH = os.environ.get("BORG_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")
 CODE_BRANCH = os.environ.get("CODE_BRANCH","default")
-LISTEN_CHANNELS = set([c.strip() for c in os.environ.get("LISTEN_CHANNELS","geoserver").split(",") if c.strip()])
+LISTEN_CHANNELS = set([c.strip() for c in os.environ.get("LISTEN_CHANNELS","kmi").split(",") if c.strip()])
 GEOSERVER_URL = os.environ.get("GEOSERVER_URL", "http://localhost:8080/geoserver")
 GEOSERVER_REST_URL = "/".join([GEOSERVER_URL,"rest/"])
 GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver/data_dir")
