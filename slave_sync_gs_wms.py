@@ -73,8 +73,8 @@ def update_layer(sync_job,task_metadata,task_status):
     """
     update a layer
     """
-    sync_job['applications'] = sync_job['applications'] or []
-    sync_job['keywords'] = sync_job['keywords'] or []
+    sync_job['applications'] = sync_job.get('applications') or []
+    sync_job['keywords'] = sync_job.get('keywords') or []
     res = requests.get(get_layer_url(sync_job['workspace'],sync_job['store'],sync_job['name']), auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD))
     if res.status_code == 200:
         http_method = requests.put
