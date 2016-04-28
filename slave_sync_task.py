@@ -64,7 +64,7 @@ sync_tasks = {
     "get_layer_preview":{},
     "send_layer_preview":{},
 
-    "update_catalogues":{},
+    #"update_catalogues":{},
 
 }
 ordered_sync_task_type = [
@@ -81,7 +81,7 @@ ordered_sync_task_type = [
             "update_gwc","empty_gwc",
             "drop_table",
             "get_layer_preview","send_layer_preview",
-            "update_catalogues",
+            #"update_catalogues",
 ]
 
 #predefined sync_job filters
