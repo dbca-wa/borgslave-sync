@@ -3,6 +3,7 @@ import traceback
 import json
 import socket
 import pytz
+import logging
 from jinja2 import Environment,FileSystemLoader
 from geoserver.catalog import Catalog
 from datetime import datetime
@@ -31,6 +32,11 @@ if not os.path.exists(SYNC_STATUS_PATH):   os.makedirs(SYNC_STATUS_PATH)
 
 
 DEBUG = bool(os.environ.get("DEBUG","false").lower() in ["true","yes","on"])
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+
 INCLUDE = [f for f in os.environ.get("INCLUDE","").split(",") if f.strip()]
 HG_NODE = os.environ.get("HG_NODE", "0")
 BORG_SSH = os.environ.get("BORG_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")

@@ -188,9 +188,9 @@ def parse_job(file_name,action,file_content):
 
 def sync():
     if DEBUG:
-        logger.info("Run in debug mode.")
+        logger.debug("Run in debug mode.")
         if INCLUDE:
-            logger.info("Only the files({}) will be processed.".format(",".join(INCLUDE)))
+            logger.debug("Only the files({}) will be processed.".format(",".join(INCLUDE)))
 	
     try:
         for init_method in module_init_handlers:
@@ -253,36 +253,44 @@ def sync():
 def is_sync_task(sync_job,segments,action,task_metadata):
     if task_metadata[JOB_DEF_INDEX][CHANNEL_SUPPORT_INDEX]:
         if not segments or len(segments) < 2:
+            logger.debug("The job '{1}' is a channel job, but the file '{0}' is not blonging to any channel,ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
             return False
 
         #channel support
         if segments[0] not in LISTEN_CHANNELS:
             #channel not lisened by this slave
+            logger.debug("The job '{1}' is a channel job, but the channel '{2}' of the file '{0}' is not in the channels '{3}' listened by this slave server,ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[0],",".join(LISTEN_CHANNELS)))
             return False
 
         if task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX] and not segments[1] == task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]:
             #check the job folder
+            logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[1],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
             return False
     else:
         #not support channel
         if task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX] and not segments[0] == task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]:
             #check the job folder
+            logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[0],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
             return False
 
     if task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX] and action != task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX]:
         #The action is not equal with the action of this type
+        logger.debug("The action '{3}' of the job '{1}' is not match the action '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],action,task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX]))
         return False
 
     if task_metadata[JOB_DEF_INDEX][IS_JOB_INDEX] and not task_metadata[JOB_DEF_INDEX][IS_JOB_INDEX](segments[len(segments) - 1]):
         #The job file is belonging to this job type
+        logger.debug("The job '{1}' is not a job  for the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
         return False
 
     if task_metadata[JOB_DEF_INDEX][IS_VALID_JOB_INDEX] and not task_metadata[JOB_DEF_INDEX][IS_VALID_JOB_INDEX](sync_job):
         #The job is a invalid job
+        logger.debug("The job '{1}' is a invalid job  for the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
         return False
 
     if task_metadata[TASK_FILTER_INDEX] and not task_metadata[TASK_FILTER_INDEX](sync_job):
         #The task is filtered out.
+        logger.debug("The job '{1}' is a valid job for the file '{0}', but filtered out,ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
         return False
 
     return True
@@ -298,6 +306,8 @@ def get_tasks(pull_status):
             ignore_files += 1
             continue
         tasks = {}
+        
+        logger.debug("Begin to check whether the file '{}' need synchronization or not.".format(file_name))
         try:
             segments = file_name.split('/',2)
             if revision in ['A','M']:
@@ -310,7 +320,7 @@ def get_tasks(pull_status):
                     file_content = hg.cat([file_name],rev=pre_rev)
                 except:
                     #can't get the file content
-                    logger.error("Can't get file content. file = " + file_name)
+                    logger.error("Can't get file '{}' content, ignore." + file_name)
                     pull_status.get_task_status(file_name).set_message("message","Failed to read file content, ignored.")
                     pull_status.get_task_status(file_name).set_message("action",action)
                     pull_status.get_task_status(file_name).succeed()
@@ -325,8 +335,10 @@ def get_tasks(pull_status):
                 pull_status.get_task_status(file_name).set_message("action","None")
                 pull_status.get_task_status(file_name).succeed()
                 pull_status.get_task_status(file_name).last_process_time = now()
+                logger.debug("No action is required fot the file '{}', ignore. ".format(file_name))
                 continue
 
+            logger.debug("The file '{}' is requested to perform '{}' action".format(file_name,action))
             sync_job["status"] = SlaveSyncStatus(file_name,action,file_content)
             #load meta data, if meta data is saved into a separated file
             load_metafile(sync_job)
@@ -352,6 +364,7 @@ def get_tasks(pull_status):
                         #check whether this task is already executed or not
                         if not job_failed and sync_job['status'].get_task_status(task_type).is_succeed:
                             #this task is already succeed, continue
+                            logger.debug("The task '{1}' is already done on the file '{0}',ignore".format(file_name,task_type))
                             break
             
                         #this task is not succeed or executed before, add this task to sync tasks
