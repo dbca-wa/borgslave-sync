@@ -37,6 +37,8 @@ if DEBUG:
 else:
     logging.basicConfig(level=logging.INFO)
 
+ROLLBACK = DEBUG and bool(os.environ.get("ROLLBACK","false").lower() in ["true","yes","on"])
+
 INCLUDE = [f for f in os.environ.get("INCLUDE","").split(",") if f.strip()]
 HG_NODE = os.environ.get("HG_NODE", "0")
 BORG_SSH = os.environ.get("BORG_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")

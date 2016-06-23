@@ -12,17 +12,25 @@ from slave_sync_env import (
 )
 from slave_sync_task import (
     update_feature_job,update_metadata_feature_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
-    update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job
+    update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job,
+    update_livestore_job,update_livelayer_job,remove_livestore_job,remove_livelayer_job
 )
 
 logger = logging.getLogger(__name__)
 
-store_name = lambda sync_job: GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace'])
-
 task_workspace_name = lambda t: t["workspace"]
-task_store_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace']))
 task_feature_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_job['name'])
 task_style_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_job['name'])
+
+def store_name(sync_job):
+    if sync_job["job_type"] == "live_store":
+        return sync_job["name"]
+    elif sync_job["job_type"] == "feature":
+        return GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace'])
+    else:
+        raise Exception("{} not support".format(sync_job["job_type"]))
+
+task_store_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],store_name(sync_job))
 
 def geoserver_style_name(sync_job,style_name):
     if not style_name:
@@ -56,14 +64,31 @@ def create_datastore(sync_job,task_metadata,task_status):
         d_gs = gs.create_datastore(name, sync_job['workspace'])
 
     d_gs.connection_parameters = dict(GEOSERVER_PGSQL_CONNECTION_DEFAULTS)
-    d_gs.connection_parameters.update({
-        "schema": sync_job["schema"],
-        "namespace": GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace']),
-    })
+
+    for k in d_gs.connection_parameters.iterkeys():
+        if k in sync_job:
+            d_gs.connection_parameters[k] = str(sync_job[k])
+
+    d_gs.connection_parameters["namespace"] = GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace'])
+
+    if "geoserver_setting" in sync_job:
+        for k,v in sync_job["geoserver_setting"].iteritems():
+            d_gs.connection_parameters[k] = str(v)
     gs.save(d_gs)
     d_gs = gs.get_store(name)
     if not d_gs:
         raise Exception("Create data store for workspace({0}) in geoserver failed.".format(sync_job['workspace']))
+
+def delete_datastore(sync_job,task_metadata,task_status):
+    name = store_name(sync_job)
+    try:
+        d_gs = gs.get_store(name)
+    except:
+        #datastore not exist
+        return
+
+    gs.delete(d_gs)
+
 
 def delete_feature(sync_job,task_metadata,task_status):
     feature_name = "{}:{}".format(sync_job['workspace'], sync_job['name'])
@@ -124,7 +149,7 @@ def create_feature(sync_job,task_metadata,task_status):
     This is not a critical task. 
     """
     crs = sync_job.get("crs",None)
-    if not crs:
+    if not crs and "datasource" not in sync_job:
         # try and fetch the layer's CRS from PostGIS
         getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
         getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
@@ -250,10 +275,14 @@ def create_workspace(sync_job,task_metadata,task_status):
         w_gs = gs.create_workspace(sync_job['workspace'], GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace']))
 
 tasks_metadata = [
+                    ("create_datastore", update_livestore_job, gs_feature_task_filter      , task_store_name  , create_datastore),
                     ("create_datastore", update_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
                     ("create_datastore", update_metadata_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
 
+                    ("delete_datastore", remove_livestore_job, gs_feature_task_filter      , task_store_name  , delete_datastore),
+
                     ("delete_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
+                    ("delete_feature"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , remove_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
 
@@ -266,6 +295,7 @@ tasks_metadata = [
                     ("update_access_rules", update_access_rules_job, None, "update_access_rules", update_access_rules),
 
                     ("create_workspace"   , update_wmsstore_job    , gs_task_filter         , task_workspace_name  , create_workspace),
+                    ("create_workspace"   , update_livestore_job   , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_layergroup_job  , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_metadata_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),

@@ -167,7 +167,7 @@ WHERE a.id = b.slave_server_id
                     sql_template = """
 DO 
 $$BEGIN
-    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN monitor_publishsyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.publish='{2}') THEN
+    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN {0}.monitor_publishsyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.publish='{2}') THEN
         UPDATE {0}.monitor_publishsyncstatus AS b SET deploied_job_id='{3}', deploied_job_batch_id='{4}', deploy_message='{5}',deploy_time= {6}, sync_job_id = null, sync_job_batch_id = null, sync_time = null, sync_message = null,preview_file={7},spatial_type='{8}'
         FROM {0}.monitor_slaveserver AS a
         WHERE b.slave_server_id = a.id AND a.name='{1}' AND b.publish='{2}';
@@ -184,7 +184,7 @@ END$$;
                 sql_template = """
 DO 
 $$BEGIN
-    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN monitor_publishsyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.publish='{2}') THEN
+    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN {0}.monitor_publishsyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.publish='{2}') THEN
         UPDATE {0}.monitor_publishsyncstatus AS b SET sync_job_id='{3}', sync_job_batch_id='{4}', sync_message='{5}',sync_time= {6},spatial_type='{8}'
         FROM {0}.monitor_slaveserver AS a
         WHERE b.slave_server_id = a.id AND a.name='{1}' AND b.publish='{2}';
@@ -232,7 +232,7 @@ END$$;
             sql_template = """
 DO 
 $$BEGIN
-    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN monitor_tasksyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}') THEN
+    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN {0}.monitor_tasksyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}') THEN
         UPDATE {0}.monitor_tasksyncstatus AS b SET action='{4}', sync_succeed={5}, sync_message='{6}',sync_time= {7}
         FROM {0}.monitor_slaveserver AS a
         WHERE b.slave_server_id = a.id AND a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}';

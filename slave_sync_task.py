@@ -39,6 +39,7 @@ sync_tasks = {
     "load_gs_stylefile": {},
     "create_workspace": {},
     "create_datastore": {},
+    "delete_datastore": {},
     "delete_feature": {},
     "delete_style": {},
     "create_feature":{},
@@ -74,6 +75,7 @@ ordered_sync_task_type = [
             "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","create_access_view","drop_outdated_table",
             "create_workspace",
             "delete_feature",
+            "delete_datastore",
             "create_datastore",
             "update_wmsstore","update_wmslayer","update_layergroup","remove_layergroup","remove_wmslayer","remove_wmsstore",
             "geoserver_reload",
@@ -97,7 +99,7 @@ db_feature_task_filter = lambda sync_job: not SKIP_DB and sync_job.get("sync_pos
 
 #task definition for update access rules
 valid_rules = lambda sync_job: not SKIP_RULES
-update_access_rules_job = ("access rules","geoserver access rules",True,None,"publish",lambda file_name: file_name == "layers.properties",valid_rules)
+update_access_rules_job = ("access_rules","geoserver access rules",True,None,"publish",lambda file_name: file_name == "layers.properties",valid_rules)
 
 #task definition for update auth
 valid_auth = lambda sync_job: not SKIP_AUTH
@@ -120,10 +122,28 @@ required_layer_remove_attrs = ("meta","action")
 required_layer_remove_attrs_20160330 = ("name", "workspace", "store","action")
 valid_layer_remove = lambda l: WMS_FILTER(l) and any(all(key in l for key in layer_attrs) for layer_attrs in [required_layer_remove_attrs,required_layer_remove_attrs_20160330])
 
-update_wmsstore_job = ("wms store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","publish",json_task,valid_store)
-update_wmslayer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","publish",json_task,valid_layer)
-remove_wmslayer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","remove",json_task,valid_layer_remove)
-remove_wmsstore_job = ("wms store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","remove",json_task,valid_store_remove)
+update_wmsstore_job = ("wms_store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","publish",json_task,valid_store)
+update_wmslayer_job = ("wms_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","publish",json_task,valid_layer)
+remove_wmslayer_job = ("wms_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","remove",json_task,valid_layer_remove)
+remove_wmsstore_job = ("wms_store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_stores","remove",json_task,valid_store_remove)
+
+#task definition for live datasource and live layers
+required_store_attrs = ("meta","action")
+valid_store = lambda l: FEATURE_FILTER(l) and any(all(key in l for key in store_attrs) for store_attrs in [required_store_attrs])
+
+required_store_remove_attrs = ("meta","action")
+valid_store_remove = lambda l: FEATURE_FILTER(l) and any(all(key in l for key in store_attrs) for store_attrs in [required_store_remove_attrs])
+
+required_layer_attrs = ("meta","action")
+valid_layer = lambda l: FEATURE_FILTER(l) and any(all(key in l for key in layer_attrs) for layer_attrs in [required_layer_attrs])
+
+required_layer_remove_attrs = ("meta","action")
+valid_layer_remove = lambda l: FEATURE_FILTER(l) and any(all(key in l for key in layer_attrs) for layer_attrs in [required_layer_remove_attrs])
+
+update_livestore_job = ("live_store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"live_stores","publish",json_task,valid_store)
+update_livelayer_job = ("live_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"live_layers","publish",json_task,valid_layer)
+remove_livelayer_job = ("live_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"live_layers","remove",json_task,valid_layer_remove)
+remove_livestore_job = ("live_store",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"live_stores","remove",json_task,valid_store_remove)
 
 #task definition for layergroup
 required_group_attrs = ("name", "workspace","title","abstract","srs","layers","action")
@@ -140,7 +160,7 @@ valid_empty_gwc_layer = lambda l: WMS_FILTER(l) and all(key in l for key in requ
 required_empty_gwc_group_attrs = ("name", "workspace","action")
 valid_empty_gwc_group = lambda l: LAYERGROUP_FILTER(l) and all(key in l for key in required_empty_gwc_group_attrs)
 
-empty_gwc_layer_job = ("wms layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","empty_gwc",json_task,valid_empty_gwc_layer)
+empty_gwc_layer_job = ("wms_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","empty_gwc",json_task,valid_empty_gwc_layer)
 empty_gwc_group_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layergroups","empty_gwc",json_task,valid_empty_gwc_group)
 
 #task definition for features
