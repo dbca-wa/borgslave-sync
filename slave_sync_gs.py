@@ -25,6 +25,8 @@ task_style_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_j
 def store_name(sync_job):
     if sync_job["job_type"] == "live_store":
         return sync_job["name"]
+    elif sync_job["job_type"] == "live_layer":
+        return sync_job["datastore"]
     elif sync_job["job_type"] == "feature":
         return GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace'])
     else:
@@ -172,12 +174,22 @@ def create_feature(sync_job,task_metadata,task_status):
                 logger.info(message)
                 task_status.set_message("message",message)
 
-    gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), title=sync_job.get('title', None), abstract=sync_job.get('abstract', None))
+    gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
+        keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
+        title=sync_job.get('title', None), 
+        abstract=sync_job.get('abstract', None),
+        nativeName=sync_job.get('table',None)
+    )
     name = task_feature_name(sync_job)
     l_gs = gs.get_layer(name)
     if not l_gs:
         gs.reload()
-        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),GEOSERVER_DEFAULT_CRS,keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), title=sync_job.get('title', None), abstract=sync_job.get('abstract', None))
+        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),GEOSERVER_DEFAULT_CRS,
+            keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
+            title=sync_job.get('title', None), 
+            abstract=sync_job.get('abstract', None),
+            nativeName=sync_job.get('table',None)
+        )
         l_gs = gs.get_layer(name)
         if not l_gs:
             raise Exception("Layer({0}) not registering.".format(name))
@@ -285,10 +297,13 @@ tasks_metadata = [
                     ("delete_feature"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , remove_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
+                    ("delete_feature"  , remove_livelayer_job, gs_feature_task_filter      , task_feature_name, delete_feature),
 
+                    ("create_feature"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, create_feature),
                     ("create_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
                     ("create_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
 
+                    ("create_style"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, create_style),
                     ("create_style"    , update_feature_job, gs_style_task_filter, task_style_name  , create_style),
                     ("create_style"    , update_metadata_feature_job, gs_style_task_filter, task_style_name  , create_style),
 

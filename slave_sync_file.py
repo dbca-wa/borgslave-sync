@@ -103,7 +103,10 @@ def load_metafile(sync_job):
     with open(temp_file,"r") as f:
         meta_data = json.loads(f.read())
     sync_job.update(meta_data)
-    local_meta_file = os.path.join(CACHE_PATH,"{}.meta.json".format(sync_job["name"]))
+    if "workspace" in sync_job:
+        local_meta_file = os.path.join(CACHE_PATH,"{}.{}.meta.json".format(sync_job["workspace"],sync_job["name"]))
+    else:
+        local_meta_file = os.path.join(CACHE_PATH,"{}.meta.json".format(sync_job["name"]))
     try:
         os.remove(local_meta_file)
     except:
