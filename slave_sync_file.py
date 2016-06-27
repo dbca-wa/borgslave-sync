@@ -9,13 +9,12 @@ from slave_sync_env import (
 )
 from slave_sync_task import (
     update_feature_job,update_metadata_feature_job,db_feature_task_filter,
-    gs_style_task_filter,gs_spatial_task_filter
+    gs_style_task_filter,gs_spatial_task_filter,layer_preview_task_filter,
+    update_livelayer_job
 )
 
 logger = logging.getLogger(__name__)
 
-
-send_layer_preview_task_filter = lambda sync_job: gs_spatial_task_filter(sync_job) and sync_job.get("preview_path")
 
 task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"])
 
@@ -171,15 +170,15 @@ def upload_file(local_file,remote_path,task_status):
         raise Exception("{0}:{1}".format(rsync.returncode,task_status.get_message("message")))
 
 def send_layer_preview(sync_job,task_metadata,task_status):
-    local_file = os.path.join(PREVIEW_ROOT_PATH,".",SLAVE_NAME,sync_job["channel"],sync_job["workspace"],sync_job["name"] + ".png")
+    local_file = os.path.join(PREVIEW_ROOT_PATH,".",sync_job["status"].get_task_status("get_layer_preview").get_message("preview_file"))
     upload_file(local_file,sync_job["preview_path"],task_status)
-
-    sync_job["preview_file"] = os.path.join(SLAVE_NAME,sync_job["channel"],sync_job["workspace"],sync_job["name"] + ".png")
+    task_status.set_message("message","Upload file {} to {}".format(local_file,sync_job["preview_path"]))
 
 
 tasks_metadata = [
                     ("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
                     ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("load_gs_stylefile"  , update_metadata_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
-                    ("send_layer_preview"  , update_feature_job, send_layer_preview_task_filter, task_name, send_layer_preview),
+                    ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
+                    ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
 ]

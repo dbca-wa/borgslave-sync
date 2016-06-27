@@ -12,7 +12,8 @@ from slave_sync_task import (
     update_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_wmsstore_job,
     update_layergroup_job,remove_layergroup_job,
     JOB_DEF_INDEX,JOB_TYPE_INDEX,jobname,
-    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job,update_workspace_job
+    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job,update_workspace_job,
+    update_livelayer_job,remove_livelayer_job,empty_gwc_livelayer_job,
 )
 from slave_sync_env import (
     CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,now
@@ -198,7 +199,11 @@ $$BEGIN
 END$$;
 """
 
-            sql = sql_template.format(MASTER_PGSQL_SCHEMA, SLAVE_NAME,task['name'], task["job_id"], task["job_batch_id"], sync_message, "'{0}'".format(sync_time) if sync_time else 'null',"'{0}'".format(task['preview_file']) if task.get('preview_file',None) else "null",task.get('spatial_type',''))
+            
+            preview_file = task["status"].get_task_status("get_layer_preview").get_message("preview_file") or None
+            preview_file = "'{}'".format(preview_file) if preview_file else "null"
+
+            sql = sql_template.format(MASTER_PGSQL_SCHEMA, SLAVE_NAME,task['name'], task["job_id"], task["job_batch_id"], sync_message, "'{0}'".format(sync_time) if sync_time else 'null',preview_file,task.get('spatial_type',''))
 
             #logger.info("Feature sync status notify: \r\n" + sql)
             sql_cmd[len(sql_cmd) - 1] = sql
@@ -232,20 +237,23 @@ END$$;
             sql_template = """
 DO 
 $$BEGIN
-    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN {0}.monitor_tasksyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}') THEN
-        UPDATE {0}.monitor_tasksyncstatus AS b SET action='{4}', sync_succeed={5}, sync_message='{6}',sync_time= {7}
+    IF EXISTS (SELECT 1 FROM {0}.monitor_slaveserver a JOIN {0}.monitor_tasksyncstatus b ON a.id=b.slave_server_id WHERE a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}' AND b.action='{4}') THEN
+        UPDATE {0}.monitor_tasksyncstatus AS b SET sync_succeed={5}, sync_message='{6}',sync_time= {7},preview_file={8}
         FROM {0}.monitor_slaveserver AS a
-        WHERE b.slave_server_id = a.id AND a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}';
+        WHERE b.slave_server_id = a.id AND a.name='{1}' AND b.task_type='{2}' AND b.task_name='{3}' AND b.action='{4}';
     ELSE
         INSERT INTO {0}.monitor_tasksyncstatus
-            (slave_server_id,task_type,task_name,action,sync_succeed,sync_message,sync_time) 
-        SELECT id,'{2}','{3}','{4}',{5},'{6}',{7}
+            (slave_server_id,task_type,task_name,action,sync_succeed,sync_message,sync_time,preview_file) 
+        SELECT id,'{2}','{3}','{4}',{5},'{6}',{7},{8}
         FROM {0}.monitor_slaveserver
         WHERE name = '{1}';
     END IF;
 END$$;
 """
-            sql = sql_template.format(MASTER_PGSQL_SCHEMA, SLAVE_NAME,task_type,task_name,action,sync_succeed, sync_message, "'{0}'".format(sync_time) if sync_time else 'null')
+            preview_file = task["status"].get_task_status("get_layer_preview").get_message("preview_file") or None
+            preview_file = "'{}'".format(preview_file) if preview_file else "null"
+
+            sql = sql_template.format(MASTER_PGSQL_SCHEMA, SLAVE_NAME,task_type,task_name,action,sync_succeed, sync_message, "'{0}'".format(sync_time) if sync_time else 'null',preview_file)
 
             #logger.info("Notify: \r\n" + sql)
 
@@ -294,5 +302,9 @@ tasks_metadata = [
                     ("send_notify", remove_layergroup_job, None, task_name, send_job_notify),
 
                     ("send_notify", update_workspace_job, None, lambda task: task["schema"], send_job_notify),
+
+                    ("send_notify", update_livelayer_job,None, task_name, send_job_notify),
+                    ("send_notify", remove_livelayer_job, None, task_name, send_job_notify),
+                    ("send_notify", empty_gwc_livelayer_job, None, task_name, send_job_notify),
 ]
 

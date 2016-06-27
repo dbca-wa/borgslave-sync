@@ -93,6 +93,8 @@ gs_spatial_task_filter = lambda sync_job: not SKIP_GS and sync_job.get("sync_geo
 gs_feature_task_filter = lambda sync_job: not SKIP_GS and sync_job.get("sync_geoserver_data",True)
 gs_style_task_filter = lambda sync_job : not SKIP_GS and sync_job.get("sync_geoserver_data",True) and any((key in sync_job) for key in ["styles","style_path"])
 
+layer_preview_task_filter = lambda sync_job: gs_spatial_task_filter(sync_job) and sync_job.get("preview_path")
+
 db_task_filter = lambda sync_job: not SKIP_DB
 db_feature_task_filter = lambda sync_job: not SKIP_DB and sync_job.get("sync_postgres_data",True)
 
@@ -162,6 +164,7 @@ valid_empty_gwc_group = lambda l: LAYERGROUP_FILTER(l) and all(key in l for key 
 
 empty_gwc_layer_job = ("wms_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"wms_layers","empty_gwc",json_task,valid_empty_gwc_layer)
 empty_gwc_group_job = ("layergroup",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layergroups","empty_gwc",json_task,valid_empty_gwc_group)
+empty_gwc_livelayer_job = ("live_layer",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"live_layers","empty_gwc",json_task,valid_empty_gwc_layer)
 
 #task definition for features
 required_feature_attrs_20160217 = ("job_id","name", "schema", "data_schema", "outdated_schema", "workspace", "dump_path","action")
