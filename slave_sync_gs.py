@@ -173,7 +173,6 @@ def create_feature(sync_job,task_metadata,task_status):
                 message = 'Found CRS for {}.{}: {}'.format(sync_job["schema"], sync_job["name"], crs)
                 logger.info(message)
                 task_status.set_message("message",message)
-    import ipdb;ipdb.set_trace()
     gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
         keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
         title=sync_job.get('title', None), 
