@@ -11,7 +11,7 @@ from slave_sync_env import (
 )
 
 from slave_sync_task import (
-    update_feature_job,gs_spatial_task_filter
+    update_feature_job,gs_spatial_task_filter,update_livelayer_job,layer_preview_task_filter
 )
 
 logger = logging.getLogger(__name__)
@@ -32,10 +32,38 @@ task_layer_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_j
 
 base_preview_url = GEOSERVER_URL + "/ows?service=wms&version=1.1.0&request=GetMap&srs=EPSG%3A4326&format=image/png"
 
+def layer_preview_url(sync_job):
+    ows_resource = None
+    preview_height = None
+    height = None
+
+    if "ows_resource" in sync_job:
+        for resource in sync_job["ows_resource"]:
+            if resource["protocol"] == "OGC:WMS" and resource["link"]:
+                height = int(resource["height"] or "0")
+                if height == 256:
+                    ows_resource = resource
+                    break
+                elif (preview_height is None
+                    or (height < 256 and height > preview_height)
+                    or (height > 256 and height < preview_height)
+                ):
+                    ows_resource = resource
+                    preview_height = height
+    if ows_resource:
+        if ows_resource["format"] == "image/jpeg":
+            return (ows_resource["link"],".jpg")
+        else:
+            return (ows_resource["link"],".{}".format(ows_resource["format"][6:]))
+    else:
+        bbox = sync_job.get("bbox") or australia_bbox
+        dimension = get_preview_dimension(bbox)
+        preview_url = base_preview_url  + "&bbox=" + ",".join([str(d) for d in bbox]) + "&layers=" + "%3A".join([sync_job["workspace"],sync_job['name']]) + "&width=" + str(dimension[0]) + "&height=" + str(dimension[1])
+    
+        return (preview_url,".png")
+
 def get_layer_preview(sync_job,task_metadata,task_status):
-    bbox = sync_job.get("bbox") or australia_bbox
-    dimension = get_preview_dimension(bbox)
-    url = base_preview_url  + "&bbox=" + ",".join([str(d) for d in bbox]) + "&layers=" + "%3A".join([sync_job["workspace"],sync_job['name']]) + "&width=" + str(dimension[0]) + "&height=" + str(dimension[1])
+    url,file_ext = layer_preview_url(sync_job)
 
     logger.info("Try to get layer preview image, url = " + url)
     resp = requests.get(url, auth=(GEOSERVER_USERNAME,GEOSERVER_PASSWORD))
@@ -46,16 +74,19 @@ def get_layer_preview(sync_job,task_metadata,task_status):
     try:
         folder = os.path.join(PREVIEW_ROOT_PATH,SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
         if not os.path.exists(folder):   os.makedirs(folder)
-        filename = os.path.join(folder,sync_job["name"] + ".png")
+        filename = os.path.join(folder,sync_job["name"] + file_ext)
 
         with open(filename, 'wb') as fd:
             for chunk in resp.iter_content(1024):
                 fd.write(chunk)
+
+        task_status.set_message("preview_file",filename[len(PREVIEW_ROOT_PATH) + 1:])
     except:
         raise Exception("Get layer's preview image failed. {0}".format(resp.content))
 
 
 tasks_metadata = [
-                    ("get_layer_preview", update_feature_job, gs_spatial_task_filter      , task_layer_name  , get_layer_preview),
+                    ("get_layer_preview", update_feature_job, layer_preview_task_filter      , task_layer_name  , get_layer_preview),
+                    ("get_layer_preview", update_livelayer_job, layer_preview_task_filter      , task_layer_name  , get_layer_preview),
 ]
 

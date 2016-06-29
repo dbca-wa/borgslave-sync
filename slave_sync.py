@@ -56,14 +56,14 @@ import sys
 import hglib
 
 from slave_sync_env import (
-    PATH,HG_NODE,LISTEN_CHANNELS,
+    PATH,HG_NODE,LISTEN_CHANNELS,ROLLBACK,
     STATE_PATH,now,DEBUG,INCLUDE
 )
 from slave_sync_status import SlaveSyncStatus
 
 from slave_sync_task import (
     sync_tasks,ordered_sync_task_type,
-    TASK_TYPE_INDEX,JOB_DEF_INDEX,TASK_FILTER_INDEX,TASK_NAME_INDEX,TASK_HANDLER_INDEX,CHANNEL_SUPPORT_INDEX,JOB_FOLDER_INDEX,JOB_ACTION_INDEX,IS_JOB_INDEX,IS_VALID_JOB_INDEX,
+    TASK_TYPE_INDEX,JOB_DEF_INDEX,TASK_FILTER_INDEX,TASK_NAME_INDEX,TASK_HANDLER_INDEX,CHANNEL_SUPPORT_INDEX,JOB_FOLDER_INDEX,JOB_ACTION_INDEX,IS_JOB_INDEX,IS_VALID_JOB_INDEX,JOB_TYPE_INDEX,
     execute_task,taskname,execute_notify_task,execute_prepare_task
 
 )
@@ -234,7 +234,8 @@ def sync():
 
         if ignore_files:
             raise Exception("{} files are ignored in debug mode,rollback!".format(ignore_files))
-        #raise Exception("Rollback for testing")
+        if ROLLBACK:
+            raise Exception("Rollback for testing")
         return
     finally:
         #save notify status 
@@ -293,6 +294,7 @@ def is_sync_task(sync_job,segments,action,task_metadata):
         logger.debug("The job '{1}' is a valid job for the file '{0}', but filtered out,ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
         return False
 
+    sync_job["job_type"] = task_metadata[JOB_DEF_INDEX][JOB_TYPE_INDEX]
     return True
                     
 
