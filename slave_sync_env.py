@@ -25,6 +25,8 @@ if not os.path.exists(PUBLISH_PATH):   os.makedirs(PUBLISH_PATH)
 os.chmod(PUBLISH_PATH,0755)
 
 PREVIEW_ROOT_PATH = os.path.join(PATH, "previews")
+PREVIEW_ROOT_PATH = PREVIEW_ROOT_PATH[0:-1] if PREVIEW_ROOT_PATH[-1:] == "/" else PREVIEW_ROOT_PATH
+
 if not os.path.exists(PREVIEW_ROOT_PATH):   os.makedirs(PREVIEW_ROOT_PATH)
 
 SYNC_STATUS_PATH = os.path.join(PATH,'.sync_status') 
@@ -36,6 +38,8 @@ if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.INFO)
+
+ROLLBACK = DEBUG and bool(os.environ.get("ROLLBACK","false").lower() in ["true","yes","on"])
 
 INCLUDE = [f for f in os.environ.get("INCLUDE","").split(",") if f.strip()]
 HG_NODE = os.environ.get("HG_NODE", "0")
