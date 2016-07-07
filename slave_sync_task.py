@@ -32,6 +32,7 @@ sync_tasks = {
     "load_table_dumpfile": {},
     "move_outdated_table": {},
     "restore_table": {},
+    "restore_foreignkey": {},
     "create_access_view": {},
     "drop_outdated_table": {},
     "drop_table": {},
@@ -72,7 +73,7 @@ ordered_sync_task_type = [
             #"update_auth",
             "update_access_rules",
             "load_table_dumpfile","load_gs_stylefile",
-            "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","create_access_view","drop_outdated_table",
+            "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","restore_foreignkey","create_access_view","drop_outdated_table",
             "create_workspace",
             "delete_feature",
             "delete_datastore",
@@ -97,6 +98,8 @@ layer_preview_task_filter = lambda sync_job: gs_spatial_task_filter(sync_job) an
 
 db_task_filter = lambda sync_job: not SKIP_DB
 db_feature_task_filter = lambda sync_job: not SKIP_DB and sync_job.get("sync_postgres_data",True)
+#no need to manage foreighkey for kmi channel
+foreignkey_task_filter = lambda sync_job: db_feature_task_filter(sync_job) and sync_job["channel"] != "kmi"
 
 
 #task definition for update access rules

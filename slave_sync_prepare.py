@@ -30,7 +30,7 @@ def prepare_feature(sync_job,task_metadata,task_status):
         #the version before 20160217, reform it to current version
         sync_job['styles'] = {'builtin':{'file':sync_job["style_path"],'md5':sync_job.get("style_md5",None)}}
 
-    if 'styles' in sync_job:
+    if 'styles' in sync_job and sync_job["styles"]:
         #have styles. populate the local cached file
         for name in sync_job['styles'].keys():
             if name == "builtin":
