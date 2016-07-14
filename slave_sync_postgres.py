@@ -9,7 +9,7 @@ from slave_sync_env import (
     env
 )
 from slave_sync_task import (
-    update_auth_job,update_feature_job,db_feature_task_filter,remove_feature_job,update_workspace_job
+    update_auth_job,update_feature_job,db_feature_task_filter,foreignkey_task_filter,remove_feature_job,update_workspace_job
 )
 
 logger = logging.getLogger(__name__)
@@ -185,6 +185,69 @@ def restore_table(sync_job,task_metadata,task_status):
     if restore.returncode != 0 or restore_output[1].find("ERROR") >= 0:
         raise Exception("{0}:{1}".format(restore.returncode,task_status.get_message("message")))
 
+def restore_foreignkey(sync_job,task_metadata,task_status):
+    psql_cmd[len(psql_cmd) - 2] = "-c"
+    psql_cmd[len(psql_cmd) -1] = """
+DO 
+$$DECLARE
+    foreign_key record;   
+    create_index varchar(512);
+BEGIN
+    FOR foreign_key IN SELECT e.nspname AS schema,d.relname AS table, c.conname AS name,
+                        (SELECT string_agg(a1.attname,',') 
+                         FROM pg_attribute a1 JOIN pg_class b1 ON a1.attrelid = b1.oid JOIN pg_namespace c1 ON b1.relnamespace = c1.oid 
+                         WHERE c1.nspname=e.nspname and b1.relname= d.relname and a1.attnum =any(c.conkey)
+                        ) AS keys,
+                        (SELECT string_agg(b1.attname,',') 
+                         FROM pg_attribute b1 
+                         WHERE b1.attrelid = a.oid and b1.attnum =any(c.confkey)
+                        ) AS referenced_keys,
+                        CASE c.confupdtype 
+                            WHEN 'a' THEN  'NO ACTION'
+                            WHEN 'r' THEN  'RESTRICT'
+                            WHEN 'c' THEN  'CASCADE'
+                            WHEN 'n' THEN  'SET NULL'
+                            WHEN 'd' THEN  'SET DEFAULT'
+                        END AS update_type, 
+                        CASE c.confdeltype
+                            WHEN 'a' THEN  'NO ACTION'
+                            WHEN 'r' THEN  'RESTRICT'
+                            WHEN 'c' THEN  'CASCADE'
+                            WHEN 'n' THEN  'SET NULL'
+                            WHEN 'd' THEN  'SET DEFAULT'
+                        END AS del_type, 
+                        CASE c.confmatchtype
+                            WHEN 'f' THEN  'MATCH FULL'
+                            WHEN 'p' THEN  'MATCH PARTIAL'
+                            WHEN 'u' THEN  'MATCH SIMPLE'
+                            ELSE ''
+                        END AS match_type
+                       FROM pg_class a 
+                            JOIN pg_namespace b ON a.relnamespace = b.oid 
+                            JOIN pg_constraint c ON c.confrelid = a.oid 
+                            JOIN pg_class d ON c.conrelid = d.oid 
+                            JOIN pg_namespace e ON d.relnamespace = e.oid 
+                       WHERE b.nspname='{2}' AND a.relname='{1}' AND c.contype='f'
+    LOOP
+        EXECUTE 'ALTER TABLE "' || foreign_key.schema || '"."' || foreign_key.table || '" DROP CONSTRAINT "' || foreign_key.name || '";';
+        create_index := 'ALTER TABLE "' || foreign_key.schema || '"."' || foreign_key.table || '" ADD CONSTRAINT "' || foreign_key.name 
+                || '" FOREIGN KEY (' || foreign_key.keys || ') REFERENCES {0}.{1}(' || foreign_key.referenced_keys || ') ' 
+                || foreign_key.match_type  || ' ON DELETE ' || foreign_key.del_type || ' ON UPDATE ' || foreign_key.update_type || ';';
+
+        EXECUTE create_index;
+        RAISE NOTICE '%',create_index;
+    END LOOP;
+END$$;
+""".format(sync_job["data_schema"],sync_job["name"],sync_job["outdated_schema"])
+    logger.info("Executing {}...".format(repr(psql_cmd)))
+    psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    psql_output = psql.communicate()
+    if psql_output[1] and psql_output[1].strip():
+        logger.info("stderr: {}".format(psql_output[1]))
+        task_status.set_message("message",psql_output[1])
+
+    if psql.returncode != 0 or psql_output[1].find("ERROR") >= 0:
+        raise Exception("{0}:{1}".format(psql.returncode,task_status.get_message("message")))
 
 def create_access_view(sync_job,task_metadata,task_status):
     #create a view to access the new layer data.
@@ -236,6 +299,7 @@ tasks_metadata = [
                     ("create_db_schema"                 , update_workspace_job,db_feature_task_filter, schema_name   , create_schema),
                     ("move_outdated_table"              , update_feature_job, db_feature_task_filter, table_name    , move_outdated_table),
                     ("restore_table"                    , update_feature_job, db_feature_task_filter, table_name    , restore_table),
+                    ("restore_foreignkey"               , update_feature_job, foreignkey_task_filter, table_name    , restore_foreignkey),
                     ("create_access_view"               , update_feature_job, db_feature_task_filter, table_name    , create_access_view),
                     ("drop_outdated_table"              , update_feature_job, db_feature_task_filter, table_name    , drop_outdated_table),
                     ("drop_table"                       , remove_feature_job, db_feature_task_filter, table_name    , drop_table),
