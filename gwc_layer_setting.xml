@@ -9,6 +9,7 @@
     <string>application/json;type=geojson</string>
     <string>application/json;type=topojson</string>
     <string>application/x-protobuf;type=mapbox-vector</string>
+    <string>application/json;type=utfgrid</string>
     {% endif %}
   </mimeFormats>
   <gridSubsets>
