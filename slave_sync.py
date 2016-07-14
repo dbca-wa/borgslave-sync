@@ -312,6 +312,7 @@ def get_tasks(pull_status):
         tasks = {}
         
         logger.debug("Begin to check whether the file '{}' need synchronization or not.".format(file_name))
+        action = ""
         try:
             segments = file_name.split('/',2)
             if revision in ['A','M']:
@@ -451,7 +452,7 @@ def get_tasks(pull_status):
             message = traceback.format_exc()
             pull_status.get_task_status(file_name).set_message("message",message)
             pull_status.get_task_status(file_name).last_process_time = now()
-            logger.error("Add the tasks for ({0}) failed.{1}".format(file_name,traceback.format_exc()))
+            logger.error("Add the '{1}' task for ({0}) failed.{2}".format(file_name,action,traceback.format_exc()))
 
 if __name__ == "__main__":
     sync()

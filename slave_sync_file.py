@@ -97,7 +97,17 @@ def load_metafile(sync_job):
     logger.info("Begin to load meta data for job({})".format(sync_job['job_file']))
     #download from borg master
     temp_file = os.path.join(CACHE_PATH,"job.meta.json")
-    download_file(meta_file["file"],temp_file,task_status,meta_file.get('md5',None))
+    if sync_job['action'] == "remove":
+        #for remove action, doesn't check md5 because of the following case. 
+        # 1. Publish an layer to repository
+        # 2. Slave pull from the repository and then publish the layer, at this time, the md5 of the layer's metadata file is 'A'
+        # 3. Publish the layer again, and now, the md5 of the layer's metadata file is 'B',
+        # 4. Remove the layer from repository.
+        # 5. Slave pull from the repository, only the last version will be fetched, and intermediate versions are ignored. so the publish action in step 3 is invisible for slave cient.
+        # 6. Slave client try to fetch the meta file from master and compare the md5 , and found: file's md5 is 'B', but md5 data in repository is 'A', doesn't match.
+        download_file(meta_file["file"],temp_file,task_status,None)
+    else:
+        download_file(meta_file["file"],temp_file,task_status,meta_file.get('md5',None))
     meta_data = None
     with open(temp_file,"r") as f:
         meta_data = json.loads(f.read())
