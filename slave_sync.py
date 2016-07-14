@@ -262,6 +262,7 @@ def is_sync_task(sync_job,segments,action,task_metadata):
             #channel not lisened by this slave
             logger.debug("The job '{1}' is a channel job, but the channel '{2}' of the file '{0}' is not in the channels '{3}' listened by this slave server,ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[0],",".join(LISTEN_CHANNELS)))
             return False
+        sync_job["channel"] = segments[0]
 
         if task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX] and not segments[1] == task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]:
             #check the job folder
@@ -273,6 +274,7 @@ def is_sync_task(sync_job,segments,action,task_metadata):
             #check the job folder
             logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[0],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
             return False
+        sync_job["channel"] = None
 
     if task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX] and action != task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX]:
         #The action is not equal with the action of this type
