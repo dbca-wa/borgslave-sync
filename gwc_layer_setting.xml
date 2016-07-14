@@ -5,6 +5,11 @@
   <mimeFormats>
     <string>image/png</string>
     <string>image/jpeg</string>
+    {% if service_type == "WFS" %}
+    <string>application/json;type=geojson</string>
+    <string>application/json;type=topojson</string>
+    <string>application/x-protobuf;type=mapbox-vector</string>
+    {% endif %}
   </mimeFormats>
   <gridSubsets>
     <gridSubset>
