@@ -188,6 +188,7 @@ def send_layer_preview(sync_job,task_metadata,task_status):
 tasks_metadata = [
                     ("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
                     ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                    ("load_gs_stylefile"  , update_livelayer_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("load_gs_stylefile"  , update_metadata_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
                     ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
