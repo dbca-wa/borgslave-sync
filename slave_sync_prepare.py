@@ -6,7 +6,7 @@ from slave_sync_env import (
     CACHE_PATH
 )
 from slave_sync_task import (
-    update_feature_job,update_metadata_feature_job,remove_feature_job,
+    update_feature_job,update_metadata_feature_job,remove_feature_job,update_livelayer_job,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ def prepare_feature(sync_job,task_metadata,task_status):
 
     if 'data' in sync_job:
         #have data file. populate the local cached file
-        sync_job['data']['local_file'] = os.path.join(CACHE_PATH, "{}.tar".format(sync_job["name"]))
+        sync_job['data']['local_file'] = os.path.join(CACHE_PATH, "{}.{}.tar".format(sync_job["workspace"],sync_job["name"]))
     else:
         sync_job['data'] = {}
 
@@ -34,9 +34,9 @@ def prepare_feature(sync_job,task_metadata,task_status):
         #have styles. populate the local cached file
         for name in sync_job['styles'].keys():
             if name == "builtin":
-                sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.sld".format(sync_job["name"]))
+                sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.sld".format(sync_job["workspace"],sync_job["name"]))
             else:
-                sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.sld".format(sync_job["name"],name))
+                sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.{}.sld".format(sync_job["workspace"],sync_job["name"],name))
     else:
         sync_job['styles'] = {}
 
@@ -45,4 +45,5 @@ tasks_metadata = [
                     ("prepare", update_feature_job, None, task_name, prepare_feature),
                     ("prepare", remove_feature_job, None, task_name, prepare_feature),
                     ("prepare", update_metadata_feature_job   , None, task_name, prepare_feature),
+                    ("prepare", update_livelayer_job   , None, task_name, prepare_feature),
 ]

@@ -51,10 +51,13 @@ def layer_preview_url(sync_job):
                     ows_resource = resource
                     preview_height = height
     if ows_resource:
+        link = ows_resource["link"]
+        #replace the kmi url with local url
+        link = GEOSERVER_URL + link[link.find("/geoserver") + len("/geoserver"):]
         if ows_resource["format"] == "image/jpeg":
-            return (ows_resource["link"],".jpg")
+            return (link,".jpg")
         else:
-            return (ows_resource["link"],".{}".format(ows_resource["format"][6:]))
+            return (link,".{}".format(ows_resource["format"][6:]))
     else:
         bbox = sync_job.get("bbox") or australia_bbox
         dimension = get_preview_dimension(bbox)
