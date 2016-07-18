@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import re
 
 from slave_sync_env import (
     CACHE_PATH
@@ -12,6 +13,8 @@ from slave_sync_task import (
 logger = logging.getLogger(__name__)
 
 task_name = lambda task: "{0}:{1}".format(task["workspace"],task["name"])
+
+keyword_re = re.compile("\,|;")
 
 def prepare_feature(sync_job,task_metadata,task_status):
     #prepare the data file properties
@@ -39,6 +42,10 @@ def prepare_feature(sync_job,task_metadata,task_status):
                 sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.{}.sld".format(sync_job["workspace"],sync_job["name"],name))
     else:
         sync_job['styles'] = {}
+
+    #transform the keywords froms string to list
+    if "keywords" in sync_job and isinstance(sync_job["keywords"],basestring):
+        sync_job["keywords"] = [k.strip() for k in keyword_re.split(sync_job["keywords"]) if k.strip()]
 
 
 tasks_metadata = [
