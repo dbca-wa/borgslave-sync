@@ -13,7 +13,7 @@ from slave_sync_task import (
     update_layergroup_job,remove_layergroup_job,
     JOB_DEF_INDEX,JOB_TYPE_INDEX,jobname,
     empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_feature_job,update_workspace_job,
-    update_livelayer_job,remove_livelayer_job,empty_gwc_livelayer_job,
+    update_livelayer_job,remove_livelayer_job,empty_gwc_livelayer_job,update_livestore_job,remove_livestore_job,
 )
 from slave_sync_env import (
     CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,now
@@ -305,6 +305,8 @@ tasks_metadata = [
 
                     ("send_notify", update_livelayer_job,None, task_name, send_job_notify),
                     ("send_notify", remove_livelayer_job, None, task_name, send_job_notify),
+                    ("send_notify", update_livestore_job, None, task_name, send_job_notify),
+                    ("send_notify", remove_livestore_job, None, task_name, send_job_notify),
                     ("send_notify", empty_gwc_livelayer_job, None, task_name, send_job_notify),
 ]
 
