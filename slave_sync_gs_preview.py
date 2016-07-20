@@ -40,7 +40,7 @@ def layer_preview_url(sync_job):
     if "ows_resource" in sync_job:
         for resource in sync_job["ows_resource"]:
             if resource["protocol"] == "OGC:WMS" and resource["link"]:
-                height = int(resource["height"] or "0")
+                height = int(resource.get("height") or "0")
                 if height == 256:
                     ows_resource = resource
                     break
