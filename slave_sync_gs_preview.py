@@ -73,7 +73,13 @@ def get_layer_preview(sync_job,task_metadata,task_status):
     if resp.status_code >= 400:
         raise Exception("Get layer's preview image failed. ({0}: {1})".format(resp.status_code, resp.content))
     elif resp.headers['Content-Type'] != "image/png":
-        raise Exception(resp.text)
+        if resp.text.find("This request used more time than allowed") >= 0:
+            #timeout when try to get preview image
+            task_status.task_failed()
+            task_status.del_message("preview_file")
+            task_status.set_message("message",resp.text)
+        else:
+            raise Exception(resp.text)
     try:
         folder = os.path.join(PREVIEW_ROOT_PATH,SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
         if not os.path.exists(folder):   os.makedirs(folder)

@@ -5,7 +5,8 @@ import json
 
 from slave_sync_env import (
     BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
-    PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER
+    PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER,
+    now
 )
 from slave_sync_task import (
     update_feature_job,update_metadata_feature_job,db_feature_task_filter,
@@ -83,6 +84,7 @@ def load_metafile(sync_job):
         return
 
     task_status = sync_job['status'].get_task_status("load_metadata")
+    task_status.last_process_time = now()
 
     if task_status.is_succeed: 
         #this task has been executed successfully,
@@ -180,9 +182,13 @@ def upload_file(local_file,remote_path,task_status):
         raise Exception("{0}:{1}".format(rsync.returncode,task_status.get_message("message")))
 
 def send_layer_preview(sync_job,task_metadata,task_status):
-    local_file = os.path.join(PREVIEW_ROOT_PATH,".",sync_job["status"].get_task_status("get_layer_preview").get_message("preview_file"))
-    upload_file(local_file,sync_job["preview_path"],task_status)
-    task_status.set_message("message","Upload file {} to {}".format(local_file,sync_job["preview_path"]))
+    if sync_job["status"].get_task_status("get_layer_preview").get_message("preview_file"):
+        local_file = os.path.join(PREVIEW_ROOT_PATH,".",sync_job["status"].get_task_status("get_layer_preview").get_message("preview_file"))
+        upload_file(local_file,sync_job["preview_path"],task_status)
+        task_status.set_message("message","Upload file {} to {}".format(local_file,sync_job["preview_path"]))
+    else:
+        task_status.task_failed()
+        task_status.set_message("message","Uploading preview image file is ignored because preview image has not been generated for some reason.")
 
 
 tasks_metadata = [
