@@ -254,7 +254,6 @@ def execute_prepare_task(sync_job,task_metadata,task_logger):
         task_logger.info("Succeed to process the task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"]))
     except:
         task_status.failed()
-        sync_job['status'].execute_succeed = False
         message = traceback.format_exc()
         task_status.set_message("message",message)
         task_logger.error("Failed to Process the task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message))
@@ -270,12 +269,7 @@ def execute_task(sync_job,task_metadata,task_logger):
         #this task has been executed successfully
         return
 
-    if task_status.is_processed:
-        #this task is already processed, maybe triggered by other tasks
-        sync_job['status'].execute_succeed = False
-        return
-
-    if not sync_job['status'].execute_succeed:
+    if sync_job['status'].is_failed:
         #some proceding task are failed,so can't execute this task
         if task_status.shared:
             #this task is shared, but this task can't executed for this job, change the task's status object to a private status object
@@ -294,7 +288,6 @@ def execute_task(sync_job,task_metadata,task_logger):
         task_logger.info("Succeed to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared " if task_status.shared else ""))
     except:
         task_status.failed()
-        sync_job['status'].execute_succeed = False
         message = traceback.format_exc()
         task_status.set_message("message",message)
         task_logger.error("Failed to Process the {4}task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message,"shared " if task_status.shared else ""))
