@@ -48,7 +48,6 @@ class SlaveSyncStatus(object):
             #file content is not null, worked in persistent mode
             self._status_file = os.path.join(SYNC_STATUS_PATH,sync_file)
             self._info = None
-            self._new = False
             if os.path.isfile(self._status_file):
                 #load the status file
                 with open(self._status_file,'r') as f:
@@ -71,7 +70,6 @@ class SlaveSyncStatus(object):
                 self._info = {"file":sync_file}
                 self._info['md5'] = md5_hash
                 self._info['action'] = action
-                self._new = True
 
             self._persistent = True
         else:
@@ -79,14 +77,13 @@ class SlaveSyncStatus(object):
             self._persistent = False
             self._info = {'action':action}
             self._info = {'file':sync_file}
-            self._new = True
 
-        if self._info.get('tasks') is None:
-            self._info['tasks'] = {}
-        for name,t in self._info.get("tasks").items():
-            self._info['tasks'][name] = SlaveSyncTaskStatus(t)
+        if "tasks" in self._info:
+            self._previous_task_status = self._info.pop("tasks")
+        else:
+            self._previous_task_status = {}
 
-        self._execute_succeed = True
+        self._info['tasks'] = {}
 
         SlaveSyncStatus._status_objects.append(self)
 
@@ -95,31 +92,17 @@ class SlaveSyncStatus(object):
         return s._info["file"]
 
     @property
-    def is_new(self):
-        return self._new
-
-    @property
     def tasks(self):
         try:
             return len(self._info['tasks'])
         except:
             return 0
 
-    @property
-    def execute_succeed(self):
-        return self._execute_succeed
-        
-    @execute_succeed.setter
-    def execute_succeed(self,value):
-        self._execute_succeed = bool(value)
-
     def get_task_status(self,name):
         try:
             return self._info['tasks'][name]
         except:
-            self._info['tasks'][name] = SlaveSyncTaskStatus({})
-            #new task, need to run
-            self._info['tasks'][name].run = True
+            self._info['tasks'][name] = SlaveSyncTaskStatus(self._previous_task_status.get(name,{}))
             return self._info['tasks'][name]
 
     def set_task_status(self,name,task_status):
@@ -131,11 +114,15 @@ class SlaveSyncStatus(object):
 
     @property
     def is_succeed(self):
-        return all([s.is_succeed for s in self._info.get("tasks",{}).values() if s.run])
+        return all([s.is_succeed for s in self._info.get("tasks",{}).itervalues()])
+
+    @property
+    def is_failed(self):
+        return any([s.is_failed for s in self._info.get("tasks",{}).itervalues()])
 
     @property
     def is_not_succeed(self):
-        return any([s.is_not_succeed  for s in self._info.get("tasks",{}).values() if s.run])
+        return any([s.is_not_succeed  for s in self._info.get("tasks",{}).itervalues()])
         
     @staticmethod
     def all_succeed():
@@ -183,12 +170,12 @@ Synchronize file from repository
 
     task_header_template_1  = Template("""
     Task {{task_index}} : {{task_type}}
-        Succeed : {{task_status.status}}
+        Succeed : {{task_status.task_status}}
         Process Time : {{task_status.last_process_time}}
 """)
     task_header_template_2  = Template("""
     Task {{task_index}} : {{task_type}}
-        Succeed : {{task_status.status}}
+        Succeed : {{task_status.task_status}}
         Process Time : {{task_status.last_process_time}}
         {% for key,value in task_status["messages"].iteritems() -%}
         {{key|capitalize}} : {{value}}
@@ -226,7 +213,6 @@ Synchronize file from repository
                 for task_type in task_types:
                     if task_type not in self._info["tasks"]: continue
                     task_status = self._info["tasks"][task_type]
-                    if not task_status.run: continue
                     task_index += 1
                     message += os.linesep + (self.task_header_template_2 if task_status.has_message() else self.task_header_template_1 ).render({"task_index":task_index,"task_type":task_type,"task_status":task_status})
                     for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).iteritems():
@@ -259,7 +245,6 @@ class SlaveSyncTaskStatus(dict):
     status object for a task.
     """
     _modified = False
-    _run = False
     def __init__(self,task_status={}):
         super(SlaveSyncTaskStatus,self).__init__(task_status)
 
@@ -269,20 +254,25 @@ class SlaveSyncTaskStatus(dict):
                 del self["stages"][s]
 
         #if no succeed stages and current task  is not succeed, clear all task status data.
-        if not self.get("stages") and self.is_not_succeed:
-            self.clear()
+        if self.is_not_succeed: 
+            #current task  is not succeed.
+            if not self.get("stages"):
+                #no stages, clear all status data
+                self.clear()
+            else:
+                #clear status and messages
+                [self.pop(k) for k in ["status","messages"] if k in self]
                 
         #init a messages dictionary object
         if "messages" not in self :
             self["messages"] = {}
 
     @property
-    def run(self):
-        return self._run
-        
-    @run.setter
-    def run(self,value):
-        self._run = bool(value)
+    def task_status(self):
+        return self["task_status"] if "task_status" in self else self.get("status",False)
+
+    def task_failed(self):
+        self["task_status"] = False
 
     @property
     def is_processed(self):
@@ -294,6 +284,13 @@ class SlaveSyncTaskStatus(dict):
         Return true, if the file is processed successfully; otherwise return False
         """
         return self.get('status',False)
+
+    @property
+    def is_failed(self):
+        """
+        Return true, if the file is processed failed; otherwise return False
+        """
+        return self.get('status',None) == False
 
     @property
     def is_not_succeed(self):

@@ -363,9 +363,6 @@ def get_tasks(pull_status):
                         if task_metadata[JOB_DEF_INDEX][CHANNEL_SUPPORT_INDEX]:
                             sync_job["channel"] = segments[0]
                     
-                        #This task meets all the conditions and is required to run
-                        sync_job['status'].get_task_status(task_type).run = True
-
                         #check whether this task is already executed or not
                         if not job_failed and sync_job['status'].get_task_status(task_type).is_succeed:
                             #this task is already succeed, continue
@@ -402,7 +399,6 @@ def get_tasks(pull_status):
                         message = traceback.format_exc()
                         logger.error(message)
                         tasks.clear()
-                        sync_job['status'].get_task_status(task_type).run = True
                         sync_job['status'].get_task_status(task_type).set_message("message","Preprocess the file failed. err = {0}".format(message))
                         sync_job['status'].get_task_status(task_type).failed()
                         #this job is failed, try to add a notify task
