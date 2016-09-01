@@ -1,5 +1,6 @@
 import logging
 import traceback
+import requests
 import subprocess
 import os
 
@@ -8,7 +9,7 @@ from slave_sync_env import (
     GEOSERVER_DATASTORE_NAMESPACE,GEOSERVER_PGSQL_CONNECTION_DEFAULTS,GEOSERVER_WORKSPACE_NAMESPACE,GEOSERVER_DEFAULT_CRS,GEOSERVER_DATA_DIR,
     GEOSERVER_PGSQL_HOST, GEOSERVER_PGSQL_PORT, GEOSERVER_PGSQL_DATABASE, GEOSERVER_PGSQL_USERNAME,
     CACHE_PATH,
-    gs,env
+    gs,env,GEOSERVER_REST_URL
 )
 from slave_sync_task import (
     update_feature_job,update_metadata_feature_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
@@ -92,6 +93,11 @@ def delete_datastore(sync_job,task_metadata,task_status):
     gs.delete(d_gs)
 
 
+class Feature(object):
+    def __init__(self,layer,href):
+        self.layer = layer
+        self.href = href
+
 def delete_feature(sync_job,task_metadata,task_status):
     feature_name = "{}:{}".format(sync_job['workspace'], sync_job['name'])
     l_gs = gs.get_layer(feature_name)
@@ -122,8 +128,12 @@ def delete_feature(sync_job,task_metadata,task_status):
 
     #delete the feature
     if l_gs:
-        #delete feature
+        #delete layer
         gs.delete(l_gs)
+        #delete feature
+        url = GEOSERVER_REST_URL + "workspaces/" + sync_job['workspace'] + "/datastores/" +  store_name(sync_job) + "/featuretypes/" + sync_job['name'] + ".xml"
+        gs.delete(Feature(l_gs,url))
+
 
     #delete the styles
     for style in styles.itervalues():
@@ -182,16 +192,7 @@ def create_feature(sync_job,task_metadata,task_status):
     name = task_feature_name(sync_job)
     l_gs = gs.get_layer(name)
     if not l_gs:
-        gs.reload()
-        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),GEOSERVER_DEFAULT_CRS,
-            keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
-            title=sync_job.get('title', None), 
-            abstract=sync_job.get('abstract', None),
-            nativeName=sync_job.get('table',None)
-        )
-        l_gs = gs.get_layer(name)
-        if not l_gs:
-            raise Exception("Layer({0}) not registering.".format(name))
+        raise Exception("Layer({0}) not registering.".format(name))
 
 def create_style(sync_job,task_metadata,task_status):
     """
@@ -315,7 +316,5 @@ tasks_metadata = [
                     ("create_workspace"   , update_metadata_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
 
                     ("geoserver_reload"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
-                    ("geoserver_reload"   , update_feature_job     , gs_feature_task_filter , "reload_geoserver"   , reload_geoserver),
-                    ("geoserver_reload"   , update_metadata_feature_job     , gs_feature_task_filter , "reload_geoserver"   , reload_geoserver),
 ]
 
