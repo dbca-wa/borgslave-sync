@@ -11,7 +11,7 @@ from slave_sync_env import (
 from slave_sync_task import (
     update_feature_job,update_metadata_feature_job,db_feature_task_filter,
     gs_style_task_filter,gs_spatial_task_filter,layer_preview_task_filter,
-    update_livelayer_job
+    update_livelayer_job,update_wmslayer_job
 )
 
 logger = logging.getLogger(__name__)
@@ -198,4 +198,5 @@ tasks_metadata = [
                     ("load_gs_stylefile"  , update_metadata_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
                     ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
+                    ("send_layer_preview"  , update_wmslayer_job, layer_preview_task_filter, task_name, send_layer_preview),
 ]
