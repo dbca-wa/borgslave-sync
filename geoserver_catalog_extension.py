@@ -44,6 +44,8 @@ def publish_featuretype(self, name, store, native_crs, srs=None,keywords=None,ti
             ["workspaces", store.workspace.name, "datastores", store.name, "featuretypes.json"], params)
     
     headers, response = self.http.request(resource_url, "POST", feature_type.message(), headers)
+    if int(headers['status']) >= 400:
+        raise Exception("publish feature failed.\nresponse headers:{}\nreason:{}".format(headers,response))
     feature_type.fetch()
     return feature_type
 
