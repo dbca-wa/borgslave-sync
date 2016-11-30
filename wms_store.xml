@@ -1,12 +1,12 @@
 <wmsStore>
-    <name>{{name}}</name>
+    <name>{{name|escape}}</name>
     <enabled>true</enabled>
-    <capabilitiesURL><![CDATA[{{capability_url}}]]></capabilitiesURL>
-    <workspace>{{workspace}}</workspace>
+    <capabilitiesURL>{{capability_url|escape}}</capabilitiesURL>
+    <workspace>{{workspace|escape}}</workspace>
     {% if username  %}
-    <user>{{username}}</user>
+    <user>{{username|escape}}</user>
     {% if password %}
-    <password>{{password}}</password>
+    <password>{{password|escape}}</password>
     {% endif %}
     {% endif %}
     {% if geoserver_setting.get("max_connections",-1) != -1 %}

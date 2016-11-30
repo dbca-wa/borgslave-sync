@@ -1,15 +1,15 @@
 <wmsLayer>
-    <name>{{name}}</name>
-    {% if native_name %}<nativeName>{{native_name}}</nativeName>{% endif %}
-    {% if title %}<title>{{title}}</title>{% endif %}
-    {% if abstract %}<abstract>{{abstract}}</abstract>{% endif %}
+    <name>{{name|escape}}</name>
+    {% if native_name %}<nativeName>{{native_name|escape}}</nativeName>{% endif %}
+    {% if title %}<title>{{title|escape}}</title>{% endif %}
+    {% if abstract %}<abstract>{{abstract|escape}}</abstract>{% endif %}
     <enabled>true</enabled>
     <keywords>
     {% for a in applications %}
-        <string>{{a}}</string>
+        <string>{{a|escape}}</string>
     {% endfor %}
     {% for k in keywords %}
-        <string>{{k}}</string>
+        <string>{{k|escape}}</string>
     {% endfor %}
     </keywords>
 </wmsLayer>
