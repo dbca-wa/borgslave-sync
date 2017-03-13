@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GeoServerLayer>
   <enabled>true</enabled>
-  <name>{{workspace}}:{{name}}</name>
+  <name>{{workspace|escape}}:{{name|escape}}</name>
   <mimeFormats>
     <string>image/png</string>
     <string>image/jpeg</string>
@@ -32,5 +32,5 @@
     <int>1</int>
     <int>1</int>
   </metaWidthHeight>
-  <gutter>0</gutter>
+  <gutter>100</gutter>
 </GeoServerLayer>

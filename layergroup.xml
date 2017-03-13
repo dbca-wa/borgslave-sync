@@ -1,25 +1,25 @@
 <layerGroup>
-    <name>{{name}}</name>
+    <name>{{name|escape}}</name>
     <mode>SINGLE</mode>
-    <title>{{title}}</title>
-    <abstractTxt>{{abstract}}</abstractTxt>
+    <title>{{title|escape}}</title>
+    <abstractTxt>{{abstract|escape}}</abstractTxt>
     <workspace>
-        <name>{{workspace}}</name>
+        <name>{{workspace|escape}}</name>
     </workspace>
     <publishables>
     {% for l in layers %}
     {% if l.get("type","") == "wms_layer" %}
         <published type="layer">
-            <name>{{l.name}}</name>
+            <name>{{l.name|escape}}</name>
         </published>
     {% elif l.get("type","") == "group" %}
         <published type="layerGroup">
-            <name>{{l.name}}</name>
+            <name>{{l.name|escape}}</name>
         </published>
     {% endif %}
     {% endfor %}
     </publishables>
     <!--bounds>
-        <crs>{{srs}}</crs>
+        <crs>{{srs|escape}}</crs>
     </bounds-->
 </layerGroup>
