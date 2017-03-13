@@ -200,7 +200,6 @@ def create_style(sync_job,task_metadata,task_status):
     """
     default_style = None
     created_styles = []
-    failed_messages = []
     style_name = None
     messages = []
     default_style_name = geoserver_style_name(sync_job,sync_job.get('default_style',None))
@@ -226,8 +225,8 @@ def create_style(sync_job,task_metadata,task_status):
 
         except:
             message = traceback.format_exc()
-            logger.error("Create style failed ({}) failed. {}".format(task_style_name(sync_job),message))
-            failed_messages.append("Failed to create style {}. {}".format(style_name,message))
+            logger.error("Create style({}) failed ({}) failed. {}".format(style_name,task_style_name(sync_job),message))
+            messages.append("Failed to create style ({}). {}".format(style_name,message))
     
     if not default_style and created_styles :
         #default style is not set, set the default style to the first created styles.
@@ -240,8 +239,7 @@ def create_style(sync_job,task_metadata,task_status):
         else:
             messages.append("Succeed to create style ({}).".format(default_style.name))
     
-    #try to set feature's styles
-    if default_style:
+        #try to set feature's styles
         try:
             feature = get_feature(sync_job)
             feature.default_style = default_style
@@ -255,13 +253,12 @@ def create_style(sync_job,task_metadata,task_status):
         except:
             message = traceback.format_exc()
             logger.error("Failed to set default style({}) and alternative styles ({}).{}".format(default_style.name, ", ".join([s.name for s in created_styles]),message))
-            failed_messages.append("Failed to set default style ({}) and alternative styles ({}). {}".format(default_style.name, ", ".join([s.name for s in created_styles]),message))
+            messages.append("Failed to set default style ({}) and alternative styles ({}). {}".format(default_style.name, ", ".join([s.name for s in created_styles]),message))
+    else:
+        messages.append("No styles are reauired to create")
 
     #set messages
-    if default_style:
-        task_status.set_message("message",os.linesep.join(messages + failed_messages))
-    else:
-        task_status.set_message("message","No style are required to create.")
+    task_status.set_message("message",os.linesep.join(messages))
 
 def update_access_rules(sync_job,task_metadata,task_status):
     with open(os.path.join(GEOSERVER_DATA_DIR,"security","layers.properties"),"wb") as access_file:
