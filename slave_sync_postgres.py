@@ -179,7 +179,7 @@ def restore_table(sync_job,task_metadata,task_status):
     elif os.path.splitext(sync_job["data"]["local_file"])[1].lower() == ".tar":
         restore_cmd[len(restore_cmd) - 2] = 't'
     else:
-        raise Exception("Unknown dumped file format({})".format(os.path.split(sync_job["data"]["local_file"])[1])
+        raise Exception("Unknown dumped file format({})".format(os.path.split(sync_job["data"]["local_file"])[1]))
     restore_cmd[len(restore_cmd) - 1] = sync_job["data"]["local_file"]
     logger.info("Executing {}...".format(repr(restore_cmd)))
     restore = subprocess.Popen(restore_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
