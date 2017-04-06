@@ -11,7 +11,7 @@ import xmltodict
 
 
 from slave_sync_task import (
-    update_feature_job,update_metadata_feature_job,gs_feature_task_filter,remove_feature_job,
+    update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,
     update_wmslayer_job,remove_wmslayer_job,gs_task_filter
 )
 from slave_sync_env import (GEOSERVER_URL)
@@ -106,7 +106,7 @@ def update_static_catalogues(task,task_metadata,task_status):
 
 tasks_metadata = [
                     ("update_catalogues", update_feature_job, gs_feature_task_filter, "update_catalogues"  , update_static_catalogues),
-                    ("update_catalogues", update_metadata_feature_job, gs_feature_task_filter, "update_catalogues"  , update_static_catalogues),
+                    ("update_catalogues", update_feature_metadata_job, gs_feature_task_filter, "update_catalogues"  , update_static_catalogues),
                     ("update_catalogues", remove_feature_job, gs_feature_task_filter, "update_catalogues"  , update_static_catalogues),
                     ("update_catalogues", update_wmslayer_job, gs_task_filter        , "update_catalogues"  , update_static_catalogues),
                     ("update_catalogues", remove_wmslayer_job, gs_task_filter        , "update_catalogues"  , update_static_catalogues),
