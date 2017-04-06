@@ -2,6 +2,7 @@ import logging
 import os
 import tempfile
 import subprocess
+import traceback
 
 from slave_sync_env import (
     GEOSERVER_PGSQL_HOST,GEOSERVER_PGSQL_PORT,GEOSERVER_PGSQL_DATABASE,GEOSERVER_PGSQL_USERNAME,
@@ -11,6 +12,7 @@ from slave_sync_env import (
 from slave_sync_task import (
     update_auth_job,update_feature_job,db_feature_task_filter,foreignkey_task_filter,remove_feature_job,update_workspace_job
 )
+from slave_sync_file import delete_table_dumpfile,load_table_dumpfile
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +175,17 @@ END$$;
 
 restore_cmd = ["pg_restore", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p" , GEOSERVER_PGSQL_PORT , "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME,"-O","-x","--no-tablespaces","-F",None,None]
 def restore_table(sync_job,task_metadata,task_status):
+    if task_status.is_stage_not_succeed('load_table_dumpfile'):
+        try:
+            load_table_dumpfile(sync_job)
+            task_status.stage_succeed('load_table_dumpfile')
+        except:
+            message = traceback.format_exc()
+            task_status.set_stage_message("load_table_dumpfile","message",message)
+            task_status.stage_failed('load_table_dumpfile')
+            logger.error(message)
+            raise Exception("Failed to download table dump file.")
+
     # load PostgreSQL dump into db with pg_restore
     if os.path.splitext(sync_job["data"]["local_file"])[1].lower() == ".db":
         restore_cmd[len(restore_cmd) - 2] = 'c'
@@ -180,6 +193,7 @@ def restore_table(sync_job,task_metadata,task_status):
         restore_cmd[len(restore_cmd) - 2] = 't'
     else:
         raise Exception("Unknown dumped file format({})".format(os.path.split(sync_job["data"]["local_file"])[1]))
+
     restore_cmd[len(restore_cmd) - 1] = sync_job["data"]["local_file"]
     logger.info("Executing {}...".format(repr(restore_cmd)))
     restore = subprocess.Popen(restore_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
@@ -190,6 +204,18 @@ def restore_table(sync_job,task_metadata,task_status):
 
     if restore.returncode != 0 or restore_output[1].find("ERROR") >= 0:
         raise Exception("{0}:{1}".format(restore.returncode,task_status.get_message("message")))
+
+    if task_status.is_stage_not_succeed('delete_table_dumpfile'):
+        try:
+            delete_table_dumpfile(sync_job)
+            task_status.stage_succeed('delete_table_dumpfile')
+        except:
+            message = traceback.format_exc()
+            task_status.set_stage_message("delete_table_dumpfile","message",message)
+            task_status.stage_failed('delete_table_dumpfile')
+            logger.error(message)
+            return
+
 
 def restore_foreignkey(sync_job,task_metadata,task_status):
     psql_cmd[len(psql_cmd) - 2] = "-c"

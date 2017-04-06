@@ -12,7 +12,7 @@ from slave_sync_env import (
     gs,env,GEOSERVER_REST_URL
 )
 from slave_sync_task import (
-    update_feature_job,update_metadata_feature_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
+    update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
     update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job,
     update_livestore_job,update_livelayer_job,remove_livestore_job,remove_livelayer_job
 )
@@ -62,11 +62,12 @@ def get_feature(sync_job):
 def create_datastore(sync_job,task_metadata,task_status):
     name = store_name(sync_job)
     try:
-        d_gs = gs.get_store(name)
+        d_gs = gs.get_store(name,sync_job['workspace'])
     except:
         d_gs = gs.create_datastore(name, sync_job['workspace'])
 
     d_gs.connection_parameters = dict(GEOSERVER_PGSQL_CONNECTION_DEFAULTS)
+    d_gs.enabled = True
 
     for k in d_gs.connection_parameters.iterkeys():
         if k in sync_job:
@@ -75,8 +76,9 @@ def create_datastore(sync_job,task_metadata,task_status):
     d_gs.connection_parameters["namespace"] = GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace'])
 
     if "geoserver_setting" in sync_job:
-        for k,v in sync_job["geoserver_setting"].iteritems():
-            d_gs.connection_parameters[k] = str(v)
+        for k in d_gs.connection_parameters.iterkeys():
+            if k in sync_job["geoserver_setting"]:
+                d_gs.connection_parameters[k] = str(sync_job["geoserver_setting"][k])
     gs.save(d_gs)
     d_gs = gs.get_store(name)
     if not d_gs:
@@ -286,23 +288,23 @@ def create_workspace(sync_job,task_metadata,task_status):
 tasks_metadata = [
                     ("create_datastore", update_livestore_job, gs_feature_task_filter      , task_store_name  , create_datastore),
                     ("create_datastore", update_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
-                    ("create_datastore", update_metadata_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
+                    ("create_datastore", update_feature_metadata_job, gs_feature_task_filter      , task_store_name  , create_datastore),
 
                     ("delete_datastore", remove_livestore_job, gs_feature_task_filter      , task_store_name  , delete_datastore),
 
                     ("delete_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, delete_feature),
-                    ("delete_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
+                    ("delete_feature"  , update_feature_metadata_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , remove_feature_job, gs_feature_task_filter      , task_feature_name, delete_feature),
                     ("delete_feature"  , remove_livelayer_job, gs_feature_task_filter      , task_feature_name, delete_feature),
 
                     ("create_feature"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, create_feature),
                     ("create_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
-                    ("create_feature"  , update_metadata_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
+                    ("create_feature"  , update_feature_metadata_job, gs_feature_task_filter      , task_feature_name, create_feature),
 
                     ("create_style"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, create_style),
                     ("create_style"    , update_feature_job, gs_style_task_filter, task_style_name  , create_style),
-                    ("create_style"    , update_metadata_feature_job, gs_style_task_filter, task_style_name  , create_style),
+                    ("create_style"    , update_feature_metadata_job, gs_style_task_filter, task_style_name  , create_style),
 
                     ("update_access_rules", update_access_rules_job, None, "update_access_rules", update_access_rules),
 
@@ -310,7 +312,7 @@ tasks_metadata = [
                     ("create_workspace"   , update_livestore_job   , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_layergroup_job  , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
-                    ("create_workspace"   , update_metadata_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
+                    ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
 
                     ("geoserver_reload"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
 ]

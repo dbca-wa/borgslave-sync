@@ -198,8 +198,10 @@ def sync():
 
         pull_status = SlaveSyncStatus.get_bitbucket_status()
         get_tasks(pull_status)
-        slave_sync_notify.SlaveServerSyncNotify.send_last_sync_time(pull_status)
-
+        try:
+            slave_sync_notify.SlaveServerSyncNotify.send_last_sync_time(pull_status)
+        except:
+            pass
         logger.info("HG_NODE: {}".format(HG_NODE))
         for task_type in ordered_sync_task_type:
             for task_name,task in sync_tasks[task_type].iteritems():    

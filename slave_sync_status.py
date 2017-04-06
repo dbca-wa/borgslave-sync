@@ -216,7 +216,7 @@ Synchronize file from repository
                     task_index += 1
                     message += os.linesep + (self.task_header_template_2 if task_status.has_message() else self.task_header_template_1 ).render({"task_index":task_index,"task_type":task_type,"task_status":task_status})
                     for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).iteritems():
-                        message += os.linesep +  (self.stage_template_2 if stage_status.has_message() else self.stage_template_1 ).render({"stage_name":stage_name, "stage_status":stage_status})
+                        message += os.linesep +  (self.stage_template_2 if "messages" in stage_status else self.stage_template_1 ).render({"stage_name":stage_name, "stage_status":stage_status})
            
         return message
 
@@ -256,17 +256,16 @@ class SlaveSyncTaskStatus(dict):
         #if no succeed stages and current task  is not succeed, clear all task status data.
         if self.is_not_succeed: 
             #current task  is not succeed.
-            if not self.get("stages"):
-                #no stages, clear all status data
-                self.clear()
-            else:
-                #clear status and messages
-                [self.pop(k) for k in ["status","messages"] if k in self]
+            stages = self.get("stages")
+            self.clear()
+            if stages:
+                self["stages"] = stages
                 
         #init a messages dictionary object
         if "messages" not in self :
             self["messages"] = {}
 
+    #status of the task, succeed job can have failed failed task
     @property
     def task_status(self):
         return self["task_status"] if "task_status" in self else self.get("status",False)
