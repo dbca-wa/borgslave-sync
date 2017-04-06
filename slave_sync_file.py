@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import json
+import traceback
 
 from slave_sync_env import (
     BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
@@ -9,38 +10,42 @@ from slave_sync_env import (
     now
 )
 from slave_sync_task import (
-    update_feature_job,update_metadata_feature_job,db_feature_task_filter,
-    gs_style_task_filter,gs_spatial_task_filter,layer_preview_task_filter,
-    update_livelayer_job,update_wmslayer_job
+    db_feature_task_filter,gs_style_task_filter,gs_spatial_task_filter,layer_preview_task_filter,
+
+    update_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_wmsstore_job,
+    update_livestore_job,update_livelayer_job,remove_livelayer_job,remove_livestore_job,
+    empty_gwc_layer_job,empty_gwc_group_job,empty_gwc_livelayer_job,
+    update_feature_job,remove_feature_job,update_feature_metadata_job,empty_gwc_feature_job,update_workspace_job
 )
 
 logger = logging.getLogger(__name__)
 
 
-task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"])
+task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"]) if "workspace" in sync_job else (sync_job["name"] if "name" in sync_job else sync_job["schema"])
 
 download_cmd = ["rsync", "-Paz", "-e", BORG_SSH,None,None]
 md5_cmd = BORG_SSH.split() + [None,"md5sum",None]
 local_md5_cmd = ["md5sum",None]
 
-def check_file_md5(md5_cmd,md5,task_status):
+def check_file_md5(md5_cmd,md5,task_status = None):
     logger.info("Executing {}...".format(repr(md5_cmd)))
     get_md5 = subprocess.Popen(md5_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     get_md5_output = get_md5.communicate()
 
-    if get_md5_output[1] and get_md5_output[1].strip():
-        logger.info("stderr: {}".format(get_md5_output[1]))
-        task_status.set_message("message",get_md5_output[1])
-
     if get_md5.returncode != 0:
-        raise Exception("{0}:{1}".format(get_md5.returncode,task_status.get_message("message")))
+        raise Exception("{0}:{1}".format(get_md5.returncode,get_md5_output[1]))
+    elif get_md5_output[1] and get_md5_output[1].strip():
+        logger.info("stderr: {}".format(get_md5_output[1]))
+        if task_status:
+            task_status.set_message("message",get_md5_output[1])
+
 
     file_md5 = get_md5_output[0].split()[0]
     if file_md5 != md5:
         raise Exception("md5sum checks failed.Expected md5 is {0}; but file's md5 is {1}".format(md5,file_md5))
 
 
-def download_file(remote_path,local_path,task_status,md5=None):
+def download_file(remote_path,local_path,task_status = None,md5=None):
     if md5:
         #check file md5 before downloading.
         remote_file_path = remote_path
@@ -65,12 +70,14 @@ def download_file(remote_path,local_path,task_status,md5=None):
     logger.info("Executing {}...".format(repr(download_cmd)))
     rsync = subprocess.Popen(download_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     rsync_output = rsync.communicate()
-    if rsync_output[1] and rsync_output[1].strip():
-        logger.info("stderr: {}".format(rsync_output[1]))
-        task_status.set_message("message",rsync_output[1])
 
     if rsync.returncode != 0:
-        raise Exception("{0}:{1}".format(rsync.returncode,task_status.get_message("message")))
+        raise Exception("{0}:{1}".format(rsync.returncode,rsync_output[1]))
+    elif rsync_output[1] and rsync_output[1].strip():
+        logger.info("stderr: {}".format(rsync_output[1]))
+        if task_status:
+            task_status.set_message("message",rsync_output[1])
+
 
     if md5:
         #check file md5 after downloading
@@ -84,19 +91,22 @@ def load_metafile(sync_job):
         return
 
     task_status = sync_job['status'].get_task_status("load_metadata")
-    task_status.last_process_time = now()
 
-    if task_status.is_succeed: 
-        #this task has been executed successfully,
-        #load the json file and add the meta data into sync_job
-        local_meta_file = task_status.get_message("meta_file")
-        with open(local_meta_file,"r") as f:
-            meta_data = json.loads(f.read())
-        sync_job.update(meta_data)
-        sync_job['meta']['local_file'] = local_meta_file
-        return
+    try:
+        if task_status.is_succeed: 
+            #this task has been executed successfully,
+            #load the json file and add the meta data into sync_job
+            local_meta_file = task_status.get_message("meta_file")
+            with open(local_meta_file,"r") as f:
+                meta_data = json.loads(f.read())
+            sync_job.update(meta_data)
+            sync_job['meta']['local_file'] = local_meta_file
+            return
+    except:
+        pass
 
     logger.info("Begin to load meta data for job({})".format(sync_job['job_file']))
+    task_status.last_process_time = now()
     #download from borg master
     temp_file = os.path.join(CACHE_PATH,"job.meta.json")
     if sync_job['action'] == "remove":
@@ -133,18 +143,16 @@ def load_metafile(sync_job):
 def previous(rev):
     return str(int(hg.log(rev)[0][0])-1)
 
-def load_table_dumpfile(sync_job,task_metadata,task_status):
+def load_table_dumpfile(sync_job):
     data_file = sync_job.get('data',None)
     if not data_file:
         raise Exception("Can't find data file in json file.")
     if SYNC_SERVER:
         #download from local slave
-        download_file("{0}:{1}/{2}.tar".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),data_file['local_file'],task_status,data_file.get("md5",None))
-	task_status.set_message("message","Succeed to download table data from slave server {0}".format(SYNC_SERVER))
+        download_file("{0}:{1}/{2}.tar".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),data_file['local_file'],None,data_file.get("md5",None))
     else:
         #download from borg master
-        download_file(data_file["file"],data_file['local_file'],task_status,data_file.get('md5',None))
-	task_status.set_message("message","Succeed to download table data from master.")
+        download_file(data_file["file"],data_file['local_file'],None,data_file.get('md5',None))
 
 def load_gs_stylefile(sync_job,task_metadata,task_status):
     style_files = sync_job.get('styles',None)
@@ -190,13 +198,56 @@ def send_layer_preview(sync_job,task_metadata,task_status):
         task_status.task_failed()
         task_status.set_message("message","Uploading preview image file is ignored because preview image has not been generated for some reason.")
 
+def delete_table_dumpfile(sync_job):
+    f = sync_job.get('data',{"local_file":None})['local_file']
+    if f and os.path.exists(f):
+        os.remove(f)
+
+def delete_dumpfile(sync_job,task_metadata,task_status):
+    messages = [] 
+    for f in [local_file for local_file in (
+        [sync_job.get('data',{}).get('local_file')] + 
+        [style_file.get('local_file') for style_file in (sync_job.get('styles') or {}).itervalues() ]
+        ) if local_file ]:
+        try:
+            if os.path.exists(f):
+                os.remove(f)
+                messages.append("Succeed to remove file({}).".format(f))
+        except:
+            message = traceback.format_exc()
+            logger.error("Remove file ({}) failed. {}".format(f,message))
+            messages.append("Failed to remove file({}). {}".format(f,message))
+            task_status.task_failed()
+
+	task_status.set_message("message",os.linesep.join(messages))
 
 tasks_metadata = [
-                    ("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
+                    #("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
                     ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("load_gs_stylefile"  , update_livelayer_job, gs_style_task_filter, task_name, load_gs_stylefile),
-                    ("load_gs_stylefile"  , update_metadata_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                    ("load_gs_stylefile"  , update_feature_metadata_job, gs_style_task_filter, task_name, load_gs_stylefile),
                     ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
                     ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
                     ("send_layer_preview"  , update_wmslayer_job, layer_preview_task_filter, task_name, send_layer_preview),
+
+                    ("delete_dumpfile"  , update_wmsstore_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , update_wmslayer_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , remove_wmsstore_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , remove_wmslayer_job, None, task_name, delete_dumpfile),
+
+                    ("delete_dumpfile"  , update_livestore_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , update_livelayer_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , remove_livestore_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , remove_livelayer_job, None, task_name, delete_dumpfile),
+
+                    ("delete_dumpfile"  , empty_gwc_layer_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , empty_gwc_group_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , empty_gwc_livelayer_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , empty_gwc_feature_job, None, task_name, delete_dumpfile),
+
+                    ("delete_dumpfile"  , update_feature_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , remove_feature_job, None, task_name, delete_dumpfile),
+                    ("delete_dumpfile"  , update_feature_metadata_job, None, task_name, delete_dumpfile),
+
+                    ("delete_dumpfile"  , update_workspace_job, None, task_name, delete_dumpfile),
 ]

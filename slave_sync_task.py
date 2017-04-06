@@ -29,7 +29,6 @@ sync_tasks = {
     
     "create_postgis_extension": {},
     "create_db_schema": {},
-    "load_table_dumpfile": {},
     "move_outdated_table": {},
     "restore_table": {},
     "restore_foreignkey": {},
@@ -67,12 +66,14 @@ sync_tasks = {
     "send_layer_preview":{},
 
     #"update_catalogues":{},
+    "delete_dumpfile":{},
 
 }
 ordered_sync_task_type = [
             #"update_auth",
             "update_access_rules",
-            "load_table_dumpfile","load_gs_stylefile",
+            #"load_table_dumpfile",
+            "load_gs_stylefile",
             "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","restore_foreignkey","create_access_view","drop_outdated_table",
             "create_workspace",
             "delete_feature",
@@ -85,6 +86,7 @@ ordered_sync_task_type = [
             "drop_table",
             "get_layer_preview","send_layer_preview",
             #"update_catalogues",
+            "delete_dumpfile"
 ]
 
 #predefined sync_job filters
@@ -183,7 +185,7 @@ required_metadata_feature_attrs_20160318 = ("name","workspace","schema","action"
 required_metadata_feature_attrs = ("meta","action")
 valid_metadata_feature_job = lambda l: FEATURE_FILTER(l) and l["job_file"].endswith(".meta.json") and any(all(key in l for key in feature_attrs) for feature_attrs in [required_metadata_feature_attrs,required_metadata_feature_attrs_20160318])
 
-update_metadata_feature_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","meta",json_task,valid_metadata_feature_job)
+update_feature_metadata_job = ("feature",lambda j:"{0}:{1}".format(j["workspace"],j["name"]),True,"layers","meta",json_task,valid_metadata_feature_job)
 
 #task definition for empty feature's gwc
 required_empty_gwc_feature_attrs = ("name","workspace","action")

@@ -94,7 +94,7 @@ GEOSERVER_PGSQL_CONNECTION_DEFAULTS = {
     "Evictor run periodicity": "300",
     "Test while idle": "true",
     "Loose bbox": "true",
-    "Expose primary keys": "false",
+    "Expose primary keys": "true",
     "create database": "false",
     "Max open prepared statements": "50",
     "fetch size": "1000",

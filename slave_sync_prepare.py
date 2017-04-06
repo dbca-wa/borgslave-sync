@@ -7,7 +7,7 @@ from slave_sync_env import (
     CACHE_PATH
 )
 from slave_sync_task import (
-    update_feature_job,update_metadata_feature_job,remove_feature_job,update_livelayer_job,
+    update_feature_job,update_feature_metadata_job,remove_feature_job,update_livelayer_job,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,6 @@ def prepare_feature(sync_job,task_metadata,task_status):
 tasks_metadata = [
                     ("prepare", update_feature_job, None, task_name, prepare_feature),
                     ("prepare", remove_feature_job, None, task_name, prepare_feature),
-                    ("prepare", update_metadata_feature_job   , None, task_name, prepare_feature),
+                    ("prepare", update_feature_metadata_job   , None, task_name, prepare_feature),
                     ("prepare", update_livelayer_job   , None, task_name, prepare_feature),
 ]
