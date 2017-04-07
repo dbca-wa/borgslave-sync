@@ -439,12 +439,12 @@ def get_tasks(pull_status):
                         notify_tasks.append((sync_job,task_metadata,task_logger))
                         break
                 pull_status.get_task_status(file_name).set_message("message","Ready to synchronize")
+                pull_status.get_task_status(file_name).set_message("action",action)
+                pull_status.get_task_status(file_name).succeed()
+                pull_status.get_task_status(file_name).last_process_time = now()
             else :
-                pull_status.get_task_status(file_name).set_message("message","Already synchronized or no need to synchronize")
+                logger.debug("File({}) has been synchronized or no need to synchronize".format(file_name))
 
-            pull_status.get_task_status(file_name).set_message("action",action)
-            pull_status.get_task_status(file_name).succeed()
-            pull_status.get_task_status(file_name).last_process_time = now()
         except:
             pull_status.get_task_status(file_name).failed()
             message = traceback.format_exc()
