@@ -338,10 +338,10 @@ def get_tasks(pull_status):
             action = sync_job["action"]
             if action == 'none':
                 #no action is required
-                pull_status.get_task_status(file_name).set_message("message","No action is required.")
-                pull_status.get_task_status(file_name).set_message("action","None")
-                pull_status.get_task_status(file_name).succeed()
-                pull_status.get_task_status(file_name).last_process_time = now()
+                #pull_status.get_task_status(file_name).set_message("message","No action is required.")
+                #pull_status.get_task_status(file_name).set_message("action","None")
+                #pull_status.get_task_status(file_name).succeed()
+                #pull_status.get_task_status(file_name).last_process_time = now()
                 logger.debug("No action is required fot the file '{}', ignore. ".format(file_name))
                 continue
 
