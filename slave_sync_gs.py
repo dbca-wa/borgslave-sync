@@ -3,6 +3,7 @@ import traceback
 import requests
 import subprocess
 import os
+import json
 
 import geoserver_catalog_extension
 from slave_sync_env import (
@@ -185,12 +186,24 @@ def create_feature(sync_job,task_metadata,task_status):
                 message = 'Found CRS for {}.{}: {}'.format(sync_job["schema"], sync_job["name"], crs)
                 logger.info(message)
                 task_status.set_message("message",message)
-    gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
-        keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
-        title=sync_job.get('title', None), 
-        abstract=sync_job.get('abstract', None),
-        nativeName=sync_job.get('table',None)
-    )
+    if (sync_job.get('override_bbox',False)):
+        bbox = json.loads(sync_job["bbox"])
+        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
+            keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
+            title=sync_job.get('title', None), 
+            abstract=sync_job.get('abstract', None),
+            nativeName=sync_job.get('table',None),
+            nativeBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs),
+            latLonBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
+        )
+    else:
+        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
+            keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
+            title=sync_job.get('title', None), 
+            abstract=sync_job.get('abstract', None),
+            nativeName=sync_job.get('table',None)
+        )
+
     name = task_feature_name(sync_job)
     l_gs = gs.get_layer(name)
     if not l_gs:
