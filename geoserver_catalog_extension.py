@@ -3,7 +3,7 @@ from geoserver.catalog import Catalog
 from geoserver.support import url
  
 
-def publish_featuretype(self, name, store, native_crs, srs=None,keywords=None,title=None,abstract=None,nativeName=None,jdbc_virtual_table=None):
+def publish_featuretype(self, name, store, native_crs, srs=None,keywords=None,title=None,abstract=None,nativeName=None,jdbc_virtual_table=None,nativeBoundingBox=None,latLonBoundingBox=None):
     '''Publish a featuretype from data in an existing store'''
     # @todo native_srs doesn't seem to get detected, even when in the DB
     # metadata (at least for postgis in geometry_columns) and then there
@@ -26,6 +26,11 @@ def publish_featuretype(self, name, store, native_crs, srs=None,keywords=None,ti
         feature_type.dirty['title'] = title
     else:
         feature_type.title = name
+    if latLonBoundingBox:
+        feature_type.dirty["latLonBoundingBox"] = latLonBoundingBox
+    if nativeBoundingBox:
+        feature_type.dirty["nativeBoundingBox"] = nativeBoundingBox
+
     if abstract:
         feature_type.dirty['abstract'] = abstract
     if keywords:
