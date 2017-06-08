@@ -4,6 +4,7 @@ import requests
 import subprocess
 import os
 import json
+from geoserver.support import JDBCVirtualTable,JDBCVirtualTableGeometry
 
 import geoserver_catalog_extension
 from slave_sync_env import (
@@ -133,9 +134,13 @@ def delete_feature(sync_job,task_metadata,task_status):
     if l_gs:
         #delete layer
         gs.delete(l_gs)
+
+    try:
         #delete feature
         url = GEOSERVER_REST_URL + "workspaces/" + sync_job['workspace'] + "/datastores/" +  store_name(sync_job) + "/featuretypes/" + sync_job['name'] + ".xml"
         gs.delete(Feature(l_gs,url))
+    except:
+        pass
 
 
     #delete the styles
@@ -166,7 +171,10 @@ def create_feature(sync_job,task_metadata,task_status):
     crs = sync_job.get("crs",None)
     if not crs and "datasource" not in sync_job:
         # try and fetch the layer's CRS from PostGIS
-        getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
+        if "spatial_column" in sync_job:
+            getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT srid FROM public.geometry_columns WHERE f_table_schema='{0}' AND f_table_name='{1}' AND f_geometry_column='{2}';".format(sync_job["schema"], sync_job["name"],sync_job["spatial_column"])]
+        else:
+            getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
         getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         getcrs_output = getcrs.communicate()
         if not getcrs_output[0]:
@@ -176,32 +184,38 @@ def create_feature(sync_job,task_metadata,task_status):
             logger.info(message)
         else:
             srid = getcrs_output[0].decode('utf-8').strip()
-            crs = 'EPSG:{}'.format(srid)
             if len(srid) == 6 and srid.startswith('90'):
                 crs = GEOSERVER_DEFAULT_CRS
                 message = 'Layer {}.{} has the non-standard SRID {}! Check the Borg Collector definition for this input and force a standard CRS if necessary. For now, the layer will be published with default CRS {}'.format(sync_job["schema"], sync_job["name"], srid, crs)
                 logger.warn(message)
                 task_status.set_message("message",message)
             else:
+                crs = 'EPSG:{}'.format(srid)
                 message = 'Found CRS for {}.{}: {}'.format(sync_job["schema"], sync_job["name"], crs)
                 logger.info(message)
                 task_status.set_message("message",message)
+
+    bbox = None
     if (sync_job.get('override_bbox',False)):
         bbox = json.loads(sync_job["bbox"])
+        bbox = (repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
+
+    if sync_job.get('viewsql'):
         gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
             keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
             title=sync_job.get('title', None), 
             abstract=sync_job.get('abstract', None),
-            nativeName=sync_job.get('table',None),
-            nativeBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs),
-            latLonBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
+            jdbc_virtual_table=JDBCVirtualTable(sync_job['name'],sync_job.get('viewsql'),'false',JDBCVirtualTableGeometry(sync_job["spatial_column"],sync_job["spatial_type"],crs[5:])),
+            nativeBoundingBox=bbox,
+            latLonBoundingBox=bbox
         )
     else:
         gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
             keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
             title=sync_job.get('title', None), 
             abstract=sync_job.get('abstract', None),
-            nativeName=sync_job.get('table',None)
+            nativeBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs),
+            latLonBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
         )
 
     name = task_feature_name(sync_job)

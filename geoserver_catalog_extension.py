@@ -43,7 +43,7 @@ def publish_featuretype(self, name, store, native_crs, srs=None,keywords=None,ti
     
     resource_url=store.resource_url
     if jdbc_virtual_table is not None:
-        feature_type.metadata=({'JDBC_VIRTUAL_TABLE':jdbc_virtual_table})
+        feature_type.metadata=({'JDBC_VIRTUAL_TABLE':jdbc_virtual_table,'cachingEnabled':'false'})
         params = dict()
         resource_url=url(self.service_url,
             ["workspaces", store.workspace.name, "datastores", store.name, "featuretypes.json"], params)
