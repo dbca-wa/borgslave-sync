@@ -214,8 +214,8 @@ def create_feature(sync_job,task_metadata,task_status):
             keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
             title=sync_job.get('title', None), 
             abstract=sync_job.get('abstract', None),
-            nativeBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs),
-            latLonBoundingBox=(repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
+            nativeBoundingBox=bbox,
+            latLonBoundingBox=bbox
         )
 
     name = task_feature_name(sync_job)
