@@ -75,6 +75,9 @@ def update_layer(sync_job,task_metadata,task_status):
     """
     sync_job['applications'] = sync_job.get('applications') or []
     sync_job['keywords'] = sync_job.get('keywords') or []
+    if (sync_job.get('override_bbox',False)):
+       sync_job["bbox"] = json.loads(sync_job["bbox"])
+
     res = requests.get(get_layer_url(sync_job['workspace'],sync_job['store'],sync_job['name']), auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD))
     if res.status_code == 200:
         http_method = requests.put
@@ -84,6 +87,7 @@ def update_layer(sync_job,task_metadata,task_status):
         request_url = get_layers_url(sync_job['workspace'],sync_job['store'])
 
     template = template_env.get_template('wms_layer.xml')
+    print template.render(sync_job)
     res = http_method(request_url, auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD), headers=update_headers, data=template.render(sync_job))
   
     if res.status_code >= 400:
