@@ -87,7 +87,6 @@ def update_layer(sync_job,task_metadata,task_status):
         request_url = get_layers_url(sync_job['workspace'],sync_job['store'])
 
     template = template_env.get_template('wms_layer.xml')
-    print template.render(sync_job)
     res = http_method(request_url, auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD), headers=update_headers, data=template.render(sync_job))
   
     if res.status_code >= 400:
