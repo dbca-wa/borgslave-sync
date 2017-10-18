@@ -3,6 +3,24 @@
     {% if native_name %}<nativeName>{{native_name|escape}}</nativeName>{% endif %}
     {% if title %}<title>{{title|escape}}</title>{% endif %}
     {% if abstract %}<abstract>{{abstract|escape}}</abstract>{% endif %}
+    {% if override_bbox %}
+    <nativeCRS>{{crs}}</nativeCRS>
+    <srs>{{crs}}</srs>
+    <nativeBoundingBox>
+        <minx>{{bbox[0]}}</minx>
+        <maxx>{{bbox[2]}}</maxx>
+        <miny>{{bbox[1]}}</miny>
+        <maxy>{{bbox[3]}}</maxy>
+        <crs>{{crs}}</crs>
+    </nativeBoundingBox>
+    <latLonBoundingBox>
+        <minx>{{bbox[0]}}</minx>
+        <maxx>{{bbox[2]}}</maxx>
+        <miny>{{bbox[1]}}</miny>
+        <maxy>{{bbox[3]}}</maxy>
+        <crs>{{crs}}</crs>
+    </latLonBoundingBox>
+    {% endif %}
     <enabled>true</enabled>
     <keywords>
     {% for a in applications %}
