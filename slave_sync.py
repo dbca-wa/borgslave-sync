@@ -172,12 +172,12 @@ def parse_job(file_name,action,file_content):
 
     #backward compatibility. set the action for meta.json file
     if "action" not in task and file_name.endswith(".meta.json"):
-	task["action"] = "meta"
+        task["action"] = "meta"
 
     task["job_file"] = file_name
     if action == "remove":
         if task.get("action","publish") != "publish":
-            #a auxiliary task file is removed. no action is required.
+            #an auxiliary task file is removed. no action is required.
             task["action"] = 'none'
         else:
             task["action"] = action
