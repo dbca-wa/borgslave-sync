@@ -144,6 +144,10 @@ def previous(rev):
     return str(int(hg.log(rev)[0][0])-1)
 
 def load_table_dumpfile(sync_job):
+    if sync_job["action"] != "publish":
+        #not a publish job, no need to download table data
+        return
+
     data_file = sync_job.get('data',None)
     if not data_file:
         raise Exception("Can't find data file in json file.")
@@ -155,13 +159,15 @@ def load_table_dumpfile(sync_job):
         download_file(data_file["file"],data_file['local_file'],None,data_file.get('md5',None))
 
 def load_gs_stylefile(sync_job,task_metadata,task_status):
+    if sync_job["action"] == "remove":
+        #remove task, no need to download style file
+        return
     style_files = sync_job.get('styles',None)
     if not style_files: 
         return
     for name,style_file in style_files.iteritems():
         if SYNC_SERVER:
             #download from local slave
-            
             if name == "builtin":
                 download_file("{}:{}/{}.sld".format(SYNC_SERVER,SYNC_PATH,sync_job["name"]),style_file['local_file'],task_status,style_file.get("md5",None))
             else:
@@ -204,9 +210,16 @@ def delete_table_dumpfile(sync_job):
         os.remove(f)
 
 def delete_dumpfile(sync_job,task_metadata,task_status):
+    """
+    Delete the dump files
+    1. table data file
+    2. meta file
+    3. style files
+    """
     messages = [] 
     for f in [local_file for local_file in (
         [sync_job.get('data',{}).get('local_file')] + 
+        [sync_job.get('meta',{}).get('local_file')] + 
         [style_file.get('local_file') for style_file in (sync_job.get('styles') or {}).itervalues() ]
         ) if local_file ]:
         try:
