@@ -203,7 +203,7 @@ END$$;
             preview_file = task["status"].get_task_status("get_layer_preview").get_message("preview_file") or None
             preview_file = "'{}'".format(preview_file) if preview_file else "null"
 
-            sql = sql_template.format(MASTER_PGSQL_SCHEMA, SLAVE_NAME,task['name'], task["job_id"], task["job_batch_id"], sync_message, "'{0}'".format(sync_time) if sync_time else 'null',preview_file,task.get('spatial_type',''))
+            sql = sql_template.format(MASTER_PGSQL_SCHEMA, SLAVE_NAME,task['name'], task.get("job_id"), task.get("job_batch_id"), sync_message, "'{0}'".format(sync_time) if sync_time else 'null',preview_file,task.get('spatial_type',''))
 
             #logger.info("Feature sync status notify: \r\n" + sql)
             sql_cmd[len(sql_cmd) - 1] = sql
