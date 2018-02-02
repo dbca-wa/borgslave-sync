@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <wmsLayer>
     <name>{{name|escape}}</name>
     {% if native_name %}<nativeName>{{native_name|escape}}</nativeName>{% endif %}
