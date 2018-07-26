@@ -89,7 +89,7 @@ def get_layer_preview(sync_job,task_metadata,task_status):
                     raise Exception("Get layer's preview image timeout.")
             else:
                 if index == len(urls):
-                    raise Exception("url:{}\r\n{}".format(url,resp.text))
+                    raise Exception("url:{}\r\n{}".format(url[0],resp.text))
                 else:
                     continue
         #getmap succeed

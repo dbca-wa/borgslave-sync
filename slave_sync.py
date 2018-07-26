@@ -349,6 +349,9 @@ def get_tasks(pull_status):
             sync_job["status"] = SlaveSyncStatus(file_name,action,file_content)
             #load meta data, if meta data is saved into a separated file
             load_metafile(sync_job)
+            #convert bbox to array if bbox is a string
+            if "bbox" in sync_job and isinstance(sync_job["bbox"],basestring):
+                sync_job["bbox"] = json.loads(sync_job["bbox"])
             #tasks will be added only after if a sync job has some unexecuted task or unsuccessful task.
             job_failed = False
             next_job = False
