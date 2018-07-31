@@ -85,7 +85,8 @@ def update_layer(sync_job,task_metadata,task_status):
     sync_job['applications'] = sync_job.get('applications') or []
     sync_job['keywords'] = sync_job.get('keywords') or []
     if (sync_job.get('override_bbox',False)):
-       sync_job["bbox"] = json.loads(sync_job["bbox"])
+       #sync_job["bbox"] = json.loads(sync_job["bbox"])
+       pass
     
     template = template_env.get_template('wms_layer.xml')
     xmlData = template.render(sync_job).encode("utf-8")
