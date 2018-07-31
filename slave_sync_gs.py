@@ -197,7 +197,7 @@ def create_feature(sync_job,task_metadata,task_status):
 
     bbox = None
     if (sync_job.get('override_bbox',False)):
-        #bbox = sync_job["bbox"]
+        bbox = sync_job["bbox"]
         bbox = (repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
 
     if sync_job.get('viewsql'):
