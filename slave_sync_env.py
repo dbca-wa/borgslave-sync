@@ -148,5 +148,5 @@ def parse_remotefilepath(f):
     return {
         "user":m.group("user"),
         "host":m.group("host"),
-        "file":m.group("file"),
+        "file":m.group("file")
     }
