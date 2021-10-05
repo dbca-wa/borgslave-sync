@@ -7,6 +7,8 @@ import traceback
 from slave_sync_env import (
     BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER,
+    SHARE_LAYER_DATA,SHARE_PREVIEW_DATA,
+    parse_remotefilepath,
     now
 )
 from slave_sync_task import (
@@ -107,6 +109,17 @@ def load_metafile(sync_job):
 
     logger.info("Begin to load meta data for job({})".format(sync_job['job_file']))
     task_status.last_process_time = now()
+    if SHARE_LAYER_DATA:
+        sync_job['meta']['local_file'] = parse_remotefilepath(sync_job["meta"]["file"])["file"]
+        meta_data = None
+        with open(sync_job['meta']['local_file'],"r") as f:
+            meta_data = json.loads(f.read())
+        sync_job.update(meta_data)
+        task_status.set_message("message","Find the meta file from shared layer data.")
+        task_status.set_message("meta_file",sync_job['meta']['local_file'])
+        task_status.succeed()
+        return
+
     #download from borg master
     temp_file = os.path.join(CACHE_PATH,"job.meta.json")
     if sync_job['action'] == "remove":
@@ -234,33 +247,70 @@ def delete_dumpfile(sync_job,task_metadata,task_status):
 
 	task_status.set_message("message",os.linesep.join(messages))
 
-tasks_metadata = [
-                    #("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
-                    ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
-                    ("load_gs_stylefile"  , update_livelayer_job, gs_style_task_filter, task_name, load_gs_stylefile),
-                    ("load_gs_stylefile"  , update_feature_metadata_job, gs_style_task_filter, task_name, load_gs_stylefile),
-                    ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
-                    ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
-                    ("send_layer_preview"  , update_wmslayer_job, layer_preview_task_filter, task_name, send_layer_preview),
-
-                    ("delete_dumpfile"  , update_wmsstore_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , update_wmslayer_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , remove_wmsstore_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , remove_wmslayer_job, None, task_name, delete_dumpfile),
-
-                    ("delete_dumpfile"  , update_livestore_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , update_livelayer_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , remove_livestore_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , remove_livelayer_job, None, task_name, delete_dumpfile),
-
-                    ("delete_dumpfile"  , empty_gwc_layer_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , empty_gwc_group_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , empty_gwc_livelayer_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , empty_gwc_feature_job, None, task_name, delete_dumpfile),
-
-                    ("delete_dumpfile"  , update_feature_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , remove_feature_job, None, task_name, delete_dumpfile),
-                    ("delete_dumpfile"  , update_feature_metadata_job, None, task_name, delete_dumpfile),
-
-                    ("delete_dumpfile"  , update_workspace_job, None, task_name, delete_dumpfile),
-]
+if not SHARE_LAYER_DATA and not SHARE_PREVIEW_DATA:
+    tasks_metadata = [
+                        #("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
+                        ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                        ("load_gs_stylefile"  , update_livelayer_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                        ("load_gs_stylefile"  , update_feature_metadata_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                        ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
+                        ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
+                        ("send_layer_preview"  , update_wmslayer_job, layer_preview_task_filter, task_name, send_layer_preview),
+    
+                        ("delete_dumpfile"  , update_wmsstore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , update_wmslayer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_wmsstore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_wmslayer_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , update_livestore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , update_livelayer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_livestore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_livelayer_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , empty_gwc_layer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , empty_gwc_group_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , empty_gwc_livelayer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , empty_gwc_feature_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , update_feature_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_feature_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , update_feature_metadata_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , update_workspace_job, None, task_name, delete_dumpfile),
+    ]
+elif SHARE_LAYER_DATA and SHARE_PREVIEW_DATA:
+    tasks_metadata = []
+elif SHARE_LAYER_DATA:
+    tasks_metadata = [
+                        ("send_layer_preview"  , update_feature_job, layer_preview_task_filter, task_name, send_layer_preview),
+                        ("send_layer_preview"  , update_livelayer_job, layer_preview_task_filter, task_name, send_layer_preview),
+                        ("send_layer_preview"  , update_wmslayer_job, layer_preview_task_filter, task_name, send_layer_preview)
+    ]
+elif SHARE_PREVIEW_DATA:
+    tasks_metadata = [
+                        #("load_table_dumpfile", update_feature_job, db_feature_task_filter      , task_name, load_table_dumpfile),
+                        ("load_gs_stylefile"  , update_feature_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                        ("load_gs_stylefile"  , update_livelayer_job, gs_style_task_filter, task_name, load_gs_stylefile),
+                        ("load_gs_stylefile"  , update_feature_metadata_job, gs_style_task_filter, task_name, load_gs_stylefile),
+    
+                        ("delete_dumpfile"  , update_wmsstore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , update_wmslayer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_wmsstore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_wmslayer_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , update_livestore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , update_livelayer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_livestore_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_livelayer_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , empty_gwc_layer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , empty_gwc_group_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , empty_gwc_livelayer_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , empty_gwc_feature_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , update_feature_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , remove_feature_job, None, task_name, delete_dumpfile),
+                        ("delete_dumpfile"  , update_feature_metadata_job, None, task_name, delete_dumpfile),
+    
+                        ("delete_dumpfile"  , update_workspace_job, None, task_name, delete_dumpfile),
+    ]

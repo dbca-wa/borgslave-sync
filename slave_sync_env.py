@@ -1,8 +1,10 @@
 import os
+import re
 import traceback
 import json
 import socket
 import pytz
+import sys
 import logging
 from jinja2 import Environment,FileSystemLoader
 from geoserver.catalog import Catalog
@@ -13,8 +15,15 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
-STATE_PATH = os.path.split(CODE_PATH)[0]
+STATE_PATH = os.environ.get("STATE_REPOSITORY_ROOT",os.path.split(CODE_PATH)[0])
 VERSION_FILE = os.path.join(CODE_PATH,"version")
+
+try:
+    POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL",sys.argv[1] if len(sys.argv) > 1 else 60))
+    if POLL_INTERVAL <= 0:
+        POLL_INTERVAL = 60
+except:
+    POLL_INTERVAL = 60
 
 CACHE_PATH = os.path.join(PATH, "dumps")
 if not os.path.exists(CACHE_PATH):   os.makedirs(CACHE_PATH)
@@ -72,6 +81,9 @@ SKIP_RULES = os.environ.get("SKIP_RULES", "false").lower() in ["true","yes"]
 SKIP_DB = os.environ.get("SKIP_DB", "false").lower() in ["true","yes"]
 SKIP_GS = os.environ.get("SKIP_GS", "false").lower() in ["true","yes"]
 
+SHARE_LAYER_DATA = os.environ.get("SHARE_LAYER_DATA","false").lower() in ["true","yes"]
+SHARE_PREVIEW_DATA = os.environ.get("SHARE_PREVIEW_DATA","false").lower() in ["true","yes"]
+
 FEATURE_FILTER = eval(os.environ.get("FEATURE_FILTER",None) or ("lambda job:job.get('auth_level',-1) in [0,1]" if SYNC_SERVER else "lambda job: True" ))
 WMS_FILTER = eval(os.environ.get("WMS_FILTER",None) or ("lambda job: False" if SYNC_SERVER else "lambda job: True"))
 LAYERGROUP_FILTER = eval(os.environ.get("LAYERGROUP_FILTER",None) or ("lambda job: False" if SYNC_SERVER else "lambda job: True"))
@@ -126,3 +138,15 @@ def now():
     Return current time
     """
     return DEFAULT_TIMEZONE.localize(datetime.now())
+
+
+remotefile_re = re.compile("^\s*(?P<user>[^\@]+)\@(?P<host>[^:]+):(?P<file>\S+)\s*$")
+def parse_remotefilepath(f):
+    m = remotefile_re.search(f)
+    if not m:
+        raise Exception("Failed to parse remote file path '{}'".format(f))
+    return {
+        "user":m.group("user"),
+        "host":m.group("host"),
+        "file":m.group("file"),
+    }
