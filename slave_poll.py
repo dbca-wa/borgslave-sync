@@ -7,13 +7,12 @@ import time
 from slave_sync_notify import SlaveServerSyncNotify
 from slave_sync_env import (
     BORG_SSH,CODE_BRANCH,SYNC_STATUS_PATH,
-    CODE_PATH,STATE_PATH
+    CODE_PATH,STATE_PATH,POLL_INTERVAL
 )
 
 logger = logging.getLogger(__name__)
 # dumb-as-rocks script to poll for mercurial updates ad infinitum
 if __name__ == "__main__":
-    interval = int(sys.argv[1]) if (len(sys.argv) > 1) else 60
     while True:
         #sync code first
         os.chdir(CODE_PATH)
@@ -52,5 +51,5 @@ if __name__ == "__main__":
                 except:
                     logger.info("Failed to run 'hg recover'.")
 
-        time.sleep(interval)
+        time.sleep(POLL_INTERVAL)
 
