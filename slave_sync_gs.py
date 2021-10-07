@@ -379,5 +379,5 @@ if DEPENDENT_GEOSERVER_URLS:
             (update_feature_metadata_job,gs_feature_task_filter),
             (empty_gwc_feature_job,gs_feature_task_filter),
             (update_workspace_job,gs_feature_task_filter)
-        )
+        ):
             tasks_metadata.append(("reload_dependent_geoserver",job,task_filter,DEPENDENT_GEOSERVER_HOSTSS[index],reload_dependent_geoserver(dependent_gss[index])))
