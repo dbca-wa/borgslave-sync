@@ -25,7 +25,7 @@ try:
 except:
     POLL_INTERVAL = 60
 
-CACHE_PATH = os.path.join(PATH, "dumps")
+CACHE_PATH = os.environ.get("CACHE_PATH",os.path.join(PATH, "dumps"))
 if not os.path.exists(CACHE_PATH):   os.makedirs(CACHE_PATH)
 os.chmod(CACHE_PATH,0755)
 
@@ -38,7 +38,7 @@ PREVIEW_ROOT_PATH = PREVIEW_ROOT_PATH[0:-1] if PREVIEW_ROOT_PATH[-1:] == "/" els
 
 if not os.path.exists(PREVIEW_ROOT_PATH):   os.makedirs(PREVIEW_ROOT_PATH)
 
-SYNC_STATUS_PATH = os.path.join(PATH,'.sync_status') 
+SYNC_STATUS_PATH = os.environ.get("SYNC_STATUS_PATH",os.path.join(PATH,'.sync_status'))
 if not os.path.exists(SYNC_STATUS_PATH):   os.makedirs(SYNC_STATUS_PATH)
 
 
@@ -69,9 +69,9 @@ else:
     GEOSERVER_URL = GEOSERVER_URL[0]
 GEOSERVER_HOST = url_re.search(GEOSERVER_URL).group("host")
 
-GEOSERVER_REST_URL =  os.path.join([GEOSERVER_URL,"rest/"])
+GEOSERVER_REST_URL =  os.path.join(GEOSERVER_URL,"rest/")
 if DEPENDENT_GEOSERVER_URLS:
-    DEPENDENT_GEOSERVER_REST_URLS = [ os.path.join([url,"rest/"]) for url in DEPENDENT_GEOSERVER_URLS]
+    DEPENDENT_GEOSERVER_REST_URLS = [ os.path.join(url,"rest/") for url in DEPENDENT_GEOSERVER_URLS]
 else:
     DEPENDENT_GEOSERVER_REST_URLS = None
 
