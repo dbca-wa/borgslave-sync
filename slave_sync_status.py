@@ -273,6 +273,10 @@ class SlaveSyncTaskStatus(dict):
     def task_failed(self):
         self["task_status"] = False
 
+    def clean_task_failed(self):
+        if "task_status" in self :
+            del self["task_status"]
+
     @property
     def is_processed(self):
         return self._modified

@@ -11,12 +11,14 @@ from slave_sync_env import (
     GEOSERVER_DATASTORE_NAMESPACE,GEOSERVER_PGSQL_CONNECTION_DEFAULTS,GEOSERVER_WORKSPACE_NAMESPACE,GEOSERVER_DEFAULT_CRS,GEOSERVER_DATA_DIR,
     GEOSERVER_PGSQL_HOST, GEOSERVER_PGSQL_PORT, GEOSERVER_PGSQL_DATABASE, GEOSERVER_PGSQL_USERNAME,
     CACHE_PATH,
-    gs,env,GEOSERVER_REST_URL
+    gs,env,GEOSERVER_REST_URL,DEPENDENT_GEOSERVER_URLS,dependent_gss,DEPENDENT_GEOSERVER_HOSTS
 )
 from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
     update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job,
-    update_livestore_job,update_livelayer_job,remove_livestore_job,remove_livelayer_job
+    update_livestore_job,update_livelayer_job,remove_livestore_job,remove_livelayer_job,
+    remove_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_layergroup_job,empty_gwc_layer_job,empty_gwc_livelayer_job,
+    empty_gwc_group_job,empty_gwc_feature_job,update_workspace_job
 )
 
 logger = logging.getLogger(__name__)
@@ -304,6 +306,17 @@ def reload_geoserver(sync_job,task_metadata,task_status):
     except:
         logger.error("Reload geoserver setting failed".format(traceback.format_exc()))
 
+def reload_dependent_geoserver(dependent_gs):
+    """
+    reload dependent geoserver setting
+    """
+    def _func(sync_job,task_metadata,task_status):
+        dependent_gs.reload()
+
+    return _func
+
+
+
 def create_workspace(sync_job,task_metadata,task_status):
     try:
         w_gs = gs.get_workspace(sync_job['workspace'])
@@ -342,6 +355,29 @@ tasks_metadata = [
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
 
-                    ("geoserver_reload"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
+                    ("reload_geoserver"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
 ]
-
+if DEPENDENT_GEOSERVER_URLS:
+    for index in range(len(DEPENDENT_GEOSERVER_URLS)):
+        for job,task_filter in (
+            (update_access_rules_job,None),
+            (update_wmsstore_job,gs_task_filter),
+            (remove_wmsstore_job,gs_task_filter),
+            (update_wmslayer_job,gs_feature_task_filter),
+            (remove_wmslayer_job,gs_feature_task_filter),
+            (update_livestore_job,gs_task_filter),
+            (remove_livestore_job,gs_task_filter),
+            (update_livelayer_job,gs_feature_task_filter),
+            (remove_livelayer_job,gs_feature_task_filter),
+            (update_layergroup_job,gs_task_filter),
+            (remove_layergroup_job,gs_task_filter),
+            (empty_gwc_layer_job,gs_feature_task_filter),
+            (empty_gwc_livelayer_job,gs_feature_task_filter),
+            (empty_gwc_group_job,gs_feature_task_filter),
+            (update_feature_job,gs_feature_task_filter),
+            (remove_feature_job,gs_feature_task_filter),
+            (update_feature_metadata_job,gs_feature_task_filter),
+            (empty_gwc_feature_job,gs_feature_task_filter),
+            (update_workspace_job,gs_feature_task_filter)
+        )
+            tasks_metadata.append(("reload_dependent_geoserver",job,task_filter,DEPENDENT_GEOSERVER_HOSTSS[index],reload_dependent_geoserver(dependent_gss[index])))

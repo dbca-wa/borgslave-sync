@@ -55,15 +55,65 @@ HG_NODE = os.environ.get("HG_NODE", "0")
 BORG_SSH = os.environ.get("BORG_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")
 CODE_BRANCH = os.environ.get("CODE_BRANCH","default")
 LISTEN_CHANNELS = set([c.strip() for c in os.environ.get("LISTEN_CHANNELS","kmi").split(",") if c.strip()])
-GEOSERVER_URL = os.environ.get("GEOSERVER_URL", "http://localhost:8080/geoserver")
-GEOSERVER_REST_URL = "/".join([GEOSERVER_URL,"rest/"])
-GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver_data")
+
+GEOSERVER_URL = [url.strip() for url in os.environ.get("GEOSERVER_URL", "http://localhost:8080/geoserver").split(",") if url and url.strip()]
+GEOSERVER_URL = [(url[:-1] if url[-1] == "/" else url) for url in GEOSERVER_URL]
+url_re = re.compile("^(?P<protocol>https?)://(?P<host>[^:/\?]+)(:(?P<port>[0-9]+))?(?P<path>[^\?]+)?(\?(?P<params>.+)?)?$",re.IGNORECASE)
+if len(GEOSERVER_URL) == 1:
+    DEPENDENT_GEOSERVER_URLS = None
+    DEPENDENT_GEOSERVER_HOSTS = None
+    GEOSERVER_URL = GEOSERVER_URL[0]
+else:
+    DEPENDENT_GEOSERVER_URLS = GEOSERVER_URL[1:]
+    DEPENDENT_GEOSERVER_HOSTS = [url_re.search(url).group("host") for url in DEPENDENT_GEOSERVER_URLS]
+    GEOSERVER_URL = GEOSERVER_URL[0]
+GEOSERVER_HOST = url_re.search(GEOSERVER_URL).group("host")
+
+GEOSERVER_REST_URL =  os.path.join([GEOSERVER_URL,"rest/"])
+if DEPENDENT_GEOSERVER_URLS:
+    DEPENDENT_GEOSERVER_REST_URLS = [ os.path.join([url,"rest/"]) for url in DEPENDENT_GEOSERVER_URLS]
+else:
+    DEPENDENT_GEOSERVER_REST_URLS = None
+
+GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver/data_dir")
+GEOSERVER_THEME_DIR = os.path.join(GEOSERVER_DATA_DIR, "www/themes")
+
 GEOSERVER_USERNAME = os.environ.get("GEOSERVER_USERNAME", "admin")
+if DEPENDENT_GEOSERVER_URLS:
+    GEOSERVER_USERNAME = [n.strip() for n in GEOSERVER_USERNAME.split(",") if n and n.strip()]
+    if len(GEOSERVER_USERNAME) == 1 :
+        DEPENDENT_GEOSERVER_USERNAMES = GEOSERVER_USERNAME * len(DEPENDENT_GEOSERVER_URLS)
+        GEOSERVER_USERNAME = GEOSERVER_USERNAME[0]
+    elif len(GEOSERVER_USERNAME) != len(DEPENDENT_GEOSERVER_URLS) + 1:
+        raise Exception("Please configure the user name for each geoserver")
+    else:
+        DEPENDENT_GEOSERVER_USERNAMES = GEOSERVER_USERNAME[1:]
+        GEOSERVER_USERNAME = GEOSERVER_USERNAME[0]
+else:
+    DEPENDENT_GEOSERVER_USERNAMES = None
+
+
 GEOSERVER_PASSWORD = os.environ.get("GEOSERVER_PASSWORD", "geoserver")
+if DEPENDENT_GEOSERVER_URLS:
+    GEOSERVER_PASSWORD = [n.strip() for n in GEOSERVER_PASSWORD.split(",") if n and n.strip()]
+    if len(GEOSERVER_PASSWORD) == 1 :
+        DEPENDENT_GEOSERVER_PASSWORDS = GEOSERVER_PASSWORD * len(DEPENDENT_GEOSERVER_URLS)
+        GEOSERVER_PASSWORD = GEOSERVER_PASSWORD[0]
+    elif len(GEOSERVER_PASSWORD) != len(DEPENDENT_GEOSERVER_URLS) + 1:
+        raise Exception("Please configure the password for each geoserver")
+    else:
+        DEPENDENT_GEOSERVER_PASSWORDS = GEOSERVER_PASSWORD[1:]
+        GEOSERVER_PASSWORD = GEOSERVER_PASSWORD[0]
+else:
+    DEPENDENT_GEOSERVER_PASSWORDS = None
+
 GEOSERVER_WORKSPACE_NAMESPACE = os.environ.get("GEOSERVER_WORKSPACE_NAMESPACE", "http://{}.dpaw.wa.gov.au")
 GEOSERVER_DATASTORE_NAMESPACE = os.environ.get("GEOSERVER_DATASTORE_NAMESPACE", "{}_ds")
 GEOSERVER_WMSLAYERS_REST_URL = os.environ.get("GEOSERVER_WMSLAYERS_REST_URL",GEOSERVER_REST_URL + 'workspaces/{}/wmsstores/{}/wmslayers.xml')
 GEOSERVER_WMSLAYER_REST_URL = os.environ.get("GEOSERVER_WMSLAYER_REST_URL",GEOSERVER_REST_URL + 'workspaces/{}/wmsstores/{}/wmslayers/{}.xml?recurse=true')
+GEOSERVER_WMS_GETCAPABILITIES_URL = "{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(GEOSERVER_URL)
+
+
 GEOSERVER_PGSQL_HOST = os.environ.get("GEOSERVER_PGSQL_HOST", "localhost")
 GEOSERVER_PGSQL_DATABASE = os.environ.get("GEOSERVER_PGSQL_DATABASE", "borg_slave")
 GEOSERVER_PGSQL_SCHEMA = os.environ.get("GEOSERVER_PGSQL_SCHEMA", "publish")
@@ -120,6 +170,12 @@ env = os.environ.copy()
 env["PGPASSWORD"] = GEOSERVER_PGSQL_PASSWORD or "dummy"
 
 gs = Catalog(GEOSERVER_REST_URL, GEOSERVER_USERNAME, GEOSERVER_PASSWORD)
+if DEPENDENT_GEOSERVER_URLS:
+    dependent_gss = [None] * len(DEPENDENT_GEOSERVER_URLS)
+    for index in range(len(DEPENDENT_GEOSERVER_URLS)):
+        dependent_gss[index] = Catalog(DEPENDENT_GEOSERVER_REST_URLS[index], DEPENDENT_GEOSERVER_USERNAMES[index], DEPENDENT_GEOSERVER_PASSWORDS[index])
+else:
+    dependent_gss = None
 
 template_env = Environment(loader=FileSystemLoader(CODE_PATH))
 

@@ -26,18 +26,14 @@ RUN useradd -d /home/borg -m -s /bin/bash -u 1001 -g 1001 borg
 WORKDIR /etc/mercurial
 COPY mercurial/hgrc ./hgrc
 
-WORKDIR /app
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt 
-
-# Install the project (ensure that frontend projects have been built prior to this step).
-FROM python_libs_borgslave
-COPY ./ ./
-RUN rm build_image.sh
-
-RUN chown -R borg:borg ./
-RUN chmod -R 755 ./
-
+RUN mkdir /app
+RUN chown borg:borg /app
 
 USER borg
+WORKDIR /app
+RUN git clone https://github.com/dbca-wa/borgslave-sync
+
+WORKDIR /app/borgslave-sync
+RUN pip install --no-cache-dir -r requirements.txt 
+
 CMD ["python","slave_poll.py"]

@@ -6,6 +6,7 @@ publish
 previews
 venv
 gmon.out
+build_image.sh
 *.swp
 *.pyc
 *.env

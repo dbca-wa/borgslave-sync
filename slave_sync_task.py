@@ -60,13 +60,15 @@ sync_tasks = {
     "update_gwc":{},
     "empty_gwc":{},
 
-    "geoserver_reload":{},
+    "reload_geoserver":{},
 
     "get_layer_preview":{},
     "send_layer_preview":{},
 
     #"update_catalogues":{},
     "delete_dumpfile":{},
+
+    "reload_dependent_geoserver":{}
 
 }
 ordered_sync_task_type = [
@@ -80,10 +82,11 @@ ordered_sync_task_type = [
             "delete_datastore",
             "create_datastore",
             "update_wmsstore","update_wmslayer","update_layergroup","remove_layergroup","remove_wmslayer","remove_wmsstore",
-            "geoserver_reload",
+            "reload_geoserver",
             "create_feature","create_style",
             "update_gwc","empty_gwc",
             "drop_table",
+            "reload_dependent_geoserver",
             "get_layer_preview","send_layer_preview",
             #"update_catalogues",
             "delete_dumpfile"
