@@ -14,14 +14,7 @@ from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,
     update_wmslayer_job,remove_wmslayer_job,gs_task_filter
 )
-from slave_sync_env import (GEOSERVER_URL)
-GEOSERVER_REST_URL = "/".join([GEOSERVER_URL,"rest/"])
-GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver/data_dir")
-GEOSERVER_THEME_DIR = os.path.join(GEOSERVER_DATA_DIR, "www/themes")
-GEOSERVER_USERNAME = os.environ.get("GEOSERVER_USERNAME", "admin")
-GEOSERVER_PASSWORD = os.environ.get("GEOSERVER_PASSWORD", "geoserver")
-
-GEOSERVER_WMS = "{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(GEOSERVER_URL)
+from slave_sync_env import (GEOSERVER_URL,GEOSERVER_REST_URL,GEOSERVER_USERNAME,GEOSERVER_PASSWORD,GEOSERVER_THEME_DIR,GEOSERVER_DATA_DIR,GEOSERVER_WMS_GETCAPABILITIES_URL)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -30,7 +23,7 @@ logging.basicConfig(
 )
 
 def update_static_catalogues(task,task_metadata,task_status):
-    r = requests.get(GEOSERVER_WMS, auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD))
+    r = requests.get(GEOSERVER_WMS_GETCAPABILITIES_URL, auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD))
     # this code makes assumptions about how the catalog XML will be formatted! use caution!
 
     # filter out all of the complete <Layer></Layer> blocks that describe one layer
