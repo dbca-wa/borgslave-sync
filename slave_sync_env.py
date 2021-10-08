@@ -75,7 +75,7 @@ if DEPENDENT_GEOSERVER_URLS:
 else:
     DEPENDENT_GEOSERVER_REST_URLS = None
 
-GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver/data_dir")
+GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver_data")
 GEOSERVER_THEME_DIR = os.path.join(GEOSERVER_DATA_DIR, "www/themes")
 
 GEOSERVER_USERNAME = os.environ.get("GEOSERVER_USERNAME", "admin")
