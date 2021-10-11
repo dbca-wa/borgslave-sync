@@ -6,7 +6,7 @@ import traceback
 
 from slave_sync_env import (
     GEOSERVER_PGSQL_HOST,GEOSERVER_PGSQL_PORT,GEOSERVER_PGSQL_DATABASE,GEOSERVER_PGSQL_USERNAME,
-    CACHE_PATH,
+    CACHE_PATH,SHARE_LAYER_DATA,
     env
 )
 from slave_sync_task import (
@@ -175,7 +175,7 @@ END$$;
 
 restore_cmd = ["pg_restore", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p" , GEOSERVER_PGSQL_PORT , "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME,"-O","-x","--no-tablespaces","-F",None,None]
 def restore_table(sync_job,task_metadata,task_status):
-    if task_status.is_stage_not_succeed('load_table_dumpfile'):
+    if not SHARE_LAYER_DATA and task_status.is_stage_not_succeed('load_table_dumpfile'):
         try:
             load_table_dumpfile(sync_job)
             task_status.stage_succeed('load_table_dumpfile')
@@ -205,7 +205,7 @@ def restore_table(sync_job,task_metadata,task_status):
     if restore.returncode != 0 or restore_output[1].find("ERROR") >= 0:
         raise Exception("{0}:{1}".format(restore.returncode,task_status.get_message("message")))
 
-    if task_status.is_stage_not_succeed('delete_table_dumpfile'):
+    if not SHARE_LAYER_DATA and task_status.is_stage_not_succeed('delete_table_dumpfile'):
         try:
             delete_table_dumpfile(sync_job)
             task_status.stage_succeed('delete_table_dumpfile')

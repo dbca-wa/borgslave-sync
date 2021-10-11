@@ -11,7 +11,7 @@ from slave_sync_env import (
     GEOSERVER_DATASTORE_NAMESPACE,GEOSERVER_PGSQL_CONNECTION_DEFAULTS,GEOSERVER_WORKSPACE_NAMESPACE,GEOSERVER_DEFAULT_CRS,GEOSERVER_DATA_DIR,
     GEOSERVER_PGSQL_HOST, GEOSERVER_PGSQL_PORT, GEOSERVER_PGSQL_DATABASE, GEOSERVER_PGSQL_USERNAME,
     CACHE_PATH,
-    gs,env,GEOSERVER_REST_URL,DEPENDENT_GEOSERVER_URLS,dependent_gss,DEPENDENT_GEOSERVER_HOSTS
+    gs,env,GEOSERVER_REST_URL,DEPENDENT_GEOSERVER_URLS,dependent_gss,DEPENDENT_GEOSERVER_HOSTS,
 )
 from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
@@ -380,4 +380,4 @@ if DEPENDENT_GEOSERVER_URLS:
             (empty_gwc_feature_job,gs_feature_task_filter),
             (update_workspace_job,gs_feature_task_filter)
         ):
-            tasks_metadata.append(("reload_dependent_geoserver",job,task_filter,DEPENDENT_GEOSERVER_HOSTSS[index],reload_dependent_geoserver(dependent_gss[index])))
+            tasks_metadata.append(("reload_dependent_geoserver",job,task_filter,DEPENDENT_GEOSERVER_HOSTS[index],reload_dependent_geoserver(dependent_gss[index])))
