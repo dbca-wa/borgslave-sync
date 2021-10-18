@@ -89,7 +89,7 @@ class SlaveServerSyncNotify(object):
     def _save_failed_sql(cls,sql):
         f_name = cls._current_failed_sql_file()
         f_exists = os.path.exists(f_name)
-        with open(f_name,'a') as f:
+        with open(f_name,'a' if f_exists else 'w') as f:
             if f_exists:
                 f.write("{1}{2}{1}{0}".format(sql,os.linesep,cls._sql_separator))
             else:
