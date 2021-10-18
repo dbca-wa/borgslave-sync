@@ -165,7 +165,7 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
         task_status.del_message("preview_file")
         task_status.del_stage_message(stagename,"preview_file")
         task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
-        exceptions.append(sys.exc_info()[1])
+        exceptions.append(str(sys.exc_info()[1]))
 
     logger.info("Try to get layer preview image for dependent geoserver")
     for i in range(len(DEPENDENT_GEOSERVER_URLS)):
@@ -220,11 +220,11 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
             task_status.stage_failed(stagename)
             task_status.del_stage_message(stagename,"preview_file")
             task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
-            exceptions.append(sys.exc_info()[1])
+            exceptions.append(str(sys.exc_info()[1]))
 
 
     if exceptions:
-        raise Exception("\n".join(str(exceptions)))
+        raise Exception("\n".join(exceptions))
     elif task_status.all_stages_succeed:
         task_status.clean_task_failed()
     else:
