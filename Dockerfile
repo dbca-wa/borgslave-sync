@@ -35,6 +35,6 @@ ARG CACHEBUST=1
 RUN git clone https://github.com/dbca-wa/borgslave-sync
 
 WORKDIR /app/borgslave-sync
-RUN pip install --no-cache-dir -r requirements.txt 
+RUN pip install --no-cache-dir -r requirements_docker.txt 
 
 CMD ["python","slave_poll.py"]
