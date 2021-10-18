@@ -16,11 +16,11 @@ from slave_sync_task import (
     update_livelayer_job,remove_livelayer_job,empty_gwc_livelayer_job,update_livestore_job,remove_livestore_job,
 )
 from slave_sync_env import (
-    CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,now
+    CODE_BRANCH,LISTEN_CHANNELS,get_version,SLAVE_NAME,SYNC_STATUS_PATH,now
 )
 
 PATH = os.path.dirname(os.path.realpath(__file__))
-CACHE_PATH = os.path.join(PATH,'.sync_status')
+CACHE_PATH = SYNC_STATUS_PATH
 
 MASTER_PGSQL_HOST = os.environ.get("MASTER_PGSQL_HOST")
 MASTER_PGSQL_DATABASE = os.environ.get("MASTER_PGSQL_DATABASE")
@@ -181,7 +181,7 @@ $$BEGIN
     END IF;
 END$$;
 """
-            else:
+            elif not remove:
                 sql_template = """
 DO 
 $$BEGIN

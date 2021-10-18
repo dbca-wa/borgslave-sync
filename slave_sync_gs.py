@@ -317,7 +317,7 @@ def reload_dependent_geoservers(sync_job,task_metadata,task_status):
         stagename = DEPENDENT_GEOSERVER_HOSTS[i]
         try:
             if task_status.is_stage_not_succeed(stagename):
-                dependent_gss[index].reload()
+                dependent_gss[i].reload()
                 task_status.del_stage_message(stagename,"message")
                 task_status.stage_succeed(stagename)
         except:
