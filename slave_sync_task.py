@@ -68,7 +68,7 @@ sync_tasks = {
     #"update_catalogues":{},
     "delete_dumpfile":{},
 
-    "reload_dependent_geoserver":{}
+    "reload_dependent_geoservers":{}
 
 }
 ordered_sync_task_type = [
@@ -86,7 +86,7 @@ ordered_sync_task_type = [
             "create_feature","create_style",
             "update_gwc","empty_gwc",
             "drop_table",
-            "reload_dependent_geoserver",
+            "reload_dependent_geoservers",
             "get_layer_preview","send_layer_preview",
             #"update_catalogues",
             "delete_dumpfile"

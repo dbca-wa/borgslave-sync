@@ -306,16 +306,30 @@ def reload_geoserver(sync_job,task_metadata,task_status):
     except:
         logger.error("Reload geoserver setting failed".format(traceback.format_exc()))
 
-def reload_dependent_geoserver(dependent_gs):
+def reload_dependent_geoservers(sync_job,task_metadata,task_status):
     """
     reload dependent geoserver setting
     """
-    def _func(sync_job,task_metadata,task_status):
-        dependent_gs.reload()
+    logger.info("Try to reload dependent geoservers")
+    exceptions = []
+    for i in range(len(DEPENDENT_GEOSERVER_URLS)):
+        stagename = DEPENDENT_GEOSERVER_HOSTS[i]
+        try:
+            if task_status.is_stage_not_succeed(stagename):
+                dependent_gss[index].reload()
+                task_status.del_stage_message(stagename,"message")
+                task_status.stage_succeed(stagename)
+        except:
+            task_status.stage_failed(stagename)
+            task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
+            exceptions.append(str(sys.exc_info()[1]))
 
-    return _func
-
-
+    if exceptions:
+        raise Exception("\n".join(exceptions))
+    elif task_status.all_stages_succeed:
+        task_status.clean_task_failed()
+    else:
+        task_status.task_failed()
 
 def create_workspace(sync_job,task_metadata,task_status):
     try:
@@ -358,26 +372,25 @@ tasks_metadata = [
                     ("reload_geoserver"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
 ]
 if DEPENDENT_GEOSERVER_URLS:
-    for index in range(len(DEPENDENT_GEOSERVER_URLS)):
-        for job,task_filter in (
-            (update_access_rules_job,None),
-            (update_wmsstore_job,gs_task_filter),
-            (remove_wmsstore_job,gs_task_filter),
-            (update_wmslayer_job,gs_feature_task_filter),
-            (remove_wmslayer_job,gs_feature_task_filter),
-            (update_livestore_job,gs_task_filter),
-            (remove_livestore_job,gs_task_filter),
-            (update_livelayer_job,gs_feature_task_filter),
-            (remove_livelayer_job,gs_feature_task_filter),
-            (update_layergroup_job,gs_task_filter),
-            (remove_layergroup_job,gs_task_filter),
-            (empty_gwc_layer_job,gs_feature_task_filter),
-            (empty_gwc_livelayer_job,gs_feature_task_filter),
-            (empty_gwc_group_job,gs_feature_task_filter),
-            (update_feature_job,gs_feature_task_filter),
-            (remove_feature_job,gs_feature_task_filter),
-            (update_feature_metadata_job,gs_feature_task_filter),
-            (empty_gwc_feature_job,gs_feature_task_filter),
-            (update_workspace_job,gs_feature_task_filter)
-        ):
-            tasks_metadata.append(("reload_dependent_geoserver",job,task_filter,DEPENDENT_GEOSERVER_HOSTS[index],reload_dependent_geoserver(dependent_gss[index])))
+    for job,task_filter in (
+        (update_access_rules_job,None),
+        (update_wmsstore_job,gs_task_filter),
+        (remove_wmsstore_job,gs_task_filter),
+        (update_wmslayer_job,gs_feature_task_filter),
+        (remove_wmslayer_job,gs_feature_task_filter),
+        (update_livestore_job,gs_task_filter),
+        (remove_livestore_job,gs_task_filter),
+        (update_livelayer_job,gs_feature_task_filter),
+        (remove_livelayer_job,gs_feature_task_filter),
+        (update_layergroup_job,gs_task_filter),
+        (remove_layergroup_job,gs_task_filter),
+        (empty_gwc_layer_job,gs_feature_task_filter),
+        (empty_gwc_livelayer_job,gs_feature_task_filter),
+        (empty_gwc_group_job,gs_feature_task_filter),
+        (update_feature_job,gs_feature_task_filter),
+        (remove_feature_job,gs_feature_task_filter),
+        (update_feature_metadata_job,gs_feature_task_filter),
+        (empty_gwc_feature_job,gs_feature_task_filter),
+        (update_workspace_job,gs_feature_task_filter)
+    ):
+        tasks_metadata.append(("reload_dependent_geoservers",job,task_filter,'reload_dependent_geoservers',reload_dependent_geoservers))
