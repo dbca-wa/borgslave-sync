@@ -46,7 +46,7 @@ DEBUG = bool(os.environ.get("DEBUG","false").lower() in ["true","yes","on"])
 if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
 
 ROLLBACK = DEBUG and bool(os.environ.get("ROLLBACK","false").lower() in ["true","yes","on"])
 
