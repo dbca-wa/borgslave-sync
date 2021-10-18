@@ -31,6 +31,7 @@ RUN chown borg:borg /app
 
 USER borg
 WORKDIR /app
+ARG CACHEBUST=1
 RUN git clone https://github.com/dbca-wa/borgslave-sync
 
 WORKDIR /app/borgslave-sync
