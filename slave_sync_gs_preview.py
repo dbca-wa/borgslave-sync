@@ -224,7 +224,7 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
 
 
     if exceptions:
-        raise Exception("\n".join(exceptions))
+        raise Exception("\n".join(str(exceptions)))
     elif task_status.all_stages_succeed:
         task_status.clean_task_failed()
     else:
