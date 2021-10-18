@@ -3,6 +3,7 @@ import traceback
 import requests
 import subprocess
 import os
+import sys
 import json
 from geoserver.support import JDBCVirtualTable,JDBCVirtualTableGeometry
 
