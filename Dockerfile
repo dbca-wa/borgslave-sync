@@ -18,6 +18,12 @@ RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-
     && apt-get install  -y --no-install-recommends postgresql-client-9.6 \
     && apt-get install  -y --no-install-recommends openssh-client
 
+RUN apt-get update && \
+    apt-get install -yq tzdata && \
+    ln -fs /usr/share/zoneinfo/Australia/Perth /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
+ENV TZ="Australia/Perth"
+
 FROM builder_base_borgslave as python_libs_borgslave
 
 RUN groupadd  -g 1001 borg
