@@ -171,7 +171,6 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
     for i in range(len(DEPENDENT_GEOSERVER_URLS)):
         stagename = DEPENDENT_GEOSERVER_HOSTS[i]
         try:
-            stagename = DEPENDENT_GEOSERVER_HOSTS[i]
             if task_status.is_stage_not_succeed(stagename):
                 urls = layer_preview_urls(sync_job,geoserver_url=DEPENDENT_GEOSERVER_URLS[i])
                 index = 0
