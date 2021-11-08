@@ -20,6 +20,7 @@ Each sync task is implemented in different modules:
     5. slave_sync_gs_layergroup.py: layergroup related tasks
     6. slave_sync_gs_gwc.py: gwc related tasks
     7. slave_sync_notify.py: send notify to master related tasks.
+    8. slave_sync_fastly.py: purge the layer cache in fastly
 
 Each module has some requirements:
     1. a "logger object" used when need to log task realted information; if not present, the logger declared in this module is used.
@@ -73,6 +74,7 @@ import slave_sync_gs_layergroup
 import slave_sync_gs
 import slave_sync_gs_gwc
 import slave_sync_gs_preview
+import slave_sync_fastly
 import slave_sync_postgres
 import slave_sync_file
 import slave_sync_notify
@@ -104,6 +106,7 @@ plugin_modules = [
         slave_sync_gs_layergroup,
         slave_sync_gs_preview,
         slave_sync_gs_gwc,
+        slave_sync_fastly,
         slave_sync_file,
         slave_catalogues
 ]
