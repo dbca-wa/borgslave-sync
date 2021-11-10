@@ -4,9 +4,7 @@ import time
 import requests
 from xml.etree import ElementTree
 from jinja2 import Template,Environment,FileSystemLoader
-from slave_sync_env import (
-    template_env
-)
+from . import slave_sync_env as settings
 
 class GeoWebCache(object):
     """
@@ -39,7 +37,7 @@ class GeoWebCache(object):
             #layer not exist, add
             http_method = requests.put
 
-        template = template_env.get_template('gwc_layer_setting.xml')
+        template = settings.template_env.get_template('gwc_layer_setting.xml')
         resp = http_method(self.get_layer_url(layer['workspace'],layer['name']), auth=(self._user, self._password), headers={'content-type':'text/xml'}, data=template.render(layer))
         
         if resp.status_code >= 400:
@@ -68,7 +66,7 @@ class GeoWebCache(object):
 
         url = "{0}/seed/{1}:{2}.xml".format(self._rest_url,layer["workspace"],layer["name"])
         #launch the truncate task
-        template = template_env.get_template('gwc_layer_empty.xml')
+        template = settings.template_env.get_template('gwc_layer_empty.xml')
         for gridset in ("gda94","mercator"):
             for f in ("image/png","image/jpeg"):
                 data = template.render({'layer':layer,'format':f,'gridset':gridset})
@@ -115,5 +113,5 @@ class GeoWebCache(object):
             raise Exception("Retrieve cached layer list failed. {0}".format(resp.content))
 
 if __name__ == "__main__":
-    gwc = GeoWebCache(os.environ.get("GEOSERVER_URL","http://127.0.0.1:8080/geoserver"),os.environ.get("GEOSERVER_USERNAME"),os.environ.get("GEOSERVER_PASSWORD"))
+    gwc = GeoWebCache(settings.GEOSERVER_URL[0],settings.GEOSERVER_USERNAME[0],settings.GEOSERVER_PASSWORD[0]))
     print(gwc.layers)

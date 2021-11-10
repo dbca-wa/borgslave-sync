@@ -14,7 +14,7 @@ from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,
     update_wmslayer_job,remove_wmslayer_job,gs_task_filter
 )
-from slave_sync_env import (GEOSERVER_URL,GEOSERVER_REST_URL,GEOSERVER_USERNAME,GEOSERVER_PASSWORD,GEOSERVER_THEME_DIR,GEOSERVER_DATA_DIR,GEOSERVER_WMS_GETCAPABILITIES_URL)
+from . import slave_sync_env as settings
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -22,8 +22,8 @@ logging.basicConfig(
     format = '%(asctime)s %(levelname)s %(message)s',
 )
 
-def update_static_catalogues(task,task_metadata,task_status):
-    r = requests.get(GEOSERVER_WMS_GETCAPABILITIES_URL, auth=(GEOSERVER_USERNAME, GEOSERVER_PASSWORD))
+def _update_static_catalogues(task,task_metadata,task_status,capability_url,username,password,theme_dir):
+    r = requests.get(capability_url, auth=(username, password))
     # this code makes assumptions about how the catalog XML will be formatted! use caution!
 
     # filter out all of the complete <Layer></Layer> blocks that describe one layer
@@ -73,15 +73,15 @@ def update_static_catalogues(task,task_metadata,task_status):
     layers_end = r.content.rfind("</Layer>", 0, r.content.rfind("</Layer>")-1)+8
 
     # create path for storing static files if doesn't exist
-    if not os.path.isdir(GEOSERVER_THEME_DIR):
-        os.makedirs(GEOSERVER_THEME_DIR)
+    if not os.path.isdir(theme_dir):
+        os.makedirs(theme_dir)
 
     # compare what we're going to write with what's already there, clear out unwanted files
-    files = os.listdir(GEOSERVER_THEME_DIR)
+    files = os.listdir(theme_dir)
     targets = list(itertools.chain(*[('{}.wms'.format(a), '{}.json'.format(a)) for a in app_layers ]))
     for f in files:
         if f not in targets:
-           os.remove(os.path.join(GEOSERVER_THEME_DIR, f))
+           os.remove(os.path.join(theme_dir, f))
 
     # write catalogues to output
     for app, layers in app_layers.items():
@@ -91,11 +91,14 @@ def update_static_catalogues(task,task_metadata,task_status):
        
         logger.info("Outputting {0}.wms/{0}.json with {1} layers".format(app, len(layers)))
 
-        with open(os.path.join(GEOSERVER_THEME_DIR, "{}.wms".format(app)), "wb") as f:
+        with open(os.path.join(theme_dir, "{}.wms".format(app)), "wb") as f:
             f.write(xml_out)
 
-        with open(os.path.join(GEOSERVER_THEME_DIR, "{}.json".format(app)), "wb") as f:
+        with open(os.path.join(theme_dir, "{}.json".format(app)), "wb") as f:
             f.write(json_out)
+
+def update_static_catalogues(task,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_static_catalogues,lambda index:(settings.GEOSERVER_WMS_GETCAPABILITIES_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index],settings.GEOSERVER_THEME_DIR[index]))
 
 tasks_metadata = [
                     ("update_catalogues", update_feature_job, gs_feature_task_filter, "update_catalogues"  , update_static_catalogues),
@@ -105,4 +108,4 @@ tasks_metadata = [
                     ("update_catalogues", remove_wmslayer_job, gs_task_filter        , "update_catalogues"  , update_static_catalogues),
 ]   
 if __name__ == '__main__':
-    update_static_catalogues()
+    update_static_catalogues(None,None,None)

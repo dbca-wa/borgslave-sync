@@ -56,63 +56,42 @@ BORG_SSH = os.environ.get("BORG_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyC
 CODE_BRANCH = os.environ.get("CODE_BRANCH","default")
 LISTEN_CHANNELS = set([c.strip() for c in os.environ.get("LISTEN_CHANNELS","kmi").split(",") if c.strip()])
 
+url_re = re.compile("^(?P<protocol>https?)://(?P<host>[^:/\?]+)(:(?P<port>[0-9]+))?(?P<path>[^\?]+)?(\?(?P<params>.+)?)?$",re.IGNORECASE)
 GEOSERVER_URL = [url.strip() for url in os.environ.get("GEOSERVER_URL", "http://localhost:8080/geoserver").split(",") if url and url.strip()]
 GEOSERVER_URL = [(url[:-1] if url[-1] == "/" else url) for url in GEOSERVER_URL]
-url_re = re.compile("^(?P<protocol>https?)://(?P<host>[^:/\?]+)(:(?P<port>[0-9]+))?(?P<path>[^\?]+)?(\?(?P<params>.+)?)?$",re.IGNORECASE)
-if len(GEOSERVER_URL) == 1:
-    DEPENDENT_GEOSERVER_URLS = None
-    DEPENDENT_GEOSERVER_HOSTS = None
-    GEOSERVER_URL = GEOSERVER_URL[0]
-else:
-    DEPENDENT_GEOSERVER_URLS = GEOSERVER_URL[1:]
-    DEPENDENT_GEOSERVER_HOSTS = [url_re.search(url).group("host") for url in DEPENDENT_GEOSERVER_URLS]
-    GEOSERVER_URL = GEOSERVER_URL[0]
-GEOSERVER_HOST = url_re.search(GEOSERVER_URL).group("host")
+GEOSERVER_HOST = [url_re.search(url).group("host") for url in GEOSERVER_URL]
+GEOSERVER_REST_URL =  [ os.path.join(url,"rest") for url in GEOSERVER_URL]
 
-GEOSERVER_REST_URL =  os.path.join(GEOSERVER_URL,"rest/")
-if DEPENDENT_GEOSERVER_URLS:
-    DEPENDENT_GEOSERVER_REST_URLS = [ os.path.join(url,"rest/") for url in DEPENDENT_GEOSERVER_URLS]
-else:
-    DEPENDENT_GEOSERVER_REST_URLS = None
+GEOSERVER_DATA_DIR = [d for d in os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver_data").split(",") if d and d.strip()]
+if len(GEOSERVER_DATA_DIR) == 1:
+    GEOSERVER_DATA_DIR = GEOSERVER_DATA_DIR * len(GEOSERVER_URL)
+elif len(GEOSERVER_DATA_DIR) != len(GEOSERVER_URL):
+    raise Exception("Please configure the data dir for each geoserver")
 
-GEOSERVER_DATA_DIR = os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver_data")
-GEOSERVER_THEME_DIR = os.path.join(GEOSERVER_DATA_DIR, "www/themes")
+GEOSERVER_THEME_DIR = [ os.path.join(d, "www/themes") for d in GEOSERVER_DATA_DIR]
 
-GEOSERVER_USERNAME = os.environ.get("GEOSERVER_USERNAME", "admin")
-if DEPENDENT_GEOSERVER_URLS:
-    GEOSERVER_USERNAME = [n.strip() for n in GEOSERVER_USERNAME.split(",") if n and n.strip()]
-    if len(GEOSERVER_USERNAME) == 1 :
-        DEPENDENT_GEOSERVER_USERNAMES = GEOSERVER_USERNAME * len(DEPENDENT_GEOSERVER_URLS)
-        GEOSERVER_USERNAME = GEOSERVER_USERNAME[0]
-    elif len(GEOSERVER_USERNAME) != len(DEPENDENT_GEOSERVER_URLS) + 1:
-        raise Exception("Please configure the user name for each geoserver")
-    else:
-        DEPENDENT_GEOSERVER_USERNAMES = GEOSERVER_USERNAME[1:]
-        GEOSERVER_USERNAME = GEOSERVER_USERNAME[0]
-else:
-    DEPENDENT_GEOSERVER_USERNAMES = None
+GEOSERVER_USERNAME = [n.strip() for n in os.environ.get("GEOSERVER_USERNAME", "admin").split(",") if n and n.strip()]
+if len(GEOSERVER_USERNAME) == 1 :
+    GEOSERVER_USERNAME = GEOSERVER_USERNAME * len(GEOSERVER_URL)
+elif len(GEOSERVER_USERNAME) != len(GEOSERVER_URL):
+    raise Exception("Please configure the user name for each geoserver")
 
+GEOSERVER_PASSWORD = [n.strip() for n in os.environ.get("GEOSERVER_PASSWORD", "geoserver").split(",") if n and n.strip()]
+if len(GEOSERVER_PASSWORD) == 1 :
+    GEOSERVER_PASSWORD = GEOSERVER_PASSWORD * len(GEOSERVER_URL)
+elif len(GEOSERVER_PASSWORD) != len(GEOSERVER_URL):
+    raise Exception("Please configure the password for each geoserver")
 
-GEOSERVER_PASSWORD = os.environ.get("GEOSERVER_PASSWORD", "geoserver")
-if DEPENDENT_GEOSERVER_URLS:
-    GEOSERVER_PASSWORD = [n.strip() for n in GEOSERVER_PASSWORD.split(",") if n and n.strip()]
-    if len(GEOSERVER_PASSWORD) == 1 :
-        DEPENDENT_GEOSERVER_PASSWORDS = GEOSERVER_PASSWORD * len(DEPENDENT_GEOSERVER_URLS)
-        GEOSERVER_PASSWORD = GEOSERVER_PASSWORD[0]
-    elif len(GEOSERVER_PASSWORD) != len(DEPENDENT_GEOSERVER_URLS) + 1:
-        raise Exception("Please configure the password for each geoserver")
-    else:
-        DEPENDENT_GEOSERVER_PASSWORDS = GEOSERVER_PASSWORD[1:]
-        GEOSERVER_PASSWORD = GEOSERVER_PASSWORD[0]
-else:
-    DEPENDENT_GEOSERVER_PASSWORDS = None
+GEOSERVER_WMS_GETCAPABILITIES_URL = ["{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(u) for u in GEOSERVER_URL]
+gs = []
+for index in range(len(GEOSERVER_URL)):
+    gs[index].append(Catalog(GEOSERVER_REST_URL[index], GEOSERVER_USERNAME[index], GEOSERVER_PASSWORD[index]))
+
+GEOSERVER_SHARING_DATA_DIR = os.environ.get("GEOSERVER_SHARING_DATA_DIR","false").lower() in ["true","yes"]
 
 GEOSERVER_WORKSPACE_NAMESPACE = os.environ.get("GEOSERVER_WORKSPACE_NAMESPACE", "http://{}.dpaw.wa.gov.au")
 GEOSERVER_DATASTORE_NAMESPACE = os.environ.get("GEOSERVER_DATASTORE_NAMESPACE", "{}_ds")
-GEOSERVER_WMSLAYERS_REST_URL = os.environ.get("GEOSERVER_WMSLAYERS_REST_URL",GEOSERVER_REST_URL + 'workspaces/{}/wmsstores/{}/wmslayers.xml')
-GEOSERVER_WMSLAYER_REST_URL = os.environ.get("GEOSERVER_WMSLAYER_REST_URL",GEOSERVER_REST_URL + 'workspaces/{}/wmsstores/{}/wmslayers/{}.xml?recurse=true')
-GEOSERVER_WMS_GETCAPABILITIES_URL = "{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(GEOSERVER_URL)
-
+GEOSERVER_DEFAULT_CRS = os.environ.get("GEOSERVER_DEFAULT_CRS", "EPSG:4326")
 
 GEOSERVER_PGSQL_HOST = os.environ.get("GEOSERVER_PGSQL_HOST", "localhost")
 GEOSERVER_PGSQL_DATABASE = os.environ.get("GEOSERVER_PGSQL_DATABASE", "borg_slave")
@@ -168,18 +147,8 @@ GEOSERVER_PGSQL_CONNECTION_DEFAULTS = {
     "Estimated extends": "true",
     "min connections": "1"
 }
-GEOSERVER_DEFAULT_CRS = os.environ.get("GEOSERVER_DEFAULT_CRS", "EPSG:4326")
-
 env = os.environ.copy()
 env["PGPASSWORD"] = GEOSERVER_PGSQL_PASSWORD or "dummy"
-
-gs = Catalog(GEOSERVER_REST_URL, GEOSERVER_USERNAME, GEOSERVER_PASSWORD)
-if DEPENDENT_GEOSERVER_URLS:
-    dependent_gss = [None] * len(DEPENDENT_GEOSERVER_URLS)
-    for index in range(len(DEPENDENT_GEOSERVER_URLS)):
-        dependent_gss[index] = Catalog(DEPENDENT_GEOSERVER_REST_URLS[index], DEPENDENT_GEOSERVER_USERNAMES[index], DEPENDENT_GEOSERVER_PASSWORDS[index])
-else:
-    dependent_gss = None
 
 template_env = Environment(loader=FileSystemLoader(CODE_PATH))
 
@@ -210,3 +179,29 @@ def parse_remotefilepath(f):
         "host":m.group("host"),
         "file":m.group("file")
     }
+
+
+def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda index:(gs[index],),start=0,end=1 if GEOSERVER_SHARING_DATA_DIR else len(GEOSERVER_URL)):
+    if len(GEOSERVER_URL[start:end]) == 1:
+        func(sync_job,task_metadata,task_status,*args_func(0))
+    else:
+        exceptions = []
+        for i in range(1,len(GEOSERVER_URL[start:end])):
+            stagename = GEOSERVER_HOST[i]
+            try:
+                if task_status.is_stage_not_succeed(stagename):
+                    func(sync_job,task_metadata,task_status,*args_func(i))
+                    task_status.del_stage_message(stagename,"message")
+                    task_status.stage_succeed(stagename)
+            except:
+                task_status.stage_failed(stagename)
+                task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
+                exceptions.append(str(sys.exc_info()[1]))
+    
+        if exceptions:
+            raise Exception("\n".join(exceptions))
+        elif task_status.all_stages_succeed:
+            task_status.clean_task_failed()
+        else:
+            task_status.task_failed()
+

@@ -7,11 +7,7 @@ import requests
 import json
 
 import geoserver_catalog_extension
-from slave_sync_env import (
-    PREVIEW_ROOT_PATH,SLAVE_NAME,
-    GEOSERVER_URL,GEOSERVER_USERNAME,GEOSERVER_PASSWORD,GEOSERVER_HOST,
-    DEPENDENT_GEOSERVER_URLS,DEPENDENT_GEOSERVER_USERNAMES,DEPENDENT_GEOSERVER_PASSWORDS,DEPENDENT_GEOSERVER_HOSTS
-)
+from . import slave_sync_env as settings
 
 from slave_sync_task import (
     update_feature_job,gs_spatial_task_filter,update_livelayer_job,layer_preview_task_filter,update_wmslayer_job
@@ -37,7 +33,7 @@ task_layer_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_j
 
 base_preview_url = lambda geoserver_url:geoserver_url + "/ows?service=wms&version=1.1.0&request=GetMap&srs=EPSG%3A4326&format=image/png"
 
-def layer_preview_urls(sync_job,geoserver_url=GEOSERVER_URL):
+def layer_preview_urls(sync_job,geoserver_url):
     urls = []
     height = None
     link = None
@@ -64,30 +60,27 @@ def layer_preview_urls(sync_job,geoserver_url=GEOSERVER_URL):
 
     return urls
 
-def _get_layer_preview(sync_job,task_metadata,task_status):
+def _get_layer_preview(sync_job,task_metadata,task_status:
     logger.info("Try to get layer preview image")
-    urls = layer_preview_urls(sync_job)
+    urls = layer_preview_urls(sync_job,settings.GEOSERVER_URL[0])
     index = 0
     for url in urls:
         index += 1
-        resp = requests.get(url[0], auth=(GEOSERVER_USERNAME,GEOSERVER_PASSWORD))
+        resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[0],settings.GEOSERVER_PASSWORD[0]))
         if resp.status_code >= 400:
+            task_status.del_message("preview_file")
             if index == len(urls):
                 raise Exception("Failed to get layer's preview image. ({0}: {1})".format(resp.status_code, resp.content))
             else:
                 continue
         elif not resp.headers['Content-Type'].startswith("image/"):
+            task_status.del_message("preview_file")
             if resp.text.find("This request used more time than allowed") >= 0:
+                #processing timeout; next time, has high change to succeed becuare the map is prepared by previous request
                 if index == len(urls):
-                    #GWC disabled getmap request
-                    #timeout when try to get preview image
-                    task_status.task_failed()
-                    task_status.del_message("preview_file")
-                    task_status.set_message("message",resp.text)
-                else:
-                    #GWC enabled getmap request
-                    #this time timeout; next time, has high change to succeed becuare the map is prepared by before request
                     raise Exception("Get layer's preview image timeout.")
+                else:
+                    continue
             else:
                 if index == len(urls):
                     raise Exception("url:{}\r\n{}".format(url[0],resp.text))
@@ -95,7 +88,7 @@ def _get_layer_preview(sync_job,task_metadata,task_status):
                     continue
         #getmap succeed
         try:
-            folder = os.path.join(PREVIEW_ROOT_PATH,SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
+            folder = os.path.join(settings.PREVIEW_ROOT_PATH,settings.SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
             if not os.path.exists(folder):   os.makedirs(folder)
             filename = os.path.join(folder,sync_job["name"] + url[1])
 
@@ -103,7 +96,7 @@ def _get_layer_preview(sync_job,task_metadata,task_status):
                 for chunk in resp.iter_content(1024):
                     fd.write(chunk)
 
-            task_status.set_message("preview_file",filename[len(PREVIEW_ROOT_PATH) + 1:])
+            task_status.set_message("preview_file",filename[len(settings.PREVIEW_ROOT_PATH) + 1:])
             break
         except:
             raise Exception("Failed to get layer's preview image. {0}".format(resp.content))
@@ -112,109 +105,53 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
     logger.info("Try to get layer preview image")
 
     exceptions = []
-    stagename = GEOSERVER_HOST
-    try:
-        if task_status.is_stage_not_succeed(stagename):
-            urls = layer_preview_urls(sync_job)
-            index = 0
-            for url in urls:
-                index += 1
-                resp = requests.get(url[0], auth=(GEOSERVER_USERNAME,GEOSERVER_PASSWORD))
-                if resp.status_code >= 400:
-                    if index == len(urls):
-                        raise Exception("Failed to get layer's preview image. ({0}: {1})".format(resp.status_code, resp.content))
-                    else:
-                        continue
-                elif not resp.headers['Content-Type'].startswith("image/"):
-                    if resp.text.find("This request used more time than allowed") >= 0:
-                        if index == len(urls):
-                            #GWC disabled getmap request
-                            #timeout when try to get preview image
-                            task_status.stage_failed(stagename)
-                            task_status.del_message("preview_file")
-                            task_status.del_stage_message(stagename,"preview_file")
-                            task_status.set_stage_message(stagename,"message",resp.text)
-                        else:
-                            #GWC enabled getmap request
-                            #this time timeout; next time, has high change to succeed becuare the map is prepared by before request
-                            raise Exception("Get layer's preview image timeout.")
-                    else:
-                        if index == len(urls):
-                            raise Exception("url:{}\r\n{}".format(url[0],resp.text))
-                        else:
-                            continue
-                #getmap succeed
-                try:
-                    folder = os.path.join(PREVIEW_ROOT_PATH,SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
-                    if not os.path.exists(folder):   os.makedirs(folder)
-                    filename = os.path.join(folder,"{}{}".format(sync_job["name"] ,url[1]))
-        
-                    with open(filename, 'wb') as fd:
-                        for chunk in resp.iter_content(1024):
-                            fd.write(chunk)
-        
-                    task_status.set_message("preview_file",filename[len(PREVIEW_ROOT_PATH) + 1:])
-                    task_status.set_stage_message(stagename,"preview_file",filename[len(PREVIEW_ROOT_PATH) + 1:])
-                    task_status.del_stage_message(stagename,"message")
-                    task_status.stage_succeed(stagename)
-                    break
-                except:
-                    raise Exception("Failed to get layer's preview image. {0}".format(resp.content))
-    except:
-        task_status.stage_failed(stagename)
-        task_status.del_message("preview_file")
-        task_status.del_stage_message(stagename,"preview_file")
-        task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
-        exceptions.append(str(sys.exc_info()[1]))
-
-    logger.info("Try to get layer preview image for dependent geoserver")
-    for i in range(len(DEPENDENT_GEOSERVER_URLS)):
-        stagename = DEPENDENT_GEOSERVER_HOSTS[i]
+    for i in range(len(settings.GEOSERVER_URL)):
+        stagename = settings.GEOSERVER_HOST[i]
         try:
             if task_status.is_stage_not_succeed(stagename):
-                urls = layer_preview_urls(sync_job,geoserver_url=DEPENDENT_GEOSERVER_URLS[i])
+                urls = layer_preview_urls(sync_job,geoserver_url=settings.GEOSERVER_URL[i])
                 index = 0
                 for url in urls:
                     index += 1
-                    resp = requests.get(url[0], auth=(DEPENDENT_GEOSERVER_USERNAMES[i],DEPENDENT_GEOSERVER_PASSWORDS[i]))
+                    resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[i],settings.GEOSERVER_PASSWORD[i]))
                     if resp.status_code >= 400:
+                        task_status.del_message("preview_file")
                         if index == len(urls):
-                            raise Exception("Failed to get layer's preview image from '{2}'. ({0}: {1})".format(resp.status_code, resp.content,DEPENDENT_GEOSERVER_HOSTS[i]))
+                            raise Exception("Failed to get layer's preview image from '{2}'. ({0}: {1})".format(resp.status_code, resp.content,settings.GEOSERVER_HOST[i]))
                         else:
                             continue
                     elif not resp.headers['Content-Type'].startswith("image/"):
+                        task_status.del_message("preview_file")
                         if resp.text.find("This request used more time than allowed") >= 0:
+                            #processing timeout; next time, has high change to succeed becuare the map is prepared by previous request
                             if index == len(urls):
-                                #GWC disabled getmap request
-                                #timeout when try to get preview image
-                                task_status.stage_failed(stagename)
-                                task_status.del_stage_message(stagename,"preview_file")
-                                task_status.set_stage_message(stagename,"message",resp.text)
+                                raise Exception("Get layer's preview image from '{}' timeout.".format(settings.GEOSERVER_HOST[i]))
                             else:
-                                #GWC enabled getmap request
-                                #this time timeout; next time, has high change to succeed becuare the map is prepared by before request
-                                raise Exception("Get layer's preview image from '{}' timeout.".format(DEPENDENT_GEOSERVER_HOSTS[i]))
+                                continue
                         else:
                             if index == len(urls):
-                                raise Exception("{2}: url:{0}\r\n{1}".format(url[0],resp.text,DEPENDENT_GEOSERVER_HOSTS[i]))
+                                raise Exception("{2}: url:{0}\r\n{1}".format(url[0],resp.text,settings.GEOSERVER_HOST[i]))
                             else:
                                 continue
                     #getmap succeed
                     try:
-                        folder = os.path.join(PREVIEW_ROOT_PATH,SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
+                        folder = os.path.join(settings.PREVIEW_ROOT_PATH,settings.SLAVE_NAME,sync_job["channel"],sync_job["workspace"])
                         if not os.path.exists(folder):   os.makedirs(folder)
-                        filename = os.path.join(folder,"{0}-{2}{1}".format(sync_job["name"] ,url[1],DEPENDENT_GEOSERVER_HOSTS[i]))
+                        if i == 0:
+                            filename = os.path.join(folder,sync_job["name"] + url[1])
+                        else:
+                            filename = os.path.join(folder,"{0}-{2}{1}".format(sync_job["name"] ,url[1],settings.GEOSERVER_HOST[i]))
             
                         with open(filename, 'wb') as fd:
                             for chunk in resp.iter_content(1024):
                                 fd.write(chunk)
             
-                        task_status.set_stage_message(stagename,"preview_file",filename[len(PREVIEW_ROOT_PATH) + 1:])
+                        task_status.set_stage_message(stagename,"preview_file",filename[len(settings.PREVIEW_ROOT_PATH) + 1:])
                         task_status.del_stage_message(stagename,"message")
                         task_status.stage_succeed(stagename)
                         break
                     except:
-                        raise Exception("Failed to get layer's preview image from '{1}'. {0}".format(resp.content,DEPENDENT_GEOSERVER_HOSTS[i]))
+                        raise Exception("Failed to get layer's preview image from '{1}'. {0}".format(resp.content,settings.GEOSERVER_HOST[i]))
         except:
             task_status.stage_failed(stagename)
             task_status.del_stage_message(stagename,"preview_file")
@@ -229,7 +166,7 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
     else:
         task_status.task_failed()
 
-if DEPENDENT_GEOSERVER_URLS:
+if len(settings.GEOSERVER_URL) > 1:
     get_layer_preview = _get_layer_preview_with_dependent_geoservers
 else:
     get_layer_preview = _get_layer_preview

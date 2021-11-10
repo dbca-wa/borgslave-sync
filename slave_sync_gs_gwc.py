@@ -5,9 +5,7 @@ import requests
 
 from gwc import GeoWebCache
 
-from slave_sync_env import (
-    GEOSERVER_URL,GEOSERVER_USERNAME,GEOSERVER_PASSWORD
-)
+from . import slave_sync_env as settings
 
 from slave_sync_task import (
     update_wmslayer_job,update_layergroup_job,update_feature_job,update_feature_metadata_job,gs_task_filter,gs_feature_task_filter,gs_spatial_task_filter,
@@ -17,13 +15,11 @@ from slave_sync_task import (
 
 logger = logging.getLogger(__name__)
 
-gwc = GeoWebCache(GEOSERVER_URL,GEOSERVER_USERNAME,GEOSERVER_PASSWORD)
-
 update_headers = {'content-type':'application/xml','Accept': 'application/xml'}
 
 task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"])
 
-def update_gwc(sync_job,task_metadata,task_status):
+def _update_gwc(sync_job,task_metadata,task_status,gwc):
     """
     update a gwc
     """
@@ -39,9 +35,11 @@ def update_gwc(sync_job,task_metadata,task_status):
         else:
             task_status.set_message("message","Nothing happened.")
 
+def update_gwc(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_gwc,lambda index:(GeoWebCache(settings.GEOSERVER_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]),))
 
 
-def empty_gwc(sync_job,task_metadata,task_status):
+def _empty_gwc(sync_job,task_metadata,task_status,gwc):
     """
     empty gwc
     """
@@ -50,6 +48,9 @@ def empty_gwc(sync_job,task_metadata,task_status):
         task_status.set_message("message","Empty gwc successfully")
     else:
         task_status.set_message("message","GWC is disabled, no need to empty gwc.")
+
+def empty_gwc(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_empty_gwc,lambda index:(GeoWebCache(settings.GEOSERVER_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]),))
 
 
 tasks_metadata = {
