@@ -8,12 +8,7 @@ import json
 from geoserver.support import JDBCVirtualTable,JDBCVirtualTableGeometry
 
 import geoserver_catalog_extension
-from slave_sync_env import (
-    GEOSERVER_DATASTORE_NAMESPACE,GEOSERVER_PGSQL_CONNECTION_DEFAULTS,GEOSERVER_WORKSPACE_NAMESPACE,GEOSERVER_DEFAULT_CRS,GEOSERVER_DATA_DIR,
-    GEOSERVER_PGSQL_HOST, GEOSERVER_PGSQL_PORT, GEOSERVER_PGSQL_DATABASE, GEOSERVER_PGSQL_USERNAME,
-    CACHE_PATH,
-    gs,env,GEOSERVER_REST_URL,DEPENDENT_GEOSERVER_URLS,dependent_gss,DEPENDENT_GEOSERVER_HOSTS,
-)
+from . import slave_sync_env as settings
 from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
     update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job,
@@ -34,7 +29,7 @@ def store_name(sync_job):
     elif sync_job["job_type"] == "live_layer":
         return sync_job["datastore"]
     elif sync_job["job_type"] == "feature":
-        return GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace'])
+        return settings.GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace'])
     else:
         raise Exception("{} not support".format(sync_job["job_type"]))
 
@@ -48,7 +43,7 @@ def geoserver_style_name(sync_job,style_name):
     else:
         return "{}.{}".format(sync_job['name'],style_name)
 
-def get_datastore(sync_job):
+def get_datastore(gs,sync_job):
     d_gs = gs.get_store(store_name(sync_job))
 
     if not d_gs:
@@ -56,29 +51,28 @@ def get_datastore(sync_job):
 
     return d_gs
 
-def get_feature(sync_job):
+def get_feature(gs,sync_job):
     l_gs = gs.get_layer(task_feature_name(sync_job))
     if not l_gs:
         raise Exception("Feature ({0}) does not exist".format(task_feature_name(sync_job)))
 
     return l_gs
 
-
-def create_datastore(sync_job,task_metadata,task_status):
+def _create_datastore(sync_job,task_metadata,task_status,gs):
     name = store_name(sync_job)
     try:
         d_gs = gs.get_store(name,sync_job['workspace'])
     except:
         d_gs = gs.create_datastore(name, sync_job['workspace'])
 
-    d_gs.connection_parameters = dict(GEOSERVER_PGSQL_CONNECTION_DEFAULTS)
+    d_gs.connection_parameters = dict(settings.GEOSERVER_PGSQL_CONNECTION_DEFAULTS)
     d_gs.enabled = True
 
     for k in d_gs.connection_parameters.iterkeys():
         if k in sync_job:
             d_gs.connection_parameters[k] = str(sync_job[k])
 
-    d_gs.connection_parameters["namespace"] = GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace'])
+    d_gs.connection_parameters["namespace"] = settings.GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace'])
 
     if "geoserver_setting" in sync_job:
         for k in d_gs.connection_parameters.iterkeys():
@@ -89,7 +83,10 @@ def create_datastore(sync_job,task_metadata,task_status):
     if not d_gs:
         raise Exception("Create data store for workspace({0}) in geoserver failed.".format(sync_job['workspace']))
 
-def delete_datastore(sync_job,task_metadata,task_status):
+def create_datastore(gs,sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_datastore)
+
+def _delete_datastore(sync_job,task_metadata,task_status,gs):
     name = store_name(sync_job)
     try:
         d_gs = gs.get_store(name)
@@ -99,13 +96,15 @@ def delete_datastore(sync_job,task_metadata,task_status):
 
     gs.delete(d_gs)
 
+def delete_datastore(sync_job,task_metadata,task_status,gs):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_delete_datastore)
 
 class Feature(object):
     def __init__(self,layer,href):
         self.layer = layer
         self.href = href
 
-def delete_feature(sync_job,task_metadata,task_status):
+def _delete_feature(sync_job,task_metadata,task_status,gs,rest_url):
     feature_name = "{}:{}".format(sync_job['workspace'], sync_job['name'])
     l_gs = gs.get_layer(feature_name)
     styles = {}
@@ -140,7 +139,7 @@ def delete_feature(sync_job,task_metadata,task_status):
 
     try:
         #delete feature
-        url = GEOSERVER_REST_URL + "workspaces/" + sync_job['workspace'] + "/datastores/" +  store_name(sync_job) + "/featuretypes/" + sync_job['name'] + ".xml"
+        url = rest_url + "workspaces/" + sync_job['workspace'] + "/datastores/" +  store_name(sync_job) + "/featuretypes/" + sync_job['name'] + ".xml"
         gs.delete(Feature(l_gs,url))
     except:
         pass
@@ -167,7 +166,10 @@ def delete_feature(sync_job,task_metadata,task_status):
         else:
             task_status.set_message("message","Feature ({}) doesn't exist.".format(feature_name))
 
-def create_feature(sync_job,task_metadata,task_status):
+def delete_feature(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_delete_feature,lambda index:(settings.gs[index],settings.GEOSERVER_REST_URL[index]))
+
+def _create_feature(sync_job,task_metadata,task_status,gs):
     """
     This is not a critical task. 
     """
@@ -175,20 +177,20 @@ def create_feature(sync_job,task_metadata,task_status):
     if not crs and "datasource" not in sync_job:
         # try and fetch the layer's CRS from PostGIS
         if "spatial_column" in sync_job:
-            getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT srid FROM public.geometry_columns WHERE f_table_schema='{0}' AND f_table_name='{1}' AND f_geometry_column='{2}';".format(sync_job["schema"], sync_job["name"],sync_job["spatial_column"])]
+            getcrs_cmd = ["psql", "-w", "-h", settings.GEOSERVER_PGSQL_HOST, "-p", settings.GEOSERVER_PGSQL_PORT, "-d", settings.GEOSERVER_PGSQL_DATABASE, "-U", settings.GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT srid FROM public.geometry_columns WHERE f_table_schema='{0}' AND f_table_name='{1}' AND f_geometry_column='{2}';".format(sync_job["schema"], sync_job["name"],sync_job["spatial_column"])]
         else:
-            getcrs_cmd = ["psql", "-w", "-h", GEOSERVER_PGSQL_HOST, "-p", GEOSERVER_PGSQL_PORT, "-d", GEOSERVER_PGSQL_DATABASE, "-U", GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
-        getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            getcrs_cmd = ["psql", "-w", "-h", settings.GEOSERVER_PGSQL_HOST, "-p", settings.GEOSERVER_PGSQL_PORT, "-d", settings.GEOSERVER_PGSQL_DATABASE, "-U", settings.GEOSERVER_PGSQL_USERNAME, "-A", "-t", "-c", "SELECT public.ST_SRID(wkb_geometry) FROM {}.{} LIMIT 1;".format(sync_job["schema"], sync_job["name"])]
+        getcrs = subprocess.Popen(getcrs_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=settings.env)
         getcrs_output = getcrs.communicate()
         if not getcrs_output[0]:
-            crs = GEOSERVER_DEFAULT_CRS
+            crs = settings.GEOSERVER_DEFAULT_CRS
             message = 'No CRS found for {}.{}, using default of {}'.format(sync_job["schema"], sync_job["name"], crs)
             task_status.set_message("message",message)
             logger.info(message)
         else:
             srid = getcrs_output[0].decode('utf-8').strip()
             if len(srid) == 6 and srid.startswith('90'):
-                crs = GEOSERVER_DEFAULT_CRS
+                crs = settings.GEOSERVER_DEFAULT_CRS
                 message = 'Layer {}.{} has the non-standard SRID {}! Check the Borg Collector definition for this input and force a standard CRS if necessary. For now, the layer will be published with default CRS {}'.format(sync_job["schema"], sync_job["name"], srid, crs)
                 logger.warn(message)
                 task_status.set_message("message",message)
@@ -204,7 +206,7 @@ def create_feature(sync_job,task_metadata,task_status):
         bbox = (repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),crs)
 
     if sync_job.get('viewsql'):
-        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
+        gs.publish_featuretype(sync_job['name'],get_datastore(gs,sync_job),crs,
             keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
             title=sync_job.get('title', None), 
             abstract=sync_job.get('abstract', None),
@@ -213,7 +215,7 @@ def create_feature(sync_job,task_metadata,task_status):
             latLonBoundingBox=bbox
         )
     else:
-        gs.publish_featuretype(sync_job['name'],get_datastore(sync_job),crs,
+        gs.publish_featuretype(sync_job['name'],get_datastore(gs,sync_job),crs,
             keywords = (sync_job.get('keywords',None) or []) + (sync_job.get('applications',None) or []), 
             title=sync_job.get('title', None), 
             abstract=sync_job.get('abstract', None),
@@ -227,7 +229,10 @@ def create_feature(sync_job,task_metadata,task_status):
     if not l_gs:
         raise Exception("Layer({0}) not registering.".format(name))
 
-def create_style(sync_job,task_metadata,task_status):
+def create_feature(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_feature)
+
+def _create_style(sync_job,task_metadata,task_status,gs):
     """
     This is not a critical task. 
     """
@@ -274,7 +279,7 @@ def create_style(sync_job,task_metadata,task_status):
     
         #try to set feature's styles
         try:
-            feature = get_feature(sync_job)
+            feature = get_feature(gs,sync_job)
             feature.default_style = default_style
             if created_styles:
                 feature.styles = created_styles
@@ -293,11 +298,17 @@ def create_style(sync_job,task_metadata,task_status):
     #set messages
     task_status.set_message("message",os.linesep.join(messages))
 
-def update_access_rules(sync_job,task_metadata,task_status):
-    with open(os.path.join(GEOSERVER_DATA_DIR,"security","layers.properties"),"wb") as access_file:
+def create_style(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_style)
+
+def _update_access_rules(sync_job,task_metadata,task_status,data_dir):
+    with open(os.path.join(data_dir,"security","layers.properties"),"wb") as access_file:
         access_file.write(sync_job["job_file_content"])
 
-def reload_geoserver(sync_job,task_metadata,task_status):
+def update_access_rules(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_access_rules,lambda index:(settings.GEOSERVER_DATA_DIR[index],))
+
+def _reload_geoserver(sync_job,task_metadata,task_status,gs):
     """
     reload geoserver setting
     always succeed, even failed.
@@ -307,39 +318,26 @@ def reload_geoserver(sync_job,task_metadata,task_status):
     except:
         logger.error("Reload geoserver setting failed".format(traceback.format_exc()))
 
+def reload_geoserver(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver)
+
 def reload_dependent_geoservers(sync_job,task_metadata,task_status):
     """
     reload dependent geoserver setting
     """
-    logger.info("Try to reload dependent geoservers")
-    exceptions = []
-    for i in range(len(DEPENDENT_GEOSERVER_URLS)):
-        stagename = DEPENDENT_GEOSERVER_HOSTS[i]
-        try:
-            if task_status.is_stage_not_succeed(stagename):
-                dependent_gss[i].reload()
-                task_status.del_stage_message(stagename,"message")
-                task_status.stage_succeed(stagename)
-        except:
-            task_status.stage_failed(stagename)
-            task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
-            exceptions.append(str(sys.exc_info()[1]))
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver,start=1)
 
-    if exceptions:
-        raise Exception("\n".join(exceptions))
-    elif task_status.all_stages_succeed:
-        task_status.clean_task_failed()
-    else:
-        task_status.task_failed()
-
-def create_workspace(sync_job,task_metadata,task_status):
+def _create_workspace(sync_job,task_metadata,task_status,gs):
     try:
         w_gs = gs.get_workspace(sync_job['workspace'])
     except:
         w_gs = None
 
     if not w_gs:
-        w_gs = gs.create_workspace(sync_job['workspace'], GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace']))
+        w_gs = gs.create_workspace(sync_job['workspace'], settings.GEOSERVER_WORKSPACE_NAMESPACE.format(sync_job['workspace']))
+
+def create_workspace(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_workspace)
 
 tasks_metadata = [
                     ("create_datastore", update_livestore_job, gs_feature_task_filter      , task_store_name  , create_datastore),
@@ -372,7 +370,7 @@ tasks_metadata = [
 
                     ("reload_geoserver"   , update_access_rules_job, None, "reload_geoserver"   , reload_geoserver),
 ]
-if DEPENDENT_GEOSERVER_URLS:
+if settings.GEOSERVER_SHARING_DATA_DIR and len(settings.GEOSERVER_URL) > 1:
     for job,task_filter in (
         (update_access_rules_job,None),
         (update_wmsstore_job,gs_task_filter),
