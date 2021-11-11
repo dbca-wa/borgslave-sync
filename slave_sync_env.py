@@ -186,7 +186,7 @@ def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda
         func(sync_job,task_metadata,task_status,*args_func(0))
     else:
         exceptions = []
-        for i in range(1,len(GEOSERVER_URL[start:end])):
+        for i in range(start,end)):
             stagename = GEOSERVER_HOST[i]
             try:
                 if task_status.is_stage_not_succeed(stagename):
