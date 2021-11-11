@@ -147,6 +147,8 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
                         task_status.set_stage_message(stagename,"preview_file",filename[len(settings.PREVIEW_ROOT_PATH) + 1:])
                         task_status.del_stage_message(stagename,"message")
                         task_status.stage_succeed(stagename)
+                        if i == 0:
+                            task_status.set_message("preview_file",filename[len(settings.PREVIEW_ROOT_PATH) + 1:])
                         break
                     except:
                         raise Exception("Failed to get layer's preview image from '{1}'. {0}".format(resp.content,settings.GEOSERVER_HOST[i]))
@@ -154,6 +156,8 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
             task_status.stage_failed(stagename)
             task_status.del_stage_message(stagename,"preview_file")
             task_status.set_stage_message(stagename,"message",str(sys.exc_info()[1]))
+            if i == 0:
+                task_status.del_message("preview_file")
             exceptions.append(str(sys.exc_info()[1]))
 
 
