@@ -335,29 +335,42 @@ class SlaveSyncTaskStatus(dict):
         self['status'] = True
         self._modified = True
 
-    def get_message(self,key):
+    def get_message(self,key,stage=None):
         """
         get the message with key
         """
+        if stage:
+            return self.get_stage_message(stage,key)
+
         try:
             return self["messages"][key]
         except:
             return ""
 
-    def has_message(self):
-        return self["messages"]
+    def has_message(self,stage=None):
+        if stage:
+            return self.has_stage_message(stage)
+        else:
+            return True if self["messages"] else False
 
-    def set_message(self,key,message):
+    def set_message(self,key,message,stage=None):
         """
         set a message with key
         """
+        if stage:
+            self.set_stage_message(stage,key,message)
+            return
+
         self["messages"][key] = message
         self._modified = True
 
-    def del_message(self,key):
+    def del_message(self,key,stage=None):
         """
         delete a message
         """
+        if stage:
+            self.del_stage_message(stage,key)
+            return
         try:
             del self["messages"][key]
         except:
@@ -419,7 +432,7 @@ class SlaveSyncTaskStatus(dict):
 
     def has_stage_message(self,stage):
         try:
-            return self["stages"][stage]["messages"]
+            return True if self["stages"][stage]["messages"] else None
         except:
             return False
     

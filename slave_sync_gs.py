@@ -60,7 +60,7 @@ def get_feature(gs,sync_job):
 
     return l_gs
 
-def _create_datastore(sync_job,task_metadata,task_status,gs):
+def _create_datastore(sync_job,task_metadata,task_status,gs,stage=None):
     name = store_name(sync_job)
     try:
         d_gs = gs.get_store(name,sync_job['workspace'])
@@ -88,7 +88,7 @@ def _create_datastore(sync_job,task_metadata,task_status,gs):
 def create_datastore(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_datastore)
 
-def _delete_datastore(sync_job,task_metadata,task_status,gs):
+def _delete_datastore(sync_job,task_metadata,task_status,gs,stage=None):
     name = store_name(sync_job)
     try:
         d_gs = gs.get_store(name)
@@ -106,7 +106,7 @@ class Feature(object):
         self.layer = layer
         self.href = href
 
-def _delete_feature(sync_job,task_metadata,task_status,gs,rest_url):
+def _delete_feature(sync_job,task_metadata,task_status,gs,rest_url,stage=None):
     feature_name = "{}:{}".format(sync_job['workspace'], sync_job['name'])
     l_gs = gs.get_layer(feature_name)
     styles = {}
@@ -156,22 +156,22 @@ def _delete_feature(sync_job,task_metadata,task_status,gs,rest_url):
             task_status.set_message("message",os.linesep.join([
                 "Succeed to delete feature ({})".format(feature_name),
                 "Succeed to delete private styles ({}).".format(", ".join([name for name in styles.iterkeys()]))
-                ]))
+                ]),stage=stage)
         else:
-            task_status.set_message("message","Succeed to delete feature ({}).".format(feature_name))
+            task_status.set_message("message","Succeed to delete feature ({}).".format(feature_name),stage=stage)
     else:
         if styles:
             task_status.set_message("message",os.linesep.join([
                 "Feature ({}) doesn't exist.".format(feature_name),
                 "Succeed to delete private styles ({}).".format(", ".join([name for name in styles.iterkeys()]))
-                ]))
+                ]),stage=stage)
         else:
-            task_status.set_message("message","Feature ({}) doesn't exist.".format(feature_name))
+            task_status.set_message("message","Feature ({}) doesn't exist.".format(feature_name),stage=stage)
 
 def delete_feature(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_delete_feature,lambda index:(settings.gs[index],settings.GEOSERVER_REST_URL[index]))
 
-def _create_feature(sync_job,task_metadata,task_status,gs):
+def _create_feature(sync_job,task_metadata,task_status,gs,stage=None):
     """
     This is not a critical task. 
     """
@@ -187,7 +187,7 @@ def _create_feature(sync_job,task_metadata,task_status,gs):
         if not getcrs_output[0]:
             crs = settings.GEOSERVER_DEFAULT_CRS
             message = 'No CRS found for {}.{}, using default of {}'.format(sync_job["schema"], sync_job["name"], crs)
-            task_status.set_message("message",message)
+            task_status.set_message("message",message,stage=stage)
             logger.info(message)
         else:
             srid = getcrs_output[0].decode('utf-8').strip()
@@ -195,12 +195,12 @@ def _create_feature(sync_job,task_metadata,task_status,gs):
                 crs = settings.GEOSERVER_DEFAULT_CRS
                 message = 'Layer {}.{} has the non-standard SRID {}! Check the Borg Collector definition for this input and force a standard CRS if necessary. For now, the layer will be published with default CRS {}'.format(sync_job["schema"], sync_job["name"], srid, crs)
                 logger.warn(message)
-                task_status.set_message("message",message)
+                task_status.set_message("message",message,stage=stage)
             else:
                 crs = 'EPSG:{}'.format(srid)
                 message = 'Found CRS for {}.{}: {}'.format(sync_job["schema"], sync_job["name"], crs)
                 logger.info(message)
-                task_status.set_message("message",message)
+                task_status.set_message("message",message,stage=stage)
 
     bbox = None
     if (sync_job.get('override_bbox',False)):
@@ -234,7 +234,7 @@ def _create_feature(sync_job,task_metadata,task_status,gs):
 def create_feature(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_feature)
 
-def _create_style(sync_job,task_metadata,task_status,gs):
+def _create_style(sync_job,task_metadata,task_status,gs,stage=None):
     """
     This is not a critical task. 
     """
@@ -298,19 +298,19 @@ def _create_style(sync_job,task_metadata,task_status,gs):
         messages.append("No styles are reauired to create")
 
     #set messages
-    task_status.set_message("message",os.linesep.join(messages))
+    task_status.set_message("message",os.linesep.join(messages),stage=stage)
 
 def create_style(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_style)
 
-def _update_access_rules(sync_job,task_metadata,task_status,data_dir):
+def _update_access_rules(sync_job,task_metadata,task_status,data_dir,stage=None):
     with open(os.path.join(data_dir,"security","layers.properties"),"wb") as access_file:
         access_file.write(sync_job["job_file_content"])
 
 def update_access_rules(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_access_rules,lambda index:(settings.GEOSERVER_DATA_DIR[index],))
 
-def _reload_geoserver(sync_job,task_metadata,task_status,gs):
+def _reload_geoserver(sync_job,task_metadata,task_status,gs,stage=None):
     """
     reload geoserver setting
     always succeed, even failed.
@@ -326,7 +326,7 @@ def reload_geoserver(sync_job,task_metadata,task_status):
 def reload_dependent_geoservers(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver,start=1)
 
-def _create_workspace(sync_job,task_metadata,task_status,gs):
+def _create_workspace(sync_job,task_metadata,task_status,gs,stage=None):
     try:
         w_gs = gs.get_workspace(sync_job['workspace'])
     except:

@@ -51,7 +51,7 @@ def get_layer_url(rest_url,workspace,store_name,layer_name,f='xml'):
     """
     return "{0}workspaces/{1}/wmsstores/{2}/wmslayers/{3}.{4}?recurse=true".format(rest_url,workspace,store_name,layer_name,f)
 
-def _update_store(sync_job,task_metadata,task_status,rest_url,username,password):
+def _update_store(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
     update a store
     """
@@ -78,7 +78,7 @@ def update_store(sync_job,task_metadata,task_status):
 
 re_laye_not_in_capabilitiles_doc = re.compile("Could\snot\sfind\slayer.+in\sthe\sserver\scapabilitiles\sdocument",re.IGNORECASE|re.DOTALL)
 re_already_exist_in_workspace = re.compile("Resource\snamed.+already\sexists\sin\snamespace.+",re.IGNORECASE|re.DOTALL)
-def _update_layer(sync_job,task_metadata,task_status,rest_url,username,password):
+def _update_layer(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
     update a layer
     """
@@ -130,7 +130,7 @@ def update_layer(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_layer,lambda index:(settings.GEOSERVER_REST_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]))
 
 
-def _remove_layer(sync_job,task_metadata,task_status,rest_url,username,password):
+def _remove_layer(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
     remove a layer
     """
@@ -145,7 +145,7 @@ def _remove_layer(sync_job,task_metadata,task_status,rest_url,username,password)
 def remove_layer(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_remove_layer,lambda index:(settings.GEOSERVER_REST_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]))
 
-def _remove_store(sync_job,task_metadata,task_status,rest_url,username,password):
+def _remove_store(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
     remove a store
     """

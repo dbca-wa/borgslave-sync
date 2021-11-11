@@ -115,13 +115,11 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
                     index += 1
                     resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[i],settings.GEOSERVER_PASSWORD[i]))
                     if resp.status_code >= 400:
-                        task_status.del_message("preview_file")
                         if index == len(urls):
                             raise Exception("Failed to get layer's preview image from '{2}'. ({0}: {1})".format(resp.status_code, resp.content,settings.GEOSERVER_HOST[i]))
                         else:
                             continue
                     elif not resp.headers['Content-Type'].startswith("image/"):
-                        task_status.del_message("preview_file")
                         if resp.text.find("This request used more time than allowed") >= 0:
                             #processing timeout; next time, has high change to succeed becuare the map is prepared by previous request
                             if index == len(urls):

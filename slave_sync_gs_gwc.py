@@ -19,7 +19,7 @@ update_headers = {'content-type':'application/xml','Accept': 'application/xml'}
 
 task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"])
 
-def _update_gwc(sync_job,task_metadata,task_status,gwc):
+def _update_gwc(sync_job,task_metadata,task_status,gwc,stage=None):
     """
     update a gwc
     """
@@ -27,27 +27,27 @@ def _update_gwc(sync_job,task_metadata,task_status,gwc):
     if "geoserver_setting" in sync_job and sync_job["geoserver_setting"].get("create_cache_layer",False):
         #need to create cache layer
         gwc.update_layer(sync_job)
-        task_status.set_message("message","Update gwc successfully")
+        task_status.set_message("message","Update gwc successfully",stage=stage)
     else:
         if gwc.get_layer(sync_job['workspace'], sync_job['name']):
             gwc.del_layer(sync_job['workspace'],sync_job['name'])
-            task_status.set_message("message","Remove gwc successfully")
+            task_status.set_message("message","Remove gwc successfully",stage=stage)
         else:
-            task_status.set_message("message","Nothing happened.")
+            task_status.set_message("message","Nothing happened.",stage=stage)
 
 def update_gwc(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_gwc,lambda index:(GeoWebCache(settings.GEOSERVER_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]),))
 
 
-def _empty_gwc(sync_job,task_metadata,task_status,gwc):
+def _empty_gwc(sync_job,task_metadata,task_status,gwc,stage=None):
     """
     empty gwc
     """
     if gwc.get_layer(sync_job['workspace'], sync_job['name']):
         gwc.empty_layer(sync_job)
-        task_status.set_message("message","Empty gwc successfully")
+        task_status.set_message("message","Empty gwc successfully",stage=stage)
     else:
-        task_status.set_message("message","GWC is disabled, no need to empty gwc.")
+        task_status.set_message("message","GWC is disabled, no need to empty gwc.",stage=stage)
 
 def empty_gwc(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_empty_gwc,lambda index:(GeoWebCache(settings.GEOSERVER_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]),))
