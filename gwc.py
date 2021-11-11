@@ -4,7 +4,7 @@ import time
 import requests
 from xml.etree import ElementTree
 from jinja2 import Template,Environment,FileSystemLoader
-from . import slave_sync_env as settings
+import slave_sync_env as settings
 
 class GeoWebCache(object):
     """
@@ -113,5 +113,5 @@ class GeoWebCache(object):
             raise Exception("Retrieve cached layer list failed. {0}".format(resp.content))
 
 if __name__ == "__main__":
-    gwc = GeoWebCache(settings.GEOSERVER_URL[0],settings.GEOSERVER_USERNAME[0],settings.GEOSERVER_PASSWORD[0]))
+    gwc = GeoWebCache(settings.GEOSERVER_URL[0],settings.GEOSERVER_USERNAME[0],settings.GEOSERVER_PASSWORD[0])
     print(gwc.layers)

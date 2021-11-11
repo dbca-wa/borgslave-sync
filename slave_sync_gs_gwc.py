@@ -5,7 +5,7 @@ import requests
 
 from gwc import GeoWebCache
 
-from . import slave_sync_env as settings
+import slave_sync_env as settings
 
 from slave_sync_task import (
     update_wmslayer_job,update_layergroup_job,update_feature_job,update_feature_metadata_job,gs_task_filter,gs_feature_task_filter,gs_spatial_task_filter,

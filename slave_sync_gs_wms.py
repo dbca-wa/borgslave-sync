@@ -3,7 +3,7 @@ import logging
 import re
 import requests
 
-from . import slave_sync_env as settings
+import slave_sync_env as settings
 from slave_sync_task import (
     update_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_wmsstore_job,gs_task_filter,
     get_http_response_exception

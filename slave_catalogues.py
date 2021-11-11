@@ -14,7 +14,7 @@ from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,
     update_wmslayer_job,remove_wmslayer_job,gs_task_filter
 )
-from . import slave_sync_env as settings
+import slave_sync_env as settings
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(

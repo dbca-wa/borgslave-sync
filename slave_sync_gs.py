@@ -8,7 +8,9 @@ import json
 from geoserver.support import JDBCVirtualTable,JDBCVirtualTableGeometry
 
 import geoserver_catalog_extension
-from . import slave_sync_env as settings
+
+import slave_sync_env as settings
+
 from slave_sync_task import (
     update_feature_job,update_feature_metadata_job,gs_feature_task_filter,remove_feature_job,gs_style_task_filter,
     update_access_rules_job,update_wmsstore_job,gs_task_filter,update_layergroup_job,
