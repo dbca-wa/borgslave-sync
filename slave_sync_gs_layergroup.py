@@ -20,13 +20,13 @@ def get_groups_url(rest_url,workspace):
     """
     return the url of layer groups
     """
-    return "{0}workspaces/{1}/layergroups.xml".format(rest_url,workspace)
+    return "{0}/workspaces/{1}/layergroups.xml".format(rest_url,workspace)
 
 def get_group_url(rest_url,workspace,group_name):
     """
     return the url of the layer group
     """
-    return "{0}workspaces/{1}/layergroups/{2}.xml".format(rest_url,workspace,group_name)
+    return "{0}/workspaces/{1}/layergroups/{2}.xml".format(rest_url,workspace,group_name)
 
 def _update_group(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
