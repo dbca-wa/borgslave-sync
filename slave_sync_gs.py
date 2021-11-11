@@ -85,7 +85,7 @@ def _create_datastore(sync_job,task_metadata,task_status,gs):
     if not d_gs:
         raise Exception("Create data store for workspace({0}) in geoserver failed.".format(sync_job['workspace']))
 
-def create_datastore(gs,sync_job,task_metadata,task_status):
+def create_datastore(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_datastore)
 
 def _delete_datastore(sync_job,task_metadata,task_status,gs):
@@ -98,7 +98,7 @@ def _delete_datastore(sync_job,task_metadata,task_status,gs):
 
     gs.delete(d_gs)
 
-def delete_datastore(sync_job,task_metadata,task_status,gs):
+def delete_datastore(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_delete_datastore)
 
 class Feature(object):
@@ -324,9 +324,6 @@ def reload_geoserver(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver)
 
 def reload_dependent_geoservers(sync_job,task_metadata,task_status):
-    """
-    reload dependent geoserver setting
-    """
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver,start=1)
 
 def _create_workspace(sync_job,task_metadata,task_status,gs):

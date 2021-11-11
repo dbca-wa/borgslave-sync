@@ -72,7 +72,7 @@ def _update_store(sync_job,task_metadata,task_status,rest_url,username,password)
     if res.status_code >= 400:
         raise Exception("{0}: {1}".format(res.status_code, get_http_response_exception(res)))
 
-def update_store(sync_job,task_metadata,task_status,rest_url,username,password):
+def update_store(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_store,lambda index:(settings.GEOSERVER_REST_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]))
 
 
