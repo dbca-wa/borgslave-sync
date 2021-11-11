@@ -190,8 +190,10 @@ def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda
             stagename = GEOSERVER_HOST[i]
             try:
                 if task_status.is_stage_not_succeed(stagename):
-                    func(sync_job,task_metadata,task_status,*args_func(i))
                     task_status.del_stage_message(stagename,"message")
+                    func(sync_job,task_metadata,task_status,*args_func(i),stage=stagename)
+                    if not task_status.get_stage_message(stagename,"message"):
+                        task_status.set_stage_message(stagename,"message","succeed")
                     task_status.stage_succeed(stagename)
             except:
                 task_status.stage_failed(stagename)

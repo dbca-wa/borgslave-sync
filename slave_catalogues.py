@@ -22,7 +22,7 @@ logging.basicConfig(
     format = '%(asctime)s %(levelname)s %(message)s',
 )
 
-def _update_static_catalogues(task,task_metadata,task_status,capability_url,username,password,theme_dir):
+def _update_static_catalogues(task,task_metadata,task_status,capability_url,username,password,theme_dir,stage=None):
     r = requests.get(capability_url, auth=(username, password))
     # this code makes assumptions about how the catalog XML will be formatted! use caution!
 

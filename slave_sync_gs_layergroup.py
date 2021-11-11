@@ -28,7 +28,7 @@ def get_group_url(rest_url,workspace,group_name):
     """
     return "{0}workspaces/{1}/layergroups/{2}.xml".format(rest_url,workspace,group_name)
 
-def _update_group(sync_job,task_metadata,task_status,rest_url,username,password):
+def _update_group(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
     update a layer group
     """
@@ -74,7 +74,7 @@ def update_group(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_group,lambda index:(settings.GEOSERVER_REST_URL[index],settings.GEOSERVER_USERNAME[index],settings.GEOSERVER_PASSWORD[index]))
 
 
-def _remove_group(sync_job,task_metadata,task_status,rest_url,username,password):
+def _remove_group(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
     remove a layer group
     """
