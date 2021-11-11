@@ -85,7 +85,7 @@ elif len(GEOSERVER_PASSWORD) != len(GEOSERVER_URL):
 GEOSERVER_WMS_GETCAPABILITIES_URL = ["{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(u) for u in GEOSERVER_URL]
 gs = []
 for index in range(len(GEOSERVER_URL)):
-    gs[index].append(Catalog(GEOSERVER_REST_URL[index], GEOSERVER_USERNAME[index], GEOSERVER_PASSWORD[index]))
+    gs.append(Catalog(GEOSERVER_REST_URL[index], GEOSERVER_USERNAME[index], GEOSERVER_PASSWORD[index]))
 
 GEOSERVER_SHARING_DATA_DIR = os.environ.get("GEOSERVER_SHARING_DATA_DIR","false").lower() in ["true","yes"]
 
