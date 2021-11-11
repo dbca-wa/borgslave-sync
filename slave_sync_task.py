@@ -309,6 +309,7 @@ def execute_task(sync_job,task_metadata,task_logger):
     sync_job['status'].last_process_time = now()
     task_status.last_process_time = now()
     try:
+        task_status.del_message("message")
         task_metadata[TASK_HANDLER_INDEX](sync_job,task_metadata,task_status)
         if not task_status.get_message("message"):
             task_status.set_message("message","succeed")
