@@ -7,7 +7,7 @@ import requests
 import json
 
 import geoserver_catalog_extension
-from . import slave_sync_env as settings
+import slave_sync_env as settings
 
 from slave_sync_task import (
     update_feature_job,gs_spatial_task_filter,update_livelayer_job,layer_preview_task_filter,update_wmslayer_job
@@ -60,7 +60,7 @@ def layer_preview_urls(sync_job,geoserver_url):
 
     return urls
 
-def _get_layer_preview(sync_job,task_metadata,task_status:
+def _get_layer_preview(sync_job,task_metadata,task_status):
     logger.info("Try to get layer preview image")
     urls = layer_preview_urls(sync_job,settings.GEOSERVER_URL[0])
     index = 0

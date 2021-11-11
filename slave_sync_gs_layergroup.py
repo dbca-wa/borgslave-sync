@@ -3,7 +3,7 @@ import logging
 import requests
 
 
-from . import slave_sync_env as settings
+import slave_sync_env as settings
 
 from slave_sync_task import (
     update_layergroup_job,remove_layergroup_job,gs_task_filter,
