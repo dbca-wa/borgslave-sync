@@ -141,7 +141,7 @@ def _delete_feature(sync_job,task_metadata,task_status,gs,rest_url,stage=None):
 
     try:
         #delete feature
-        url = rest_url + "workspaces/" + sync_job['workspace'] + "/datastores/" +  store_name(sync_job) + "/featuretypes/" + sync_job['name'] + ".xml"
+        url = "{}/workspaces/{}/datastores/{}/featuretypes/{}.xml".format(rest_url,sync_job['workspace'],store_name(sync_job),sync_job['name'])
         gs.delete(Feature(l_gs,url))
     except:
         pass

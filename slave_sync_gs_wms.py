@@ -25,31 +25,31 @@ def get_stores_url(rest_url,workspace):
     """
     return the url of the wms stores
     """
-    return "{0}workspaces/{1}/wmsstores.xml".format(rest_url,workspace)
+    return "{0}/workspaces/{1}/wmsstores.xml".format(rest_url,workspace)
 
 def get_store_url(rest_url,workspace,store_name,f='xml'):
     """
     return the url of the wms store
     """
-    return "{0}workspaces/{1}/wmsstores/{2}.{3}".format(rest_url,workspace,store_name,f)
+    return "{0}/workspaces/{1}/wmsstores/{2}.{3}".format(rest_url,workspace,store_name,f)
 
 def get_wmsstores_url(rest_url,workspace,f="xml"):
     """
     return the url of the wms store layers
     """
-    return "{0}workspaces/{1}/wmsstores.{2}".format(rest_url,workspace,f)
+    return "{0}/workspaces/{1}/wmsstores.{2}".format(rest_url,workspace,f)
 
 def get_layers_url(rest_url,workspace,store_name,f='xml'):
     """
     return the url of the wms store layers
     """
-    return "{0}workspaces/{1}/wmsstores/{2}/wmslayers.{3}".format(rest_url,workspace,store_name,f)
+    return "{0}/workspaces/{1}/wmsstores/{2}/wmslayers.{3}".format(rest_url,workspace,store_name,f)
 
 def get_layer_url(rest_url,workspace,store_name,layer_name,f='xml'):
     """
     return the url of the wms layer
     """
-    return "{0}workspaces/{1}/wmsstores/{2}/wmslayers/{3}.{4}?recurse=true".format(rest_url,workspace,store_name,layer_name,f)
+    return "{0}/workspaces/{1}/wmsstores/{2}/wmslayers/{3}.{4}?recurse=true".format(rest_url,workspace,store_name,layer_name,f)
 
 def _update_store(sync_job,task_metadata,task_status,rest_url,username,password,stage=None):
     """
