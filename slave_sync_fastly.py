@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 task_feature_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_job['name'])
 
-PURGE_URL = "/service/{0}/purge/{{0}}".format(settings.FASTLY_SERVICEID)
 def purge_fastly_cache(sync_job,task_metadata,task_status):
     purge_urls = []
     for k in settings.FASTLY_SURROGATE_KEY:
@@ -33,7 +32,9 @@ def purge_fastly_cache(sync_job,task_metadata,task_status):
 tasks_metadata = []
 
 
-if settings.FASTLY_SERVICEID and settings.FASTLY_API_TOKEN and settings.FASTLY_SURROGATE_KEY:
+if settings.FASTLY_PURGE_URL and settings.FASTLY_SERVICEID and settings.FASTLY_API_TOKEN and settings.FASTLY_SURROGATE_KEY:
+    PURGE_URL = settings.FASTLY_PURGE_URL.format(settings.FASTLY_SERVICEID)
+
     for job,task_filter in (
         (update_wmslayer_job,gs_feature_task_filter),
         (remove_wmslayer_job,gs_feature_task_filter),

@@ -113,10 +113,12 @@ SKIP_GS = os.environ.get("SKIP_GS", "false").lower() in ["true","yes"]
 SHARE_LAYER_DATA = os.environ.get("SHARE_LAYER_DATA","false").lower() in ["true","yes"]
 SHARE_PREVIEW_DATA = os.environ.get("SHARE_PREVIEW_DATA","false").lower() in ["true","yes"]
 
+FASTLY_ PURGE_URL = os.environ.get("FASTLY_PURGE_URL")
 FASTLY_SERVICEID = os.environ.get("FASTLY_SERVICEID")
 FASTLY_API_TOKEN = os.environ.get("FASTLY_API_TOKEN")
-FASTLY_SOFT_PURGE = 1 if os.environ.get("FASTLY_SOFT_PURGE","false").lower() in ["true","yes"] else 0
-FASTLY_SURROGATE_KEY = [k.strip() for k in os.environ.get("FASTLY_SURROGATE_KEY","").split() if k and k.strip()]
+
+FASTLY_SOFT_PURGE = "1" if os.environ.get("FASTLY_SOFT_PURGE","false").lower() in ["true","yes"] else "0"
+FASTLY_SURROGATE_KEY = [k.strip() for k in os.environ.get("FASTLY_SURROGATE_KEY","").split(",") if k and k.strip()]
 
 FEATURE_FILTER = eval(os.environ.get("FEATURE_FILTER",None) or ("lambda job:job.get('auth_level',-1) in [0,1]" if SYNC_SERVER else "lambda job: True" ))
 WMS_FILTER = eval(os.environ.get("WMS_FILTER",None) or ("lambda job: False" if SYNC_SERVER else "lambda job: True"))
