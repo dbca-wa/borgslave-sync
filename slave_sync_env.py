@@ -113,7 +113,7 @@ SKIP_GS = os.environ.get("SKIP_GS", "false").lower() in ["true","yes"]
 SHARE_LAYER_DATA = os.environ.get("SHARE_LAYER_DATA","false").lower() in ["true","yes"]
 SHARE_PREVIEW_DATA = os.environ.get("SHARE_PREVIEW_DATA","false").lower() in ["true","yes"]
 
-FASTLY_ PURGE_URL = os.environ.get("FASTLY_PURGE_URL")
+FASTLY_PURGE_URL = os.environ.get("FASTLY_PURGE_URL")
 FASTLY_SERVICEID = os.environ.get("FASTLY_SERVICEID")
 FASTLY_API_TOKEN = os.environ.get("FASTLY_API_TOKEN")
 
