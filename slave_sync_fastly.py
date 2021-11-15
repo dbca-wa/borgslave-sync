@@ -17,17 +17,17 @@ logger = logging.getLogger(__name__)
 task_feature_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync_job['name'])
 
 def purge_fastly_cache(sync_job,task_metadata,task_status):
-    purge_urls = []
+    purge_results = []
     for k in settings.FASTLY_SURROGATE_KEY:
         purge_url = PURGE_URL.format(k).format(sync_job['workspace'],sync_job['name'])
         try:
             resp = requests.post(purge_url, headers={'Accept':'application/json','Fastly-Soft-Purge':settings.FASTLY_SOFT_PURGE,'Fastly-Key':settings.FASTLY_API_TOKEN})
             resp.raise_for_status()
-            purge_urls.append(purge_url)
+            purge_results.append("{}:{}".format(puge_url,resp.content.decode()))
         except Exception as ex:
             raise Exception("Failed to purge fastly cache via url({}).{}".format(purge_url,str(ex)))
 
-    task_status.set_message("message","Succeed to purge fastly cache via url({})".format(purge_urls))
+    task_status.set_message("message","Succeed to purge fastly cache.\r\n{}".format("\r\n".join(purge_results)))
 
 tasks_metadata = []
 
