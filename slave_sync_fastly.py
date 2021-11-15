@@ -23,7 +23,7 @@ def purge_fastly_cache(sync_job,task_metadata,task_status):
         try:
             resp = requests.post(purge_url, headers={'Accept':'application/json','Fastly-Soft-Purge':settings.FASTLY_SOFT_PURGE,'Fastly-Key':settings.FASTLY_API_TOKEN})
             resp.raise_for_status()
-            purge_urls.append(puge_url)
+            purge_urls.append(purge_url)
         except Exception as ex:
             raise Exception("Failed to purge fastly cache via url({}).{}".format(purge_url,str(ex)))
 
