@@ -18,11 +18,9 @@ task_feature_name = lambda sync_job: "{0}:{1}".format(sync_job['workspace'],sync
 
 PURGE_URL = "/service/{0}/purge/{{0}}".format(settings.FASTLY_SERVICEID)
 def purge_fastly_cache(sync_job,task_metadata,task_status):
-    layer_name = task_feature_name(sync_job)
-
     purge_urls = []
     for k in settings.FASTLY_SURROGATE_KEY:
-        purge_url = PURGE_URL.format(k).format(layer_name)
+        purge_url = PURGE_URL.format(k).format(sync_job['workspace'],sync_job['name'])
         try:
             resp = requests.post(purge_url, headers={'Accept':'application/json','Fastly-Soft-Purge':settings.FASTLY_SOFT_PURGE,'Fastly-Key':settings.FASTLY_API_TOKEN})
             resp.raise_for_status()
