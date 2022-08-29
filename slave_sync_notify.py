@@ -198,6 +198,8 @@ $$BEGIN
     END IF;
 END$$;
 """
+            else:
+                return
 
             
             preview_file = task["status"].get_task_status("get_layer_preview").get_message("preview_file") or None
