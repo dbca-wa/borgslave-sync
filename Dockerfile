@@ -19,7 +19,7 @@ RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-
     && apt-get install  -y --no-install-recommends openssh-client
 
 RUN apt-get update && \
-    apt-get install -yq tzdata && \
+    apt-get install -yq tzdata rsync && \
     ln -fs /usr/share/zoneinfo/Australia/Perth /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
 ENV TZ="Australia/Perth"

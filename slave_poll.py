@@ -6,7 +6,7 @@ import logging
 import time
 from slave_sync_notify import SlaveServerSyncNotify
 from slave_sync_env import (
-    BORG_SSH,CODE_BRANCH,SYNC_STATUS_PATH,
+    BORG_STATE_SSH,CODE_BRANCH,SYNC_STATUS_PATH,
     CODE_PATH,STATE_PATH,POLL_INTERVAL
 )
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         except:
             pass
         try:
-            subprocess.check_call(['hg', 'pull', '-b', 'default', '-u', '-e', BORG_SSH], timeout=3600)
+            subprocess.check_call(['hg', 'pull', '-b', 'default', '-u', '-e', BORG_STATE_SSH], timeout=3600)
         except:
             #failed.
             #if caused by synchronizaion failed. do nothing.
@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 try:
                     subprocess.check_call(['hg', 'recover'], timeout=3600)
                     logger.info("Succeed to run 'hg recover'. Try to run 'hg pull' again.")
-                    subprocess.call(['hg', 'pull', '-b', 'default', '-u', '-e', BORG_SSH], timeout=3600)
+                    subprocess.call(['hg', 'pull', '-b', 'default', '-u', '-e', BORG_STATE_SSH], timeout=3600)
                 except:
                     logger.info("Failed to run 'hg recover'.")
 
