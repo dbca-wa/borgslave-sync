@@ -5,7 +5,7 @@ import json
 import traceback
 
 from slave_sync_env import (
-    BORG_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
+    BORGCOLLECTOR_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER,
     SHARE_LAYER_DATA,SHARE_PREVIEW_DATA,
     parse_remotefilepath,
@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 task_name = lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"]) if "workspace" in sync_job else (sync_job["name"] if "name" in sync_job else sync_job["schema"])
 
-download_cmd = ["rsync", "-Paz", "-e", BORG_SSH,None,None]
-md5_cmd = BORG_SSH.split() + [None,"md5sum",None]
+download_cmd = ["rsync", "-Paz", "-e", BORGCOLLECTOR_SSH,None,None]
+md5_cmd = BORGCOLLECTOR_SSH.split() + [None,"md5sum",None]
 local_md5_cmd = ["md5sum",None]
 
 def check_file_md5(md5_cmd,md5,task_status = None):
@@ -192,7 +192,7 @@ def load_gs_stylefile(sync_job,task_metadata,task_status):
             task_status.set_message("message","Succeed to download style file from master.")
 
 
-upload_cmd = ["rsync", "-azR" ,"-e", BORG_SSH,None,None]
+upload_cmd = ["rsync", "-azR" ,"-e", BORGCOLLECTOR_SSH,None,None]
 
 def upload_file(local_file,remote_path,task_status):
     # sync over PostgreSQL dump with rsync
