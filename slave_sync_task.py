@@ -25,7 +25,7 @@ jobname = lambda task,task_metadata: task_metadata[JOB_DEF_INDEX][JOB_NAME_INDEX
 sync_tasks = {
     "prepare": {},
     #"update_auth": {},
-    "update_access_rules": {},
+    #"update_access_rules": {},
     
     "create_postgis_extension": {},
     "create_db_schema": {},
@@ -74,7 +74,7 @@ sync_tasks = {
 }
 ordered_sync_task_type = [
             #"update_auth",
-            "update_access_rules",
+            #"update_access_rules",
             #"load_table_dumpfile",
             "load_gs_stylefile",
             "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","restore_foreignkey","create_access_view","drop_outdated_table",
