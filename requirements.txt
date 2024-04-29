@@ -1,5 +1,5 @@
 python-hglib
--e git+https://github.com/scottp-dpaw/gsconfig.git@wms_creds_fix#egg=gsconfig
+geoserver-rest==2.7.0
 jinja2
 honcho
 requests

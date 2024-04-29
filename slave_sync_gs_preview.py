@@ -6,7 +6,6 @@ import sys
 import requests
 import json
 
-import geoserver_catalog_extension
 import slave_sync_env as settings
 
 from slave_sync_task import (

@@ -6,8 +6,8 @@ import socket
 import pytz
 import sys
 import logging
+from geo.Geoserver import Geoserver
 from jinja2 import Environment,FileSystemLoader
-from geoserver.catalog import Catalog
 from datetime import datetime
 
 PATH = os.path.dirname(os.path.realpath(__file__))
@@ -86,9 +86,10 @@ elif len(GEOSERVER_PASSWORD) != len(GEOSERVER_URL):
 GEOSERVER_WMS_GETCAPABILITIES_URL = ["{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(u) for u in GEOSERVER_URL]
 gs = []
 for index in range(len(GEOSERVER_URL)):
-    gs.append(Catalog(GEOSERVER_REST_URL[index], GEOSERVER_USERNAME[index], GEOSERVER_PASSWORD[index]))
+    gs.append(Geoserver(GEOSERVER_URL[index], username=GEOSERVER_USERNAME[index], password=GEOSERVER_PASSWORD[index]))
 
 GEOSERVER_SHARING_DATA_DIR = os.environ.get("GEOSERVER_SHARING_DATA_DIR","false").lower() in ["true","yes"]
+GEOSERVER_CLUSTERING = os.environ.get("GEOSERVER_CLUSTERING","false").lower() in ["true","yes"]
 
 GEOSERVER_WORKSPACE_NAMESPACE = os.environ.get("GEOSERVER_WORKSPACE_NAMESPACE", "http://{}.dpaw.wa.gov.au")
 GEOSERVER_DATASTORE_NAMESPACE = os.environ.get("GEOSERVER_DATASTORE_NAMESPACE", "{}_ds")
@@ -126,31 +127,34 @@ WMS_FILTER = eval(os.environ.get("WMS_FILTER",None) or ("lambda job: False" if S
 LAYERGROUP_FILTER = eval(os.environ.get("LAYERGROUP_FILTER",None) or ("lambda job: False" if SYNC_SERVER else "lambda job: True"))
 
 GEOSERVER_PGSQL_CONNECTION_DEFAULTS = {
-    "host": GEOSERVER_PGSQL_HOST,
-    "database": GEOSERVER_PGSQL_DATABASE,
-    "schema": GEOSERVER_PGSQL_SCHEMA,
-    "port": GEOSERVER_PGSQL_PORT,
-    "user": GEOSERVER_PGSQL_USERNAME,
-    "passwd": "plain:{}".format(GEOSERVER_PGSQL_PASSWORD),
-    "Connection timeout": "20",
-    "dbtype": "postgis",
-    "Evictor tests per run": "3",
-    "validate connections": "true",
-    "encode functions": "false",
-    "max connections": "10",
-    "Support on the fly geometry simplification": "true",
-    "Max connection idle time": "300",
-    "Evictor run periodicity": "300",
-    "Test while idle": "true",
-    "Loose bbox": "true",
-    "Expose primary keys": "true",
-    "create database": "false",
-    "Max open prepared statements": "50",
-    "fetch size": "1000",
-    "preparedStatements": "false",
-    "Estimated extends": "true",
-    "min connections": "1"
+    "host": ("host",GEOSERVER_PGSQL_HOST),
+    "database": ("db",GEOSERVER_PGSQL_DATABASE),
+    "schema": ("schema",GEOSERVER_PGSQL_SCHEMA),
+    "port": ("port",GEOSERVER_PGSQL_PORT),
+    "user": ("pg_user",GEOSERVER_PGSQL_USERNAME),
+    "passwd": ("pg_password","plain:{}".format(GEOSERVER_PGSQL_PASSWORD)),
+    "dbtype": ("","postgis"),
+    "Connection timeout": ("connection_timeout",20),
+    "Evictor tests per run": ("evictor_tests_per_run",3),
+    "validate connections": ("validate_connections","true"),
+    "encode functions": ("encode_functions","false"),
+    "max connections": ("max_connections",10),
+    "Support on the fly geometry simplification": ("support_on_the_fly_geometry_simplification","true"),
+    "Max connection idle time": ("max_connection_idle_time",300),
+    "Evictor run periodicity": ("evictor_run_periodicity",300),
+    "Test while idle": ("test_while_idle","true"),
+    "Loose bbox": ("loose_bbox","true"),
+    "Expose primary keys": ("expose_primary_keys","true"),
+    "create database": ("create_database","false"),
+    "Max open prepared statements": ("max_open_prepared_statements",50),
+    "fetch size": ("fetch_size",1000),
+    "preparedStatements": ("preparedstatements","false"),
+    "Estimated extends": ("estimated_extends","true"),
+    "min connections": ("min_connections",1),
+    "Primary key metadata table":("primary_key_metadata_table",None),
+    "Batch insert size":("batch_insert_size",1)
 }
+
 env = os.environ.copy()
 env["PGPASSWORD"] = GEOSERVER_PGSQL_PASSWORD or "dummy"
 
@@ -185,7 +189,7 @@ def parse_remotefilepath(f):
     }
 
 
-def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda index:(gs[index],),start=0,end=1 if GEOSERVER_SHARING_DATA_DIR else len(GEOSERVER_URL)):
+def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda index:(gs[index],),start=0,end=1 if (GEOSERVER_SHARING_DATA_DIR or GEOSERVER_CLUSTERING ) else len(GEOSERVER_URL)):
     if len(GEOSERVER_URL[start:end]) == 1:
         func(sync_job,task_metadata,task_status,*args_func(0))
     else:
