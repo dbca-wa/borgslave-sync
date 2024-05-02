@@ -78,7 +78,6 @@ import slave_sync_fastly
 import slave_sync_postgres
 import slave_sync_file
 import slave_sync_notify
-import slave_catalogues
 from slave_sync_file import load_metafile
 
 hg = hglib.open(STATE_PATH)
@@ -108,7 +107,6 @@ plugin_modules = [
         slave_sync_gs_gwc,
         slave_sync_fastly,
         slave_sync_file,
-        slave_catalogues
 ]
 notify_modules = [
     slave_sync_notify
@@ -207,7 +205,7 @@ def sync():
             pass
         logger.info("HG_NODE: {}".format(HG_NODE))
         for task_type in ordered_sync_task_type:
-            for task_name,task in sync_tasks[task_type].iteritems():    
+            for task_name,task in sync_tasks[task_type].items():    
                 if isinstance(task,list):
                     #shared task
                     logger.info("Shared Task : {0}  {1} = [{2}]".format(task_type,task_name,",".join([t[0]['job_file'] for t in task])))
@@ -309,7 +307,7 @@ def get_tasks(pull_status):
     global ignore_files
     changes = get_changeset()
     next_job = False
-    for file_name, revision in changes.iteritems():
+    for file_name, revision in changes.items():
         if DEBUG and INCLUDE and file_name not in INCLUDE:
             #debug mode, file_name is not in INCLUDE
             ignore_files += 1
@@ -428,7 +426,7 @@ def get_tasks(pull_status):
                 continue
 
             #add the sync job's tasks to the total sync tasks.
-            for key,val in tasks.iteritems():
+            for key,val in tasks.items():
                 sync_tasks[key].update(val)
             
             if tasks:

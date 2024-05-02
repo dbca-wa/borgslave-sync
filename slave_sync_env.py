@@ -6,7 +6,6 @@ import socket
 import pytz
 import sys
 import logging
-from geo.Geoserver import Geoserver
 from jinja2 import Environment,FileSystemLoader
 from datetime import datetime
 
@@ -16,6 +15,7 @@ DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
 STATE_PATH = os.environ.get("STATE_REPOSITORY_ROOT",os.path.split(CODE_PATH)[0])
+BORGSLAVE_SYNC_BRANCH = os.environ.get("BORGSLAVE_SYNC_BRANCH","master")
 VERSION_FILE = os.path.join(CODE_PATH,"version")
 
 try:
@@ -63,14 +63,6 @@ GEOSERVER_URL = [(url[:-1] if url[-1] == "/" else url) for url in GEOSERVER_URL]
 GEOSERVER_HOST = [url_re.search(url).group("host") for url in GEOSERVER_URL]
 GEOSERVER_REST_URL =  [ os.path.join(url,"rest") for url in GEOSERVER_URL]
 
-GEOSERVER_DATA_DIR = [d for d in os.environ.get("GEOSERVER_DATA_DIR", "/opt/geoserver_data").split(",") if d and d.strip()]
-if len(GEOSERVER_DATA_DIR) == 1:
-    GEOSERVER_DATA_DIR = GEOSERVER_DATA_DIR * len(GEOSERVER_URL)
-elif len(GEOSERVER_DATA_DIR) != len(GEOSERVER_URL):
-    raise Exception("Please configure the data dir for each geoserver")
-
-GEOSERVER_THEME_DIR = [ os.path.join(d, "www/themes") for d in GEOSERVER_DATA_DIR]
-
 GEOSERVER_USERNAME = [n.strip() for n in os.environ.get("GEOSERVER_USERNAME", "admin").split(",") if n and n.strip()]
 if len(GEOSERVER_USERNAME) == 1 :
     GEOSERVER_USERNAME = GEOSERVER_USERNAME * len(GEOSERVER_URL)
@@ -84,11 +76,7 @@ elif len(GEOSERVER_PASSWORD) != len(GEOSERVER_URL):
     raise Exception("Please configure the password for each geoserver")
 
 GEOSERVER_WMS_GETCAPABILITIES_URL = ["{}/wms?request=GetCapabilities&version=1.3.0&tiled=true".format(u) for u in GEOSERVER_URL]
-gs = []
-for index in range(len(GEOSERVER_URL)):
-    gs.append(Geoserver(GEOSERVER_URL[index], username=GEOSERVER_USERNAME[index], password=GEOSERVER_PASSWORD[index]))
 
-GEOSERVER_SHARING_DATA_DIR = os.environ.get("GEOSERVER_SHARING_DATA_DIR","false").lower() in ["true","yes"]
 GEOSERVER_CLUSTERING = os.environ.get("GEOSERVER_CLUSTERING","false").lower() in ["true","yes"]
 
 GEOSERVER_WORKSPACE_NAMESPACE = os.environ.get("GEOSERVER_WORKSPACE_NAMESPACE", "http://{}.dpaw.wa.gov.au")
@@ -168,7 +156,7 @@ def get_version():
     except:
         version = "0.0"
 
-    return version
+    return "{}:{}".format(BORGSLAVE_SYNC_BRANCH,version)
 
 def now():
     """
@@ -189,9 +177,9 @@ def parse_remotefilepath(f):
     }
 
 
-def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda index:(gs[index],),start=0,end=1 if (GEOSERVER_SHARING_DATA_DIR or GEOSERVER_CLUSTERING ) else len(GEOSERVER_URL)):
+def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if GEOSERVER_CLUSTERING) else len(GEOSERVER_URL)):
     if len(GEOSERVER_URL[start:end]) == 1:
-        func(sync_job,task_metadata,task_status,*args_func(0))
+        func(GEOSERVER_REST_URL[0],GEOSERVER_USERNAME[0],GEOSERVER_PASSWORD[0],sync_job,task_metadata,task_status)
     else:
         exceptions = []
         for i in range(start,end):
@@ -199,7 +187,7 @@ def apply_to_geoservers(sync_job,task_metadata,task_status,func,args_func=lambda
             try:
                 if task_status.is_stage_not_succeed(stagename):
                     task_status.del_stage_message(stagename,"message")
-                    func(sync_job,task_metadata,task_status,*args_func(i),stage=stagename)
+                    func(GEOSERVER_REST_URL[i],GEOSERVER_USERNAME[i],GEOSERVER_PASSWORD[i],sync_job,task_metadata,task_status,stage=stagename)
                     if not task_status.get_stage_message(stagename,"message"):
                         task_status.set_stage_message(stagename,"message","succeed")
                     task_status.stage_succeed(stagename)

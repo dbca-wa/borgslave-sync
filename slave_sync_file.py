@@ -178,7 +178,7 @@ def load_gs_stylefile(sync_job,task_metadata,task_status):
     style_files = sync_job.get('styles',None)
     if not style_files: 
         return
-    for name,style_file in style_files.iteritems():
+    for name,style_file in style_files.items():
         if SYNC_SERVER:
             #download from local slave
             if name == "builtin":
@@ -233,7 +233,7 @@ def delete_dumpfile(sync_job,task_metadata,task_status):
     for f in [local_file for local_file in (
         [sync_job.get('data',{}).get('local_file')] + 
         [sync_job.get('meta',{}).get('local_file')] + 
-        [style_file.get('local_file') for style_file in (sync_job.get('styles') or {}).itervalues() ]
+        [style_file.get('local_file') for style_file in (sync_job.get('styles') or {}).values() ]
         ) if local_file ]:
         try:
             if os.path.exists(f):

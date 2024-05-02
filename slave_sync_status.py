@@ -114,15 +114,15 @@ class SlaveSyncStatus(object):
 
     @property
     def is_succeed(self):
-        return all([s.is_succeed for s in self._info.get("tasks",{}).itervalues()])
+        return all([s.is_succeed for s in self._info.get("tasks",{}).values()])
 
     @property
     def is_failed(self):
-        return any([s.is_failed for s in self._info.get("tasks",{}).itervalues()])
+        return any([s.is_failed for s in self._info.get("tasks",{}).values()])
 
     @property
     def is_not_succeed(self):
-        return any([s.is_not_succeed  for s in self._info.get("tasks",{}).itervalues()])
+        return any([s.is_not_succeed  for s in self._info.get("tasks",{}).values()])
         
     @staticmethod
     def all_succeed():
@@ -177,7 +177,7 @@ Synchronize file from repository
     Task {{task_index}} : {{task_type}}
         Succeed : {{task_status.task_status}}
         Process Time : {{task_status.last_process_time}}
-        {% for key,value in task_status["messages"].iteritems() -%}
+        {% for key,value in task_status["messages"].items() -%}
         {{key|capitalize}} : {{value}}
         {% endfor -%}
 """)
@@ -191,7 +191,7 @@ Synchronize file from repository
         Stage : {{stage_name}}
             Succeed : {{stage_status.status}}
             Process Time : {{stage_status.last_process_time}}
-            {% for key,value in stage_status["messages"].iteritems() -%}
+            {% for key,value in stage_status["messages"].items() -%}
             {{key|capitalize}} : {{value}}
             {% endfor -%}
 """)
@@ -201,10 +201,10 @@ Synchronize file from repository
         task_index = 0
         if self == SlaveSyncStatus.get_bitbucket_status():
             message = self.header_template_bitbucket.render({"task":self._info,"is_succeed":self.is_succeed})
-            for task_type,task_status in self._info["tasks"].iteritems():
+            for task_type,task_status in self._info["tasks"].items():
                 task_index += 1
                 message += os.linesep + (self.task_header_template_2 if task_status.has_message() else self.task_header_template_1 ).render({"task_index":task_index,"task_type":task_type,"task_status":task_status})
-                for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).iteritems():
+                for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).items():
                     message += os.linesep +  (self.stage_template_2 if stage_status.has_message() else self.stage_template_1 ).render({"stage_name":stage_name, "stage_status":stage_status})
            
         else:
@@ -215,7 +215,7 @@ Synchronize file from repository
                     task_status = self._info["tasks"][task_type]
                     task_index += 1
                     message += os.linesep + (self.task_header_template_2 if task_status.has_message() else self.task_header_template_1 ).render({"task_index":task_index,"task_type":task_type,"task_status":task_status})
-                    for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).iteritems():
+                    for stage_name,stage_status in self._info["tasks"][task_type].get("stages",{}).items():
                         message += os.linesep +  (self.stage_template_2 if "messages" in stage_status else self.stage_template_1 ).render({"stage_name":stage_name, "stage_status":stage_status})
            
         return message
