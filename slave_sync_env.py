@@ -16,6 +16,7 @@ DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
 STATE_PATH = os.environ.get("STATE_REPOSITORY_ROOT",os.path.split(CODE_PATH)[0])
+BORGSLAVE_SYNC_BRANCH = os.environ.get("BORGSLAVE_SYNC_BRANCH","master")
 VERSION_FILE = os.path.join(CODE_PATH,"version")
 
 try:
@@ -164,7 +165,7 @@ def get_version():
     except:
         version = "0.0"
 
-    return version
+    return "{}:{}".format(BORGSLAVE_SYNC_BRANCH,version)
 
 def now():
     """
