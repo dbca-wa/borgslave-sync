@@ -6,7 +6,6 @@ import socket
 import pytz
 import sys
 import logging
-from jinja2 import Environment,FileSystemLoader
 from datetime import datetime
 
 PATH = os.path.dirname(os.path.realpath(__file__))
@@ -26,11 +25,11 @@ except:
 
 CACHE_PATH = os.environ.get("CACHE_PATH",os.path.join(PATH, "dumps"))
 if not os.path.exists(CACHE_PATH):   os.makedirs(CACHE_PATH)
-os.chmod(CACHE_PATH,0755)
+os.chmod(CACHE_PATH,0o755)
 
 PUBLISH_PATH = os.path.join(PATH, "publish")
 if not os.path.exists(PUBLISH_PATH):   os.makedirs(PUBLISH_PATH)
-os.chmod(PUBLISH_PATH,0755)
+os.chmod(PUBLISH_PATH,0o755)
 
 PREVIEW_ROOT_PATH = os.path.join(PATH, "previews")
 PREVIEW_ROOT_PATH = PREVIEW_ROOT_PATH[0:-1] if PREVIEW_ROOT_PATH[-1:] == "/" else PREVIEW_ROOT_PATH
@@ -145,7 +144,6 @@ GEOSERVER_PGSQL_CONNECTION_DEFAULTS = {
 env = os.environ.copy()
 env["PGPASSWORD"] = GEOSERVER_PGSQL_PASSWORD or "dummy"
 
-template_env = Environment(loader=FileSystemLoader(CODE_PATH))
 
 def get_version():
     version = None
@@ -176,7 +174,7 @@ def parse_remotefilepath(f):
     }
 
 
-def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if GEOSERVER_CLUSTERING) else len(GEOSERVER_URL)):
+def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if GEOSERVER_CLUSTERING else len(GEOSERVER_URL)):
     if len(GEOSERVER_URL[start:end]) == 1:
         func(GEOSERVER_REST_URL[0],GEOSERVER_USERNAME[0],GEOSERVER_PASSWORD[0],sync_job,task_metadata,task_status)
     else:

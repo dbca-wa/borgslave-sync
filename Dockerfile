@@ -26,6 +26,7 @@ ENV TZ="Australia/Perth"
 
 FROM builder_base_borgslave as python_libs_borgslave
 
+RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN groupadd  -g 1001 borg
 RUN useradd -d /home/borg -m -s /bin/bash -u 1001 -g 1001 borg
 
