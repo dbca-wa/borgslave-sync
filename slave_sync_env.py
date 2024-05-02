@@ -15,7 +15,6 @@ DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
 STATE_PATH = os.environ.get("STATE_REPOSITORY_ROOT",os.path.split(CODE_PATH)[0])
-BORGSLAVE_SYNC_BRANCH = os.environ.get("BORGSLAVE_SYNC_BRANCH","master")
 VERSION_FILE = os.path.join(CODE_PATH,"version")
 
 try:
@@ -54,7 +53,7 @@ INCLUDE = [f for f in os.environ.get("INCLUDE","").split(",") if f.strip()]
 HG_NODE = os.environ.get("HG_NODE", "0")
 BORG_STATE_SSH = os.environ.get("BORG_STATE_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")
 BORGCOLLECTOR_SSH = os.environ.get("BORGCOLLECTOR_SSH", "ssh -i /etc/id_rsa_borg -o StrictHostKeyChecking=no -o KeepAlive=yes -o ServerAliveInterval=30 -o ConnectTimeout=3600 -o ConnectionAttempts=5")
-CODE_BRANCH = os.environ.get("CODE_BRANCH","default")
+CODE_BRANCH = os.environ.get("CODE_BRANCH","master")
 LISTEN_CHANNELS = set([c.strip() for c in os.environ.get("LISTEN_CHANNELS","kmi").split(",") if c.strip()])
 
 url_re = re.compile("^(?P<protocol>https?)://(?P<host>[^:/\?]+)(:(?P<port>[0-9]+))?(?P<path>[^\?]+)?(\?(?P<params>.+)?)?$",re.IGNORECASE)
@@ -156,7 +155,7 @@ def get_version():
     except:
         version = "0.0"
 
-    return "{}:{}".format(BORGSLAVE_SYNC_BRANCH,version)
+    return version
 
 def now():
     """

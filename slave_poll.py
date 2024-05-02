@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-import subprocess32 as subprocess
+import subprocess
 import sys
 import logging
 import time

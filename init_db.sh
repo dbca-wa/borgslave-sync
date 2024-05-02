@@ -158,22 +158,3 @@ do
         echo "The extension(${extension}) exists"
     fi
 done
-
-
-echo "Begin to initialize the borgslave_sync"
-branch=${BORGSLAVE_SYNC_BRANCH:-master}
-
-current_branch=$(cd ${SCRIPT_DIR} ; git rev-parse --abbrev-ref HEAD)
-echo "${current_branch}, required ${branch}"
-if [[ "${branch}" == "${current_branch}" ]]; then
-    echo "Already in the expected branch(${branch})"
-else
-    echo "Try to switch the branch from '${current_branch}' to '${branch}'"
-    cd ${SCRIPT_DIR} ; git checkout ${branch}
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to switch the branch from '${current_branch}' to '${branch}'"
-        exit 1
-    fi
-fi
-
-

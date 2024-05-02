@@ -1,6 +1,6 @@
 # Dockerfile to build borgslave-sync image
 # Prepare the base environment.
-FROM ubuntu:18.04 as builder_base_borgslave
+FROM ubuntu:22.04 as builder_base_borgslave
 MAINTAINER asi@dbca.wa.gov.au
 ENV DEBIAN_FRONTEND=noninteractive
 LABEL org.opencontainers.image.source https://github.com/dbca-wa/borgslave-sync
@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.source https://github.com/dbca-wa/borgslave-sync
 RUN apt-get update && apt-get install -y software-properties-common
 RUN add-apt-repository ppa:ubuntugis/ppa \
     && apt-get update \
-    && apt-get install -y --no-install-recommends wget git libmagic-dev gcc binutils vim python python-setuptools python-dev python-pip tzdata mercurial less \
+    && apt-get install -y --no-install-recommends wget git libmagic-dev gcc binutils vim python3 python3-setuptools python3-dev python3-pip tzdata mercurial less \
     && pip install --upgrade pip
 
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list' \
@@ -40,7 +40,14 @@ WORKDIR /app
 ARG CACHEBUST=1
 RUN git clone https://github.com/dbca-wa/borgslave-sync
 
-WORKDIR /app/borgslave-sync
-RUN pip install --no-cache-dir -r requirements_docker.txt 
+RUN echo "#!/bin/bash \n\
+cd borgslave-sync && git checkout ${CODE_BRANCH:-master}  \n\
+cd borgslave-sync && git pull &&   \n\
+cd borgslave-sync && RUN pip install --no-cache-dir -r requirements_docker.txt \n\
+/app/borgslave-sync/init_db.sh \n\
+cd borgslave-sync && python slave_poll.py \n\
+" > ./start_sync.sh
+RUN chmod 555 ./start_sync.sh
 
-CMD ["python","slave_poll.py"]
+
+CMD ["start_sync.sh"]
