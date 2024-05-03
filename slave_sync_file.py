@@ -245,7 +245,7 @@ def delete_dumpfile(sync_job,task_metadata,task_status):
             messages.append("Failed to remove file({}). {}".format(f,message))
             task_status.task_failed()
 
-	task_status.set_message("message",os.linesep.join(messages))
+        task_status.set_message("message",os.linesep.join(messages))
 
 if not SHARE_LAYER_DATA and not SHARE_PREVIEW_DATA:
     tasks_metadata = [

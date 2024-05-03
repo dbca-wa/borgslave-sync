@@ -33,7 +33,7 @@ def _update_group(geoserver_url,username,password,sync_job,task_metadata,task_st
                 raise Exception("update sub group ({0}) failed.".format(sub_task[0]["name"]))
 
     workspace = sync_job['workspace']
-    groupname = sync_job['name'])
+    groupname = sync_job['name']
     extra_data = {}
     if sync_job.get('keywords')  and sync_job.get('applications'):
         keywords = sync_job["keywords"] + sync_job["applications"]
@@ -56,7 +56,7 @@ def _remove_group(geoserver_url,username,password,sync_job,task_metadata,task_st
     remove a layer group
     """
     workspace = sync_job['workspace']
-    groupname = sync_job['name'])
+    groupname = sync_job['name']
     gs.delete_layergroup(geoserver_url,username,password,workspace,groupname)
 
 def remove_group(sync_job,task_metadata,task_status):

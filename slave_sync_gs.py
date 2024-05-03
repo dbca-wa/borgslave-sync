@@ -73,7 +73,7 @@ def _update_datastore(geoserver_url,username,password,sync_job,task_metadata,tas
     workspace = task_workspace_name(sync_job)
     storename = get_storename(sync_job)
     if "geoserver_setting" in sync_job:
-        gs.update_datastore(geoserver_url,username,password,workspace,storename,collections.ChainMap(sync_job,sync_job["geoserver_setting"])
+        gs.update_datastore(geoserver_url,username,password,workspace,storename,collections.ChainMap(sync_job,sync_job["geoserver_setting"]))
     else:
         gs.update_datastore(geoserver_url,username,password,workspace,storename,sync_job)
 
@@ -240,7 +240,7 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
 
             sldversion = "1.1.0" if "version=\"1.1.0\"" in slddata else "1.0.0"
 
-            gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata):
+            gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
             created_styles.append(task_style_name(sync_job))
         except:
             message = traceback.format_exc()
@@ -316,3 +316,4 @@ tasks_metadata = [
                     ("create_workspace"   , update_layergroup_job  , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace)
+]

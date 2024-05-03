@@ -308,6 +308,12 @@ def get_tasks(pull_status):
     changes = get_changeset()
     next_job = False
     for file_name, revision in changes.items():
+        if isinstance(file_name,bytes)
+            file_name = file_name.decode()
+
+        if isinstance(revision,bytes)
+            revision = revision.decode()
+
         if DEBUG and INCLUDE and file_name not in INCLUDE:
             #debug mode, file_name is not in INCLUDE
             ignore_files += 1
