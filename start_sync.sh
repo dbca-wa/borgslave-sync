@@ -11,18 +11,17 @@ fi
 echo "Initialize borg state repository"
 function enable_hook() {
     if [[ "$1" == "initial_sync" ]]; then
-        hook="/bin/bash ${SCRIPT_DIR}/initial_sync_in_progreses.sh"
+        hook="/bin/bash ${SCRIPT_DIR}/initial_sync_in_progress.sh"
     else
         hook="python ${SCRIPT_DIR}/slave_sync.py"
     fi
     #remove the hooks
     sed -i -E '/\s*\[hooks\].*|precommit.*|pretxnchangegroup.*/d' ${BORG_STATE_HOME}/.hg/hgrc
     #add the hooks
-   echo "\n\
-[hooks]
+   echo "[hooks]
 precommit = /bin/bash ${SCRIPT_DIR}/denied.sh
 pretxnchangegroup = ${hook}
-" >> ${SCRIPT_DIR}/.hg/hgrc
+" >> ${BORG_STATE_HOME}/.hg/hgrc
 }
 
 if [[ ! -d ${BORG_STATE_HOME}/.hg ]]; then
@@ -43,6 +42,7 @@ if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]
             #The hook is not added
             echo "Enable the denied hook for initial sync."
             enable_hook "initial_sync"
+        fi
 
         if [[ "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/initial_sync_in_progress.sh" ]]; then
             echo "The denied hook for initial sync was enabled"

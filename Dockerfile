@@ -42,10 +42,11 @@ ARG CACHEBUST=1
 RUN git clone https://github.com/dbca-wa/borgslave-sync
 
 RUN echo "#!/bin/bash \n\
-cd borgslave-sync && git checkout ${CODE_BRANCH:-master}  \n\
-cd borgslave-sync && git pull &&   \n\
-cd borgslave-sync && RUN pip install --no-cache-dir -r requirements_docker.txt \n\
-cd borgslave-sync && /bin/bash start_sync.sh \n\
+cd borgslave-sync \n\
+git checkout \${CODE_BRANCH:-master}  \n\
+git pull    \n\
+pip install --no-cache-dir -r requirements_docker.txt \n\
+/bin/bash start_sync.sh \n\
 " > ./start_sync.sh
 RUN chmod 555 ./start_sync.sh
 
