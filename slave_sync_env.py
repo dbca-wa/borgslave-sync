@@ -13,7 +13,7 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
-BPRG_STATE_HOME = os.environ.get("BORG_STATE_HOME",os.path.split(CODE_PATH)[0])  
+BORG_STATE_HOME = os.environ.get("BORG_STATE_HOME",os.path.split(CODE_PATH)[0])  
 VERSION_FILE = os.path.join(CODE_PATH,"version")
 
 try:
