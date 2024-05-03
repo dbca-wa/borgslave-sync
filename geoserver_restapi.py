@@ -245,7 +245,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     layername,
     parameters.get('title', ""), 
     parameters.get('abstract', ""), 
-    os.linesep.join("<string>k</string>".format(k) for k in  parameters.get('keywords', [])), 
+    os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     parameters.get("srs","EPSG:4326"),
     """
     <nativeBoundingBox>
@@ -299,7 +299,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     layername,
     parameters.get('title', ""), 
     parameters.get('abstract', ""), 
-    os.linesep.join("<string>k</string>".format(k) for k in  parameters.get('keywords', [])), 
+    os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     parameters.get("srs","EPSG:4326"),
     """
     <nativeBoundingBox>
@@ -702,7 +702,7 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
     "<abstract>{}</abstract>".format(parameters.get("abstract")) if parameters.get("abstract") else "",
     "<description>{}</description>".format(parameters.get("description")) if parameters.get("description") else "",
     "<nativeName>{}</nativeName>".format(parameters.get("native_name")) if parameters.get("native_name") else "",
-    os.linesep.join("<string>{}</string>" for k in parameters.get("keywords"))) if parameters.get("keywords") else "",
+    os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     "<nativeCRS>{}</nativeCRS>".format(parameters.get("nativeCRS")) if parameters.get("nativeCRS") else "",
     "<srs>{}</srs>".format(parameters.get("srs")) if parameters.get("srs") else "",
     """
@@ -779,7 +779,7 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
     groupname,
     parameters.get("title",""),
     parameters.get("abstract",""),
-    os.linesep.join("<string>{}</string>" for k in parameters.get("keywords"))) if parameters.get("keywords") else "",
+    os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     os.linesep.join("""
         <published>
             <name>{}</name>
