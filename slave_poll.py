@@ -7,7 +7,7 @@ import time
 from slave_sync_notify import SlaveServerSyncNotify
 from slave_sync_env import (
     BORG_STATE_SSH,CODE_BRANCH,SYNC_STATUS_PATH,
-    CODE_PATH,STATE_PATH,POLL_INTERVAL
+    CODE_PATH,BORG_STATE_HOME,POLL_INTERVAL
 )
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         SlaveServerSyncNotify.exec_failed_sql()
 
         #sync file
-        os.chdir(STATE_PATH)
+        os.chdir(BORG_STATE_HOME)
         pull_status_file = os.path.join(SYNC_STATUS_PATH,'bitbucket')
         last_pull_time = None
         try:

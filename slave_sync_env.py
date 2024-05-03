@@ -13,7 +13,7 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TIMEZONE = pytz.timezone('Australia/Perth')
 
 CODE_PATH = PATH
-STATE_PATH = os.environ.get("STATE_REPOSITORY_ROOT",os.path.split(CODE_PATH)[0])
+BPRG_STATE_HOME = os.environ.get("BORG_STATE_HOME",os.path.split(CODE_PATH)[0])  
 VERSION_FILE = os.path.join(CODE_PATH,"version")
 
 try:
@@ -25,11 +25,9 @@ except:
 
 CACHE_PATH = os.environ.get("CACHE_PATH",os.path.join(PATH, "dumps"))
 if not os.path.exists(CACHE_PATH):   os.makedirs(CACHE_PATH)
-os.chmod(CACHE_PATH,0o755)
 
 PUBLISH_PATH = os.path.join(PATH, "publish")
 if not os.path.exists(PUBLISH_PATH):   os.makedirs(PUBLISH_PATH)
-os.chmod(PUBLISH_PATH,0o755)
 
 PREVIEW_ROOT_PATH = os.path.join(PATH, "previews")
 PREVIEW_ROOT_PATH = PREVIEW_ROOT_PATH[0:-1] if PREVIEW_ROOT_PATH[-1:] == "/" else PREVIEW_ROOT_PATH

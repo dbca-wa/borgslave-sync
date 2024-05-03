@@ -58,7 +58,7 @@ import hglib
 
 from slave_sync_env import (
     PATH,HG_NODE,LISTEN_CHANNELS,ROLLBACK,
-    STATE_PATH,now,DEBUG,INCLUDE
+    BORG_STATE_HOME,now,DEBUG,INCLUDE
 )
 from slave_sync_status import SlaveSyncStatus
 
@@ -80,7 +80,7 @@ import slave_sync_file
 import slave_sync_notify
 from slave_sync_file import load_metafile
 
-hg = hglib.open(STATE_PATH)
+hg = hglib.open(BORG_STATE_HOME)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
