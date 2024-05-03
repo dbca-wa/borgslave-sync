@@ -1,3 +1,4 @@
 python-hglib
+jinja2
 requests
 pytz

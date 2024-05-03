@@ -6,7 +6,7 @@ import collections
 import os
 import sys
 import json
-from . import geoserver_restapi as gs
+import geoserver_restapi as gs
 
 import slave_sync_env as settings
 

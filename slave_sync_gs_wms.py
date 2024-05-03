@@ -4,7 +4,7 @@ import collections
 import requests
 
 import slave_sync_env as settings
-from . import geoserver_restapi as gs
+import geoserver_restapi as gs
 from slave_sync_task import (
     update_wmsstore_job,update_wmslayer_job,remove_wmslayer_job,remove_wmsstore_job,gs_task_filter,
     get_http_response_exception

@@ -64,7 +64,7 @@ sync_tasks = {
 
     "get_layer_preview":{},
     "send_layer_preview":{},
-_
+
     "delete_dumpfile":{},
     "purge_fastly_cache":{}
 

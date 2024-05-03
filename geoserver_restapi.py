@@ -375,7 +375,7 @@ def get_layer_styles(geoserver_url,username,password,workspace,layername):
     r = requests.get(layer_styles_url(geoserver_url,workspace,layername),headers=accept_header("json"),auth=(username,password))
     if r.status_code == 200:
         r = r.json()
-        return (r.get("defaultStyle",{}).get("name",None), [d["name"] for d in r.get("styles",{}).get("style",[]])
+        return (r.get("defaultStyle",{}).get("name",None), [d["name"] for d in r.get("styles",{}).get("style",[])])
     else:
         raise Exception("Failed to get styles of the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
