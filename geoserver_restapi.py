@@ -1,5 +1,6 @@
 import logging
 import collections
+import slave_sync_env as settings
 import os
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ def contenttype_header(f = "xml"):
     else:
         raise Exception("Format({}) Not Support".format(f))
 
-def accept_header(f = "xml")
+def accept_header(f = "xml"):
     if f == "xml":
         return {"Accept": "application/xml"}
     elif f == "json":
@@ -35,12 +36,12 @@ def datastore_url(geoserver_url,workspace,storename):
     return "{0}/rest/workspaces/{1}/datastores/{2}".format(geoserver_url,workspace,storename)
 
 postgis_connection_parameters = {
-    "host": GEOSERVER_PGSQL_HOST,
-    "database": GEOSERVER_PGSQL_DATABASE,
-    "schema": GEOSERVER_PGSQL_SCHEMA,
-    "port": GEOSERVER_PGSQL_PORT,
-    "user": GEOSERVER_PGSQL_USERNAME,
-    "passwd": "plain:{}".format(GEOSERVER_PGSQL_PASSWORD),
+    "host": settings.GEOSERVER_PGSQL_HOST,
+    "database": settings.GEOSERVER_PGSQL_DATABASE,
+    "schema": settings.GEOSERVER_PGSQL_SCHEMA,
+    "port": settings.GEOSERVER_PGSQL_PORT,
+    "user": settings.GEOSERVER_PGSQL_USERNAME,
+    "passwd": "plain:{}".format(settings.GEOSERVER_PGSQL_PASSWORD),
     "dbtype": "postgis",
     "Connection timeout": 20,
     "Evictor tests per run": 3,
@@ -116,7 +117,7 @@ def layergroup_url(geoserver_url,workspace,groupname):
     return "{0}/rest/workspaces/{1}/layergroups/{}".format(geoserver_url,workspace,groupname)
 
 def gwc_layers_url(geoserver_url):
-    return "{0}/gwc/rest/layers"format(geoserver_url)
+    return "{0}/gwc/rest/layers".format(geoserver_url)
 
 def gwc_layer_url(geoserver_url,workspace,layername):
     return "{0}/gwc/rest/layers/{1}:{2}".format(geoserver_url,workspace,layername)
@@ -395,7 +396,7 @@ def set_layer_styles(geoserver_url,username,password,workspace,layername,default
     if r.status_code != 200:
         raise Exception("Failed to set styles of the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
-    logger.debug("Succeed to set the styles of the layer({}:{}),default_style={}, styles={}".format(workspace,layername,default_style,styles)
+    logger.debug("Succeed to set the styles of the layer({}:{}),default_style={}, styles={}".format(workspace,layername,default_style,styles))
 
 def get_catalogue_mode(geoserver_url,username,password):
     r = requests.get(catalogue_mode_url(geoserver_url),headers=accept_header("json"),auth=(username,password))
@@ -517,12 +518,12 @@ def gwc_update_layer(gepserver_url,username,password,workspace,layername,paramet
     parameters.get("geoserver_setting",{}).get("client_cache_expire")
 )
 
-        r = requests.put(gwc_layer_url(geoserver_url,workspace,layername), auth=(username,password), headers=contenttype_header("xml"), data=layer_data)
+    r = requests.put(gwc_layer_url(geoserver_url,workspace,layername), auth=(username,password), headers=contenttype_header("xml"), data=layer_data)
         
-        if resp.status_code >= 300:
-            raise Exception("Failed to update the gwc layer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
+    if resp.status_code >= 300:
+        raise Exception("Failed to update the gwc layer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
-        logger.debug("Succeed to update the gwc layer({}:{}). ".format(workspace,layername))
+    logger.debug("Succeed to update the gwc layer({}:{}). ".format(workspace,layername))
 
 def gwc_empty_layer(geoserver_url,username,password,workspace,layername):
     for gridset in ("gda94","mercator"):
