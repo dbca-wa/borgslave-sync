@@ -204,7 +204,7 @@ def _create_feature(geoserver_url,username,password,sync_job,task_metadata,task_
     try:
         gs.publish_featuretype(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_data,sync_job))
     except:
-        if not has_featuretype(geoserver_url,username,password,workspace,storename,layername):
+        if not gs.has_featuretype(geoserver_url,username,password,workspace,storename,layername):
             raise
 
 
