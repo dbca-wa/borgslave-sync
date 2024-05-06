@@ -218,7 +218,7 @@ def _create_feature(geoserver_url,username,password,sync_job,task_metadata,task_
         elif default_stylename != stylename:
             stylenames.append(stylename)
 
-    gs.set_layer_styles(geoserver_url,username,password,default_stylename,stylenames)
+    gs.set_layer_styles(geoserver_url,username,password,workspace,layername,default_stylename,stylenames)
 
 
 def create_feature(sync_job,task_metadata,task_status):
