@@ -197,7 +197,7 @@ def restore_table(sync_job,task_metadata,task_status):
     restore_cmd[len(restore_cmd) - 1] = sync_job["data"]["local_file"]
     logger.info("Executing {}...".format(repr(restore_cmd)))
     restore = subprocess.Popen(restore_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    restore_output = [m.decode for m in restore.communicate()]
+    restore_output = [m.decode() for m in restore.communicate()]
     if restore_output[1] and restore_output[1].strip():
         logger.info("stderr: {}".format(restore_output[1]))
         task_status.set_message("message",restore_output[1])

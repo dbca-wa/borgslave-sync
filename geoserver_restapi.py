@@ -2,6 +2,8 @@ import logging
 import collections
 import slave_sync_env as settings
 import os
+import requests
+
 logger = logging.getLogger(__name__)
 
 def contenttype_header(f = "xml"):
@@ -133,12 +135,10 @@ def create_workspace(geoserver_url,username,password,workspace):
     data = """
 <?xml version="1.0" encoding="UTF-8"?>
 <workspace>
-    <workspace>
-        <name>{}</name>
-    </workspace>
+    <name>{}</name>
 </workspace>
 """.format(workspace)
-    r = requests.post(workspace_url(rest_usr,workspace),data=data,headers=contenttype_header("xml"),auth=(username,password))
+    r = requests.post(workspaces_url(geoserver_url),data=data,headers=contenttype_header("xml"),auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to create the workspace({}). code = {},message = {}".format(workspace,r.status_code, r.content))
 

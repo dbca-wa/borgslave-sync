@@ -57,7 +57,6 @@ url_re = re.compile("^(?P<protocol>https?)://(?P<host>[^:/\?]+)(:(?P<port>[0-9]+
 GEOSERVER_URL = [url.strip() for url in os.environ.get("GEOSERVER_URL", "http://localhost:8080/geoserver").split(",") if url and url.strip()]
 GEOSERVER_URL = [(url[:-1] if url[-1] == "/" else url) for url in GEOSERVER_URL]
 GEOSERVER_HOST = [url_re.search(url).group("host") for url in GEOSERVER_URL]
-GEOSERVER_REST_URL =  [ os.path.join(url,"rest") for url in GEOSERVER_URL]
 
 GEOSERVER_USERNAME = [n.strip() for n in os.environ.get("GEOSERVER_USERNAME", "admin").split(",") if n and n.strip()]
 if len(GEOSERVER_USERNAME) == 1 :
@@ -174,7 +173,7 @@ def parse_remotefilepath(f):
 
 def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if GEOSERVER_CLUSTERING else len(GEOSERVER_URL)):
     if len(GEOSERVER_URL[start:end]) == 1:
-        func(GEOSERVER_REST_URL[0],GEOSERVER_USERNAME[0],GEOSERVER_PASSWORD[0],sync_job,task_metadata,task_status)
+        func(GEOSERVER_URL[0],GEOSERVER_USERNAME[0],GEOSERVER_PASSWORD[0],sync_job,task_metadata,task_status)
     else:
         exceptions = []
         for i in range(start,end):
@@ -182,7 +181,7 @@ def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if
             try:
                 if task_status.is_stage_not_succeed(stagename):
                     task_status.del_stage_message(stagename,"message")
-                    func(GEOSERVER_REST_URL[i],GEOSERVER_USERNAME[i],GEOSERVER_PASSWORD[i],sync_job,task_metadata,task_status,stage=stagename)
+                    func(GEOSERVER_URL[i],GEOSERVER_USERNAME[i],GEOSERVER_PASSWORD[i],sync_job,task_metadata,task_status,stage=stagename)
                     if not task_status.get_stage_message(stagename,"message"):
                         task_status.set_stage_message(stagename,"message","succeed")
                     task_status.stage_succeed(stagename)

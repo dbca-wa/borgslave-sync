@@ -6,7 +6,7 @@ echo "Begin to initialize the database"
 host=${GEOSERVER_PGSQL_HOST:-localhost}
 port=${GEOSERVER_PGSQL_PORT:-5432}
 db=${GEOSERVER_PGSQL_DATABASE:-kmi}
-dbuser=${GEOSERVER_PGSQL_USERNAME:-oim1}
+dbuser=${GEOSERVER_PGSQL_USERNAME:-oim}
 dbpassword=${GEOSERVER_PGSQL_PASSWORD}
 admin=postgres
 adminpassword=${GEOSERVER_PGSQL_ADMINPASSWORD}
@@ -109,9 +109,9 @@ elif [[ $result -eq 1 ]]; then
         #role does not exist, try to create it
         echo "The role(${dbuser}) doesn't exist,try to create it."
         if [[ "${dbpassword}" == "" ]]; then
-            execute_sql ${admindb} "CREATE USER ${dbuser} WITH NOCREATEDB;"
+            execute_sql ${admindb} "CREATE USER ${dbuser} WITH NOCREATEDB CREATEROLE;"
         else
-            execute_sql ${admindb} "CREATE USER ${dbuser} WITH PASSWORD '${dbpassword}' NOCREATEDB;"
+            execute_sql ${admindb} "CREATE USER ${dbuser} WITH PASSWORD '${dbpassword}' NOCREATEDB CREATEROLE;"
         fi
         result=$?
         if [[ $result -ne 0 ]]; then

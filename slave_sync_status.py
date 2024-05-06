@@ -249,9 +249,15 @@ class SlaveSyncTaskStatus(dict):
         super(SlaveSyncTaskStatus,self).__init__(task_status)
 
         #remove failed stages
+        removed_keys = []
         for s in self.get("stages",{}).keys():
             if self.is_stage_not_succeed(s):
-                del self["stages"][s]
+                removed_keys.append(s)
+
+        for k in removed_keys:
+            del self["stages"][k]
+
+        removed_keys.clear()
 
         #if no succeed stages and current task  is not succeed, clear all task status data.
         if self.is_not_succeed: 
