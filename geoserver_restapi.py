@@ -460,7 +460,7 @@ def gwc_has_layer(geoserver_url,username,password,workspace,layername):
 
 def gwc_delete_layer(geoserver_url,username,password,workspace,layername):
     if gwc_has_layer(geoserver_url,username,password,workspace,layername):
-        r = requests.delete(gwc_layer_url(geoserver_url,workspace,layername), auth=(self._user, self._password))
+        r = requests.delete(gwc_layer_url(geoserver_url,workspace,layername), auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to delete the gwc layer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
         logger.debug("Succeed to delete the gwc layer({}:{})".format(workspace,layername))
@@ -524,7 +524,7 @@ def gwc_empty_layer(geoserver_url,username,password,workspace,layername):
     for gridset in ("gda94","mercator"):
         for f in ("image/png","image/jpeg"):
             data = template.render({'layer':layer,'format':f,'gridset':gridset})
-            resp = http_method(url, auth=(self._user, self._password), headers={'content-type':'text/xml'}, data=data)
+            resp = http_method(url, auth=(username,password), headers={'content-type':'text/xml'}, data=data)
             layer_data = """<?xml version="1.0" encoding="UTF-8"?>
 <seedRequest>
     <name>{0}:{1}</name>
