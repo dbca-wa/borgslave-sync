@@ -43,6 +43,7 @@ sync_tasks = {
     "delete_feature": {},
     "delete_style": {},
     "create_feature":{},
+    "set_feature_styles":{},
     "create_style":{},
 
     "update_feature": {},
@@ -81,7 +82,7 @@ ordered_sync_task_type = [
             "create_datastore",
             "update_wmsstore","update_wmslayer","update_layergroup","remove_layergroup","remove_wmslayer","remove_wmsstore",
             "reload_geoserver",
-            "create_feature","create_style",
+            "create_feature","create_style","set_feature_styles",
             "update_gwc","empty_gwc",
             "drop_table",
             "purge_fastly_cache",

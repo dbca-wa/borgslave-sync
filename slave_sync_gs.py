@@ -201,12 +201,15 @@ def _create_feature(geoserver_url,username,password,sync_job,task_metadata,task_
 
     extra_data["keywords"] = keywords
     #create the featuretype
-    try:
-        gs.publish_featuretype(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_data,sync_job))
-    except:
-        if not gs.has_featuretype(geoserver_url,username,password,workspace,storename,layername):
-            raise
+    gs.publish_featuretype(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_data,sync_job))
 
+def create_feature(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_feature)
+
+def _set_feature_styles(geoserver_url,username,password,sync_job,task_metadata,task_status,stage=None):
+    workspace = task_workspace_name(sync_job)
+    storename = get_storename(sync_job)
+    layername = sync_job['name']
 
     #set layer styles
     default_stylename = get_stylename(sync_job,sync_job.get('default_style',None))
@@ -226,8 +229,9 @@ def _create_feature(geoserver_url,username,password,sync_job,task_metadata,task_
     gs.set_layer_styles(geoserver_url,username,password,workspace,layername,default_stylename,stylenames)
 
 
-def create_feature(sync_job,task_metadata,task_status):
-    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_create_feature)
+
+def set_feature_styles(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_set_feature_styles)
 
 def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_status,stage=None):
     """
@@ -309,6 +313,10 @@ tasks_metadata = [
                     ("create_feature"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, create_feature),
                     ("create_feature"  , update_feature_job, gs_feature_task_filter      , task_feature_name, create_feature),
                     ("create_feature"  , update_feature_metadata_job, gs_feature_task_filter      , task_feature_name, create_feature),
+
+                    ("set_feature_styles"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, set_feature_styles),
+                    ("set_feature_styles"  , update_feature_job, gs_feature_task_filter      , task_feature_name, set_feature_styles),
+                    ("set_feature_styles"  , update_feature_metadata_job, gs_feature_task_filter      , task_feature_name, set_feature_styles),
 
                     ("create_style"  , update_livelayer_job, gs_feature_task_filter      , task_feature_name, create_style),
                     ("create_style"    , update_feature_job, gs_style_task_filter, task_style_name  , create_style),
