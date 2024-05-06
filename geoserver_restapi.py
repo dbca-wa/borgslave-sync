@@ -163,7 +163,7 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
     connection_parameters = None
     for k,v in postgis_connection_parameters.items():
         if k in parameters:
-            if not v :
+            if not parameters[k] :
                 continue
             else:
                 value = str(parameters[k])
