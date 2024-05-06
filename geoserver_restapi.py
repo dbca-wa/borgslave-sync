@@ -384,14 +384,12 @@ def set_layer_styles(geoserver_url,username,password,workspace,layername,default
     layer_styles_data = """
 <?xml version="1.0" encoding="UTF-8"?>
 <layer>
-  <defaultStyle>
-    <name>{0}</name>
-  </defaultStyle>
+  {0}
   <styles class="linked-hash-set">
-  {}
+  {1}
   </styles>
 </layer>
-""".format(default_style,os.linesep.join("<style><name>{}</name></style>".format(n) for n in styles) if styles else "")
+""".format("<defaultStyle><name>{}</name></defaultStyle>".format(default_style) if default_style else "",os.linesep.join("<style><name>{}</name></style>".format(n) for n in styles) if styles else "")
     r = requests.put(layer_styles_url(geoserver_url,workspace,layername),headers=contenttype_header("xml"),data=layer_styles_data,auth=(username,password))
     if r.status_code != 200:
         raise Exception("Failed to set styles of the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))

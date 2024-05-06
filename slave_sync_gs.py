@@ -239,6 +239,7 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
     """
     workspace = sync_job['workspace']
     created_styles = []
+    messages = []
     #create styles
     for name,style in sync_job["styles"].items():
         stylename = get_stylename(sync_job,name)
@@ -253,7 +254,7 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
             created_styles.append(task_style_name(sync_job))
         except:
             message = traceback.format_exc()
-            messages.append("Failed to create style ({}). {}".format(style_name,message))
+            messages.append("Failed to create style ({}). {}".format(stylename,message))
     
     if created_styles:
         messages.append("Succeed to create styles ({}).".format(" , ".join(created_styles)))
