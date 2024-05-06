@@ -181,8 +181,8 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
     <description>{}</description>
     <connectionParameters>
         {}
-    <connectionParameters>
-<dataStore>
+    </connectionParameters>
+</dataStore>
 """.format(storename,"local postgis datastore",connection_parameters)
     r = func(url,data=store_data,headers=contenttype_header(),auth=(username,password))
     if r.status_code >= 300:
@@ -324,7 +324,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
 )
 
     r = requests.post(featuretypes_url(geoserver_url,workspace,storename),headers=contenttype_header("xml"),data=featuretype_data,auth=(username,password))
-    if r >= 300:
+    if r.status_code >= 300:
         raise Exception("Failed to create the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
     logger.debug("Succeed to publish the featuretype({}:{})".format(workspace,layername))
@@ -334,7 +334,7 @@ def delete_featuretype(geoserver_url,username,password,workspace,storename,layer
         return
 
     r = requests.delete("{}?recurse=false".format(featuretype_url(geoserver_url,workspace,storename,layername)),auth=(username,password))
-    if r >= 300:
+    if r.status_code >= 300:
         raise Exception("Failed to delete the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
     logger.debug("Succeed to delete the featuretype({}:{})".format(workspace,layername))
@@ -348,7 +348,7 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
         return
 
     r = requests.delete("{}?recurse=false&purge=true".format(style_url(geoserver_url,stylename)), auth=(username,password))
-    if r >= 300:
+    if r.status_code >= 300:
         raise Exception("Failed to delete the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
     logger.debug("Succeed to delete the style({}:{})".format(workspace,stylename))
@@ -364,7 +364,7 @@ def update_style(geoserver_url,username,password,workspace,stylename,sldversion,
         r = requests.put(style_url(geoserver_url,workspace,stylename),data=slddata, headers=headers,auth=(username,password))
     else:
         r = requests.post(styles_url(geoserver_url,workspace),data=slddata, headers=headers,auth=(username,password))
-    if r_sld.status_code != 200:
+    if r.status_code != 200:
         raise Exception("Failed to update the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
     logger.debug("Succeed to update the style({}:{})".format(workspace,stylename))
@@ -520,7 +520,7 @@ def gwc_update_layer(gepserver_url,username,password,workspace,layername,paramet
 
     r = requests.put(gwc_layer_url(geoserver_url,workspace,layername), auth=(username,password), headers=contenttype_header("xml"), data=layer_data)
         
-    if resp.status_code >= 300:
+    if r.status_code >= 300:
         raise Exception("Failed to update the gwc layer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
     logger.debug("Succeed to update the gwc layer({}:{}). ".format(workspace,layername))
