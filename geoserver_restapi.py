@@ -329,6 +329,9 @@ def delete_featuretype(geoserver_url,username,password,workspace,storename,layer
     if not has_featuretype(geoserver_url,username,password,workspace,storename,layername):
         return
 
+    if gwc_has_layer(geoserver_url,username,password,workspace,layername):
+        gwc_delete_layer(geoserver_url,username,password,workspace,layername)
+
     r = requests.delete("{}?recurse=false".format(featuretype_url(geoserver_url,workspace,storename,layername)),auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to delete the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
