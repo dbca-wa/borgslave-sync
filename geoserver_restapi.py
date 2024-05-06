@@ -356,16 +356,26 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
     logger.debug("Succeed to delete the style({}:{})".format(workspace,stylename))
 
 def update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata):
+    if not has_style(geoserver_url,username,password,workspace,stylename):
+        headers = {"content-type": "application/xml"}
+        styledata = """<?xml version="1.0" encoding="UTF-8"?>
+<style>
+  <name>{1}</name>
+  <filename>{0}_{1}.sld</filename>
+</style>
+""".format(workspace,stylename)
+        r = requests.post(styles_url(geoserver_url,workspace),data=styledata, headers=headers,auth=(username,password))
+        if r.status_code >= 300:
+            raise Exception("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
+
     sld_content_type = "application/vnd.ogc.sld+xml"
     if sldversion == "1.1.0" or sldversion == "1.1":
         sld_content_type = "application/vnd.ogc.se+xml"
 
     headers = {"content-type": sld_content_type}
 
-    if has_style(geoserver_url,username,password,workspace,stylename):
-        r = requests.put(style_url(geoserver_url,workspace,stylename),data=slddata, headers=headers,auth=(username,password))
-    else:
-        r = requests.post(styles_url(geoserver_url,workspace),data=slddata, headers=headers,auth=(username,password))
+    r = requests.put(style_url(geoserver_url,workspace,stylename),data=slddata, headers=headers,auth=(username,password))
+
     if r.status_code >= 300:
         raise Exception("Failed to update the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
