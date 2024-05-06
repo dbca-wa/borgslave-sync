@@ -44,6 +44,7 @@ postgis_connection_parameters = {
     "port": settings.GEOSERVER_PGSQL_PORT,
     "user": settings.GEOSERVER_PGSQL_USERNAME,
     "passwd": "plain:{}".format(settings.GEOSERVER_PGSQL_PASSWORD),
+    "SSL mode":"ALLOW",
     "dbtype": "postgis",
     "Connection timeout": 20,
     "Evictor tests per run": 3,
@@ -162,7 +163,10 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
     connection_parameters = None
     for k,v in postgis_connection_parameters.items():
         if k in parameters:
-            value = str(parameters[k])
+            if not v :
+                continue
+            else:
+                value = str(parameters[k])
         elif v:
             value = v
         else:
@@ -332,7 +336,7 @@ def delete_featuretype(geoserver_url,username,password,workspace,storename,layer
     if gwc_has_layer(geoserver_url,username,password,workspace,layername):
         gwc_delete_layer(geoserver_url,username,password,workspace,layername)
 
-    r = requests.delete("{}?recurse=false".format(featuretype_url(geoserver_url,workspace,storename,layername)),auth=(username,password))
+    r = requests.delete("{}?recurse=true".format(featuretype_url(geoserver_url,workspace,storename,layername)),auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to delete the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
