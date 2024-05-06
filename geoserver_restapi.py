@@ -330,10 +330,9 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     logger.debug("Succeed to publish the featuretype({}:{})".format(workspace,layername))
 
 def delete_featuretype(geoserver_url,username,password,workspace,storename,layername):
-    if gwc_has_layer(geoserver_url,username,password,workspace,layername):
-        gwc_delete_layer(geoserver_url,username,password,workspace,layername)
-
     if not has_featuretype(geoserver_url,username,password,workspace,storename,layername):
+        if gwc_has_layer(geoserver_url,username,password,workspace,layername):
+            gwc_delete_layer(geoserver_url,username,password,workspace,layername)
         return
 
     r = requests.delete("{}?recurse=true".format(featuretype_url(geoserver_url,workspace,storename,layername)),auth=(username,password))
@@ -350,7 +349,7 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
     if not has_style(geoserver_url,username,password,workspace,stylename):
         return
 
-    r = requests.delete("{}?recurse=false&purge=true".format(style_url(geoserver_url,stylename)), auth=(username,password))
+    r = requests.delete("{}?recurse=true&purge=true".format(style_url(geoserver_url,stylename)), auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to delete the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
@@ -642,9 +641,11 @@ def has_wmslayer(geoserver_url,username,password,workspace,layername,storename=N
 def delete_wmslayer(geoserver_url,username,password,workspace,layername):
     if not has_wmslayer(geoserver_url,username,password,workspace,layername):
         logger.debug("The wmslayer({}:{}) doesn't exist".format(workspace,layername))
+        if gwc_has_layer(geoserver_url,username,password,workspace,layername):
+            gwc_delete_layer(geoserver_url,username,password,workspace,layername)
         return
 
-    r = requests.delete("{}?recurse=false".format(wmslayer_url(geoserver_url,workspace,layername)), auth=(username, password))
+    r = requests.delete("{}?recurse=true".format(wmslayer_url(geoserver_url,workspace,layername)), auth=(username, password))
     if r.status_code >= 300:
         raise Exception("Failed to delete the wmslayer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 

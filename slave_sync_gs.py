@@ -61,9 +61,19 @@ def _create_datastore(geoserver_url,username,password,sync_job,task_metadata,tas
     if gs.has_datastore(geoserver_url,username,password,workspace,storename):
         #already exists
         return
-   
-    if sync_job["job_type"] == "feature":
-        sync_job["SSL mode"] = None
+    if "geoserver_setting" in sync_job:
+        parameters = collections.ChainMap(sync_job["geoserver_setting"],sync_job)
+    else:
+        parameters = sync_job
+
+    if "SSL mode" not in parameters:
+        if sync_job["job_type"] == "feature":
+            sync_job["SSL mode"] = None
+        elif any(parameters.get("host","").startswith(s) for s in ["az-aks-","az-k3s-"]):
+            sync_job["SSL mode"] = None
+        else:
+            sync_job["SSL mode"] = "PREFER"
+
 
     if "geoserver_setting" in sync_job:
         gs.update_datastore(geoserver_url,username,password,workspace,storename,collections.ChainMap(sync_job["geoserver_setting"],sync_job),create=True)
