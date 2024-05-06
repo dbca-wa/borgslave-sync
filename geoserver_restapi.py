@@ -358,7 +358,7 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
 
 def update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata):
     sld_content_type = "application/vnd.ogc.sld+xml"
-    if sld_version == "1.1.0" or sld_version == "1.1":
+    if sldversion == "1.1.0" or sldversion == "1.1":
         sld_content_type = "application/vnd.ogc.se+xml"
 
     headers = {"content-type": sld_content_type}

@@ -248,17 +248,13 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
     for name,style in sync_job["styles"].items():
         stylename = get_stylename(sync_job,name)
 
-        try:
-            with open(style['local_file']) as f:
-                slddata = f.read()
+        with open(style['local_file']) as f:
+            slddata = f.read()
 
-            sldversion = "1.1.0" if "version=\"1.1.0\"" in slddata else "1.0.0"
+        sldversion = "1.1.0" if "version=\"1.1.0\"" in slddata else "1.0.0"
 
-            gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
-            created_styles.append(task_style_name(sync_job))
-        except:
-            message = traceback.format_exc()
-            messages.append("Failed to create style ({}). {}".format(stylename,message))
+        gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
+        created_styles.append(task_style_name(sync_job))
     
     if created_styles:
         messages.append("Succeed to create styles ({}).".format(" , ".join(created_styles)))
