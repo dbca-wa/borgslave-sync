@@ -42,7 +42,7 @@ def get_stylename(sync_job,style_name):
     elif style_name == "builtin":
         return sync_job['name']
     else:
-        return "{}.{}".format(sync_job['name'],style_name)
+        return "{}_{}".format(sync_job['name'],style_name)
 
 def _create_workspace(geoserver_url,username,password,sync_job,task_metadata,task_status,stage=None):
     workspace = sync_job['workspace']
