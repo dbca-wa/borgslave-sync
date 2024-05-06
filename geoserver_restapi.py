@@ -132,8 +132,7 @@ def has_workspace(geoserver_url,username,password,workspace):
     return True if res.status_code == 200 else False
 
 def create_workspace(geoserver_url,username,password,workspace):
-    data = """
-<?xml version="1.0" encoding="UTF-8"?>
+    data = """<?xml version="1.0" encoding="UTF-8"?>
 <workspace>
     <name>{}</name>
 </workspace>
@@ -174,8 +173,7 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
         else:
             connection_parameters = """<entry key="{}">{}</entry>""".format(k,value)
 
-    store_data = """
-<?xml version="1.0" encoding="UTF-8"?>
+    store_data = """<?xml version="1.0" encoding="UTF-8"?>
 <dataStore>
     <name>{}</name>
     <description>{}</description>
@@ -206,8 +204,7 @@ def has_featuretype(geoserver_url,username,password,workspace,storename,layernam
 
 def publish_featuretype(geoserver_url,username,password,workspace,storename,layername,parameters):
     if parameters.get('viewsql'):
-        featuretype_data = """
-<?xml version="1.0" encoding="UTF-8"?>
+        featuretype_data = """<?xml version="1.0" encoding="UTF-8"?>
 <featureType>
     <name>{2}</name>
     <namespace>
@@ -274,8 +271,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     parameters.get("cachingEnabled","false")
 )
     else:
-        featuretype_data = """
-<?xml version="1.0" encoding="UTF-8"?>
+        featuretype_data = """<?xml version="1.0" encoding="UTF-8"?>
 <featureType>
     <name>{2}</name>
     {9}
@@ -381,8 +377,7 @@ def get_layer_styles(geoserver_url,username,password,workspace,layername):
         raise Exception("Failed to get styles of the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
 def set_layer_styles(geoserver_url,username,password,workspace,layername,default_style,styles):
-    layer_styles_data = """
-<?xml version="1.0" encoding="UTF-8"?>
+    layer_styles_data = """<?xml version="1.0" encoding="UTF-8"?>
 <layer>
   {0}
   <styles class="linked-hash-set">
@@ -469,10 +464,9 @@ def gwc_delete_layer(geoserver_url,username,password,workspace,layername):
     else:
         logger.debug("The gwc layer({}:{}) doesn't exist".format(workspace,layername))
 
-def gwc_update_layer(gepserver_url,username,password,workspace,layername,parameters):
-    layer_data = """
-<?xml version="1.0" encoding="UTF-8"?>
-<layer>
+def gwc_update_layer(geoserver_url,username,password,workspace,layername,parameters):
+    layer_data = """<?xml version="1.0" encoding="UTF-8"?>
+<GeoServerLayer>
     <name>{0}:{1}</name>
     <mimeFormats>
         <string>image/png</string>
@@ -502,7 +496,7 @@ def gwc_update_layer(gepserver_url,username,password,workspace,layername,paramet
         </styleParameterFilter>
     </parameterFilters>
     <gutter>100</gutter>
-</layer>
+</GeoServerLayer>
 """.format(
     workspace,
     layername,
@@ -528,8 +522,7 @@ def gwc_empty_layer(geoserver_url,username,password,workspace,layername):
         for f in ("image/png","image/jpeg"):
             data = template.render({'layer':layer,'format':f,'gridset':gridset})
             resp = http_method(url, auth=(self._user, self._password), headers={'content-type':'text/xml'}, data=data)
-            layer_data = """
-<?xml version="1.0" encoding="UTF-8"?>
+            layer_data = """<?xml version="1.0" encoding="UTF-8"?>
 <seedRequest>
     <name>{0}:{1}</name>
     <gridSetId>{2}</gridSetId>
@@ -584,8 +577,7 @@ def update_wmsstore(geoserver_url,username,password,workspace,storename,paramete
         func = requests.post
         url = wmsstores_url(geoserver_url,workspace)
 
-    store_data="""
-<?xml version="1.0" encoding="UTF-8"?>
+    store_data="""<?xml version="1.0" encoding="UTF-8"?>
 <wmsStore>
     <name>{1}</name>
     <type>WMS</type>
@@ -669,8 +661,7 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
         func = requests.post
         url = wmsstore_layers_url(geoserver_url,workspace,storename)
 
-    layer_data="""
-<?xml version="1.0" encoding="UTF-8"?>
+    layer_data="""<?xml version="1.0" encoding="UTF-8"?>
 <wmsLayer>
     <name>{2}</name>
     {6}
@@ -756,8 +747,7 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
         url = layergroups_url(geoserver_url,workspace)
         create = True
 
-    group_data="""
-<?xml version="1.0" encoding="UTF-8"?>
+    group_data="""<?xml version="1.0" encoding="UTF-8"?>
 <layerGroup>
     <name>{1}</name>
     <mode>SINGLE</mode>
