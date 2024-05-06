@@ -97,16 +97,16 @@ def _delete_feature(geoserver_url,username,password,sync_job,task_metadata,task_
     feature_exist = False
     if gs.has_featuretype(geoserver_url,username,password,workspace,storename,layername):
         #find the related styles first
-        for default_style,other_styles in gs.get_layer_styles(geoserver_url,username,password,workspace,layername):
-            if default_style:
-                if default_style.startswith(layername):
+        default_style,other_styles = gs.get_layer_styles(geoserver_url,username,password,workspace,layername)
+        if default_style:
+            if default_style.startswith(layername):
+                #the alternate style is only used by this feature, save it for delete.
+                styles.append(default_style)
+        if other_styles:
+            for stylename in other_styles:
+                if stylename.startswith(layername):
                     #the alternate style is only used by this feature, save it for delete.
-                    styles.append(d["name"])
-            if other_styles:
-                for stylename in other_styles:
-                    if stylename.startswith(layername):
-                        #the alternate style is only used by this feature, save it for delete.
-                        styles.append(stylename)
+                    styles.append(stylename)
         #delete the feature
         gs.delete_featuretype(geoserver_url,username,password,workspace,storename,layername)
         feature_exist = True
