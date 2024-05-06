@@ -201,7 +201,12 @@ def _create_feature(geoserver_url,username,password,sync_job,task_metadata,task_
 
     extra_data["keywords"] = keywords
     #create the featuretype
-    gs.publish_featuretype(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_data,sync_job))
+    try:
+        gs.publish_featuretype(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_data,sync_job))
+    except:
+        if not has_featuretype(geoserver_url,username,password,workspace,storename,layername):
+            raise
+
 
     #set layer styles
     default_stylename = get_stylename(sync_job,sync_job.get('default_style',None))
