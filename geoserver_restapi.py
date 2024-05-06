@@ -330,11 +330,11 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     logger.debug("Succeed to publish the featuretype({}:{})".format(workspace,layername))
 
 def delete_featuretype(geoserver_url,username,password,workspace,storename,layername):
-    if not has_featuretype(geoserver_url,username,password,workspace,storename,layername):
-        return
-
     if gwc_has_layer(geoserver_url,username,password,workspace,layername):
         gwc_delete_layer(geoserver_url,username,password,workspace,layername)
+
+    if not has_featuretype(geoserver_url,username,password,workspace,storename,layername):
+        return
 
     r = requests.delete("{}?recurse=true".format(featuretype_url(geoserver_url,workspace,storename,layername)),auth=(username,password))
     if r.status_code >= 300:
