@@ -170,9 +170,9 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
             continue
 
         if connection_parameters:
-            connection_parameters = """{}{}<entry key="{}">{}</entry>""".format(connection_parameters,os.linesep,k,v)
+            connection_parameters = """{}{}<entry key="{}">{}</entry>""".format(connection_parameters,os.linesep,k,value)
         else:
-            connection_parameters = """<entry key="{}">{}</entry>""".format(k,v)
+            connection_parameters = """<entry key="{}">{}</entry>""".format(k,value)
 
     store_data = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -208,7 +208,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     if parameters.get('viewsql'):
         featuretype_data = """
 <?xml version="1.0" encoding="UTF-8"?>
-<FeatureTypeInfo>
+<featureType>
     <name>{2}</name>
     <namespace>
         <name>{0}</name>
@@ -239,7 +239,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
         </entry>
         <entry key="cachingEnabled">{14}</entry>
   </metadata>
-</FeatureTypeInfo>
+</featureType>
 """.format(
     workspace,
     storename,
@@ -278,7 +278,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
 <?xml version="1.0" encoding="UTF-8"?>
 <FeatureTypeInfo>
     <name>{2}</name>
-    <nativeName>{9}</nativeName>
+    {9}
     <namespace>
         <name>{0}</name>
     </namespace>
@@ -320,7 +320,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
         <crs>{}</crs>
     </latLonBoundingBox>
 """.format(*parameters["latLonBoundingBox"]) if parameters.get("latLonBoundingBox") else "",
-    parameters.get('table',None)
+    "<nativeName>{}</nativeName>".format(parameters.get('table')) if parameters.get('table') else ""
 )
 
     r = requests.post(featuretypes_url(geoserver_url,workspace,storename),headers=contenttype_header("xml"),data=featuretype_data,auth=(username,password))
