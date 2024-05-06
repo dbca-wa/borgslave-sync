@@ -276,7 +276,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     else:
         featuretype_data = """
 <?xml version="1.0" encoding="UTF-8"?>
-<FeatureTypeInfo>
+<featureType>
     <name>{2}</name>
     {9}
     <namespace>
@@ -293,7 +293,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     <store class="dataStore">
         <name>{0}:{1}</name>
     </store>
-</FeatureTypeInfo>
+</featureType>
 """.format(
     workspace,
     storename,
