@@ -367,7 +367,7 @@ def update_style(geoserver_url,username,password,workspace,stylename,sldversion,
         r = requests.put(style_url(geoserver_url,workspace,stylename),data=slddata, headers=headers,auth=(username,password))
     else:
         r = requests.post(styles_url(geoserver_url,workspace),data=slddata, headers=headers,auth=(username,password))
-    if r.status_code != 200:
+    if r.status_code >= 300:
         raise Exception("Failed to update the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
     logger.debug("Succeed to update the style({}:{})".format(workspace,stylename))
@@ -393,7 +393,7 @@ def set_layer_styles(geoserver_url,username,password,workspace,layername,default
 </layer>
 """.format("<defaultStyle><name>{}</name></defaultStyle>".format(default_style) if default_style else "",os.linesep.join("<style><name>{}</name></style>".format(n) for n in styles) if styles else "")
     r = requests.put(layer_styles_url(geoserver_url,workspace,layername),headers=contenttype_header("xml"),data=layer_styles_data,auth=(username,password))
-    if r.status_code != 200:
+    if r.status_code >= 300:
         raise Exception("Failed to set styles of the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
     logger.debug("Succeed to set the styles of the layer({}:{}),default_style={}, styles={}".format(workspace,layername,default_style,styles))
@@ -408,7 +408,7 @@ def get_catalogue_mode(geoserver_url,username,password):
 
 def set_catalogue_mode(geoserver_url,username,password,mode):
     r = requests.put(catalogue_mode_url(geoserver_url),data = {"mode":mode},headers=contenttype_header("json"),auth=(username,password))
-    if r.status_code != 200:
+    if r.status_code >= 300:
         raise Exception("Failed to set the catalogue mode({}). code = {} , message = {}".format(mode,r.status_code, r.content))
 
     logger.debug("Succeed to set catalogue mode.")
@@ -429,7 +429,7 @@ def update_layer_access_rules(geoserver_url,username,password,layer_access_rules
     for permission,groups in existing_layer_access_rules.items():
         if permission not in layer_access_rules:
             r = requests.delete(layer_access_url(geoserver_url,permission),auth=(username,password))
-            if r.status_code != 200:
+            if r.status_code >= 300:
                 raise Exception("Failed to delete layer access rules({} = {}). code = {} , message = {}".format(permission,groups,r.status_code, r.content))
         else:
             update_layer_access_rules[permission] = layer_access_rules[permission]
@@ -441,19 +441,19 @@ def update_layer_access_rules(geoserver_url,username,password,layer_access_rules
 
     if update_layer_access_rules:
         r = requests.put(layer_access_rules_url(geoserver_url),data=update_layer_access_rules,headers=contenttype_header("json"),auth=(username,password))
-        if r.status_code != 200:
+        if r.status_code >= 300:
             raise Exception("Failed to update layer access rules({}). code = {} , message = {}".format(update_layer_access_rules,r.status_code, r.content))
 
     if new_layer_access_rules:
         r = requests.post(layer_access_rules_url(geoserver_url),data=new_layer_access_rules,headers=contenttype_header("json"),auth=(username,password))
-        if r.status_code != 200:
+        if r.status_code >= 300:
             raise Exception("Failed to create layer access rules({}). code = {} , message = {}".format(new_layer_access_rules,r.status_code, r.content))
 
     logger.debug("Succeed to update the layer access rules.")
 
 def reload(geoserver_url,username,password):
     r = requests.put(reload_url(geoserver_url),auth=(username,password))
-    if r.status_code != 200:
+    if r.status_code >= 300:
         raise Exception("Failed to reload geoserver catalogue. code = {} , message = {}".format(r.status_code, r.content))
     else:
         logger.debug("Succeed to reload the geoserver catalogue.")
