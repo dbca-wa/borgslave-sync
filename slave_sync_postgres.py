@@ -31,7 +31,7 @@ def update_auth(sync_job,task_metadata,task_status):
 
         logger.info("Executing {}...".format(repr(psql_cmd)))
         psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        psql_output = psql.communicate()
+        psql_output = [m.decode.() for m in psql.communicate()]
         if psql_output[1] and psql_output[1].strip():
             logger.info("stderr: {}".format(psql_output[1]))
             task_status.set_message("message",psql_output[1])
@@ -44,7 +44,7 @@ def create_postgis_extension(sync_job,task_metadata,task_status):
     psql_cmd[len(psql_cmd) - 1] = "CREATE EXTENSION IF NOT EXISTS postgis;"
     
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])
@@ -100,7 +100,7 @@ def create_schema(sync_job,task_metadata,task_status):
     psql_cmd[len(psql_cmd) - 1] = ";".join(["CREATE SCHEMA IF NOT EXISTS \"{0}\"".format(s) for s in [sync_job["schema"],sync_job["data_schema"],sync_job["outdated_schema"]] if s])
     
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])
@@ -122,7 +122,7 @@ def create_schema(sync_job,task_metadata,task_status):
         psql_cmd[len(psql_cmd) - 1] = create_role_sql.format(GEOSERVER_PGSQL_DATABASE,sync_job["schema"],"sso_access",GEOSERVER_PGSQL_USERNAME)
 
         psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        psql_output = psql.communicate()
+        psql_output = [m.decode.() for m in psql.communicate()]
         if psql_output[1] and psql_output[1].strip():
             logger.info("stderr: {}".format(psql_output[1]))
             task_status.set_message("message",psql_output[1])
@@ -164,7 +164,7 @@ END$$;
 """.format(sync_job["data_schema"],sync_job["name"],sync_job["outdated_schema"],sync_job["schema"])
     logger.info("Executing {}...".format(repr(psql_cmd)))
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])
@@ -197,7 +197,7 @@ def restore_table(sync_job,task_metadata,task_status):
     restore_cmd[len(restore_cmd) - 1] = sync_job["data"]["local_file"]
     logger.info("Executing {}...".format(repr(restore_cmd)))
     restore = subprocess.Popen(restore_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    restore_output = restore.communicate()
+    restore_output = [m.decode for m in restore.communicate()]
     if restore_output[1] and restore_output[1].strip():
         logger.info("stderr: {}".format(restore_output[1]))
         task_status.set_message("message",restore_output[1])
@@ -273,7 +273,7 @@ END$$;
 """.format(sync_job["data_schema"],sync_job["name"],sync_job["outdated_schema"])
     logger.info("Executing {}...".format(repr(psql_cmd)))
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])
@@ -287,7 +287,7 @@ def create_access_view(sync_job,task_metadata,task_status):
     psql_cmd[len(psql_cmd) -1] = "DROP VIEW IF EXISTS \"{0}\".\"{1}\" CASCADE;CREATE VIEW \"{0}\".\"{1}\" AS SELECT * FROM \"{2}\".\"{1}\";".format(sync_job["schema"],sync_job["name"],sync_job["data_schema"])
     logger.info("Executing {}...".format(repr(psql_cmd)))
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])
@@ -302,7 +302,7 @@ def drop_outdated_table(sync_job,task_metadata,task_status):
     psql_cmd[len(psql_cmd) -1] = "DROP TABLE IF EXISTS \"{0}\".\"{1}\";".format(sync_job["outdated_schema"],sync_job["name"])
     logger.info("Executing {}...".format(repr(psql_cmd)))
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])
@@ -316,7 +316,7 @@ def drop_table(sync_job,task_metadata,task_status):
     psql_cmd[len(psql_cmd) -1] = "DROP VIEW IF EXISTS \"{0}\".\"{1}\" CASCADE;DROP TABLE IF EXISTS \"{2}\".\"{1}\" CASCADE;DROP TABLE IF EXISTS \"{3}\".\"{1}\" CASCADE;".format(sync_job["schema"], sync_job["name"],sync_job["data_schema"],sync_job["outdated_schema"])
     logger.info("Executing {}...".format(repr(psql_cmd)))
     psql = subprocess.Popen(psql_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-    psql_output = psql.communicate()
+    psql_output = [m.decode.() for m in psql.communicate()]
     if psql_output[1] and psql_output[1].strip():
         logger.info("stderr: {}".format(psql_output[1]))
         task_status.set_message("message",psql_output[1])

@@ -42,7 +42,7 @@ def check_file_md5(md5_cmd,md5,task_status = None):
             task_status.set_message("message",get_md5_output[1])
 
 
-    file_md5 = get_md5_output[0].split()[0]
+    file_md5 = get_md5_output[0].split()[0].decode()
     if file_md5 != md5:
         raise Exception("md5sum checks failed.Expected md5 is {0}; but file's md5 is {1}".format(md5,file_md5))
 

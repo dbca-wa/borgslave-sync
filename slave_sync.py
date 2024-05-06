@@ -308,11 +308,9 @@ def get_tasks(pull_status):
     changes = get_changeset()
     next_job = False
     for file_name, revision in changes.items():
-        if isinstance(file_name,bytes)
-            file_name = file_name.decode()
+        file_name = file_name.decode()
 
-        if isinstance(revision,bytes)
-            revision = revision.decode()
+        revision = revision.decode()
 
         if DEBUG and INCLUDE and file_name not in INCLUDE:
             #debug mode, file_name is not in INCLUDE
@@ -326,12 +324,12 @@ def get_tasks(pull_status):
             segments = file_name.split('/',2)
             if revision in ['A','M']:
                 action = "update"
-                file_content = hg.cat([file_name],rev="tip")
+                file_content = hg.cat([os.path.join(BORG_STATE_HOME,file_name).encode()],rev="tip")
             elif revision == 'R':
                 action = "remove"
                 pre_rev = previous(HG_NODE)
                 try:
-                    file_content = hg.cat([file_name],rev=pre_rev)
+                    file_content = hg.cat([os.path.join(BORG_STATE_HOME,file_name).encode()],rev=pre_rev)
                 except:
                     #can't get the file content
                     logger.error("Can't get file '{}' content, ignore.".format(file_name))
@@ -357,7 +355,7 @@ def get_tasks(pull_status):
             #load meta data, if meta data is saved into a separated file
             load_metafile(sync_job)
             #convert bbox to array if bbox is a string
-            if "bbox" in sync_job and isinstance(sync_job["bbox"],basestring):
+            if "bbox" in sync_job and isinstance(sync_job["bbox"],str):
                 sync_job["bbox"] = json.loads(sync_job["bbox"])
             #tasks will be added only after if a sync job has some unexecuted task or unsuccessful task.
             job_failed = False

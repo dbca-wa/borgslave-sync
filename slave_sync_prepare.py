@@ -50,7 +50,7 @@ def prepare_feature(sync_job,task_metadata,task_status):
         sync_job['styles'] = {}
 
     #transform the keywords froms string to list
-    if "keywords" in sync_job and isinstance(sync_job["keywords"],basestring):
+    if "keywords" in sync_job and isinstance(sync_job["keywords"],str):
         sync_job["keywords"] = [k.strip() for k in keyword_re.split(sync_job["keywords"]) if k.strip()]
 
 

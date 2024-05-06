@@ -18,7 +18,7 @@ australia_bbox = (108.0000,-45.0000,155.0000,-10.0000)
 preview_dimension = (480,278)
 
 def get_preview_dimension(bbox):
-    if isinstance(bbox,basestring):
+    if isinstance(bbox,str):
         bbox = json.loads(bbox)
     bbox_ratio = [(bbox[2] - bbox[0]) / (australia_bbox[2] - australia_bbox[0]),(bbox[3] - bbox[1]) / (australia_bbox[3] - australia_bbox[1])]
     if (bbox_ratio[0] > bbox_ratio[1]):

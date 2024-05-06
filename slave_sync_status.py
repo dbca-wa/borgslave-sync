@@ -63,7 +63,7 @@ class SlaveSyncStatus(object):
                 self._info = {}
 
             m = hashlib.md5()
-            m.update(file_content.encode())
+            m.update(file_content.encode() if isinstance(file_content,str) else file_content)
             md5_hash = m.hexdigest()
             if self._info.get('md5',None) != md5_hash or self._info.get('action',None) != action:
                 self._info.clear()
