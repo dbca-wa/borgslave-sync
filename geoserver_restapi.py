@@ -358,7 +358,7 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
 def update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata):
     if not has_style(geoserver_url,username,password,workspace,stylename):
         headers = {"content-type": "application/vnd.ogc.sld+xml"}
-        slddata = """<?xml version="1.0" encoding="UTF-8"?><sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/sld" version="1.0.0">
+        placeholder_data = """<?xml version="1.0" encoding="UTF-8"?><sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/sld" version="1.0.0">
   <sld:NamedLayer>
     <sld:Name>{0}</sld:Name>
     <sld:UserStyle>
@@ -382,7 +382,7 @@ def update_style(geoserver_url,username,password,workspace,stylename,sldversion,
   </sld:NamedLayer>
 </sld:StyledLayerDescriptor>
 """.format(stylename)
-        r = requests.post(styles_url(geoserver_url,workspace),data=slddata, headers=headers,auth=(username,password))
+        r = requests.post(styles_url(geoserver_url,workspace),data=placeholder_data, headers=headers,auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
