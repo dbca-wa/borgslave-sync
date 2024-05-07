@@ -365,8 +365,6 @@ def update_style(geoserver_url,username,password,workspace,stylename,sldversion,
 </style>
 """.format(workspace,stylename)
         r = requests.post(styles_url(geoserver_url,workspace),data=styledata, headers=headers,auth=(username,password))
-        if r.status_code >= 300:
-            raise Exception("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
     sld_content_type = "application/vnd.ogc.sld+xml"
     if sldversion == "1.1.0" or sldversion == "1.1":
