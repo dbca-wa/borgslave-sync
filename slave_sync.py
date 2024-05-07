@@ -312,7 +312,7 @@ def get_tasks(pull_status):
 
         revision = revision.decode()
 
-        if DEBUG and INCLUDE and file_name not in INCLUDE:
+        if DEBUG and INCLUDE and not any(file_name.startswith(f) for f in INCLUDE):
             #debug mode, file_name is not in INCLUDE
             ignore_files += 1
             continue
