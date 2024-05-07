@@ -357,14 +357,35 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
 
 def update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata):
     if not has_style(geoserver_url,username,password,workspace,stylename):
-        headers = {"content-type": "application/xml"}
-        styledata = """<?xml version="1.0" encoding="UTF-8"?>
-<style>
-  <name>{1}</name>
-  <filename>{0}_{1}.sld</filename>
-</style>
-""".format(workspace,stylename)
-        r = requests.post(styles_url(geoserver_url,workspace),data=styledata, headers=headers,auth=(username,password))
+        headers = {"content-type": "application/vnd.ogc.sld+xml"}
+        slddata = """<?xml version="1.0" encoding="UTF-8"?><sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/sld" version="1.0.0">
+  <sld:NamedLayer>
+    <sld:Name>{0}</sld:Name>
+    <sld:UserStyle>
+      <sld:Name>{0}</sld:Name>
+      <sld:Title>Default Line</sld:Title>
+      <sld:Abstract>A sample style that draws a line</sld:Abstract>
+      <sld:FeatureTypeStyle>
+        <sld:Name>name</sld:Name>
+        <sld:Rule>
+          <sld:Name>rule1</sld:Name>
+          <sld:Title>Blue Line</sld:Title>
+          <sld:Abstract>A solid blue line with a 1 pixel width</sld:Abstract>
+          <sld:LineSymbolizer>
+            <sld:Stroke>
+              <sld:CssParameter name="stroke">#0000FF</sld:CssParameter>
+            </sld:Stroke>
+          </sld:LineSymbolizer>
+        </sld:Rule>
+      </sld:FeatureTypeStyle>
+    </sld:UserStyle>
+  </sld:NamedLayer>
+</sld:StyledLayerDescriptor>
+""".format(stylename)
+        r = requests.post(styles_url(geoserver_url,workspace),data=slddata, headers=headers,auth=(username,password))
+        if r.status_code >= 300:
+            raise Exception("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
+
 
     sld_content_type = "application/vnd.ogc.sld+xml"
     if sldversion == "1.1.0" or sldversion == "1.1":
