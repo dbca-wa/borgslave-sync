@@ -141,7 +141,7 @@ def _delete_feature(geoserver_url,username,password,sync_job,task_metadata,task_
         if  styles:
             task_status.set_message("message",os.linesep.join([
                 "Succeed to delete feature ({}:{})".format(workspace,layername),
-                "Succeed to delete private styles ({}).".format(", ".join([name for name in styles.keys()]))
+                "Succeed to delete private styles ({}).".format(", ".join([name for name in styles]))
                 ]),stage=stage)
         else:
             task_status.set_message("message","Succeed to delete feature ({}:{}).".format(workspace,layername),stage=stage)
@@ -149,7 +149,7 @@ def _delete_feature(geoserver_url,username,password,sync_job,task_metadata,task_
         if styles:
             task_status.set_message("message",os.linesep.join([
                 "Feature ({}:{}) doesn't exist.".format(workspace,layername),
-                "Succeed to delete private styles ({}).".format(", ".join([name for name in styles.keys()]))
+                "Succeed to delete private styles ({}).".format(", ".join([name for name in styles]))
                 ]),stage=stage)
         else:
             task_status.set_message("message","Feature ({}:{}) doesn't exist.".format(workspace,layername),stage=stage)

@@ -342,14 +342,14 @@ def delete_featuretype(geoserver_url,username,password,workspace,storename,layer
     logger.debug("Succeed to delete the featuretype({}:{})".format(workspace,layername))
 
 def has_style(geoserver_url,username,password,workspace,stylename):
-    r = requests.get(style_url(geoserver_url,workspace,stylename), auth=(username,password))
+    r = requests.get(style_url(geoserver_url,workspace,stylename),headers=accept_header(), auth=(username,password))
     return True if r.status_code == 200 else False
 
 def delete_style(geoserver_url,username,password,workspace,stylename):
     if not has_style(geoserver_url,username,password,workspace,stylename):
         return
 
-    r = requests.delete("{}?recurse=true&purge=true".format(style_url(geoserver_url,stylename)), auth=(username,password))
+    r = requests.delete("{}?recurse=true&purge=true".format(style_url(geoserver_url,workspace,stylename)), auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to delete the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
