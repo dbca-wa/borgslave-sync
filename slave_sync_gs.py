@@ -195,7 +195,7 @@ def _create_feature(geoserver_url,username,password,sync_job,task_metadata,task_
     extra_data = {}
     if (sync_job.get('override_bbox',False)):
         bbox = sync_job["bbox"]
-        bbox = (repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),sync_job("crs"))
+        bbox = (repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),sync_job["crs"])
         extra_data["nativeBoundingBox"] = bbox
         extra_data["latLonBoundingBox"] = bbox
     else:

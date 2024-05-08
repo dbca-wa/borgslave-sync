@@ -74,8 +74,8 @@ def _update_layer(geoserver_url,username,password,sync_job,task_metadata,task_st
         bbox = (repr(bbox[0]),repr(bbox[2]),repr(bbox[1]),repr(bbox[3]),sync_job["crs"])
         extra_data["nativeBoundingBox"] = bbox
         extra_data["latLonBoundingBox"] = bbox
-        extra_data["nativeCRS"] = sync_job("crs")
-        extra_data["srs"] = sync_job("crs")
+        extra_data["nativeCRS"] = sync_job["crs"]
+        extra_data["srs"] = sync_job["crs"]
     else:
         extra_data["nativeBoundingBox"] = None
         extra_data["latLonBoundingBox"] = None
