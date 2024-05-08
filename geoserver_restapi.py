@@ -623,7 +623,7 @@ def update_wmsstore(geoserver_url,username,password,workspace,storename,paramete
     <metadata>
         <entry key="useConnectionPooling">true</entry>
     </metadata>
-    <capabilitiesURL>{2}</capabilitiesURL>
+    <capabilitiesURL><![CDATA[{2}]]</capabilitiesURL>
     {3}
     {4}
     {5}
