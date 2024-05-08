@@ -57,7 +57,7 @@ def _update_layer(geoserver_url,username,password,sync_job,task_metadata,task_st
     storename = sync_job['store']
     layername = sync_job['name']
 
-    extra_dict = {}
+    extra_data = {}
 
     if sync_job.get('keywords')  and sync_job.get('applications'):
         keywords = sync_job["keywords"] + sync_job["applications"]
@@ -67,7 +67,7 @@ def _update_layer(geoserver_url,username,password,sync_job,task_metadata,task_st
         keywords = sync_job["applications"]
     else:
         keywords = None
-    extra_dict["keywords"] = keywords
+    extra_data["keywords"] = keywords
 
     if (sync_job.get('override_bbox',False)):
         bbox = sync_job["bbox"]
@@ -82,7 +82,7 @@ def _update_layer(geoserver_url,username,password,sync_job,task_metadata,task_st
         extra_data["nativeCRS"] = None
         extra_data["srs"] = None
 
-    gs.update_wmslayer(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_dict,sync_job))
+    gs.update_wmslayer(geoserver_url,username,password,workspace,storename,layername,collections.ChainMap(extra_data,sync_job))
 
 def update_layer(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_layer)
