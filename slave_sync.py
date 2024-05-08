@@ -204,31 +204,40 @@ def sync():
         except:
             pass
         logger.info("HG_NODE: {}".format(HG_NODE))
+        #sort the tasks
+        execute_tasks = OrderedDict()
         for task_type in ordered_sync_task_type:
             for task_name,task in sync_tasks[task_type].items():    
                 if isinstance(task,list):
                     #shared task
-                    logger.info("Shared Task : {0}  {1} = [{2}]".format(task_type,task_name,",".join([t[0]['job_file'] for t in task])))
+                    for shared_task in task:
+                        if shared_task[0]['job_file'] in execute_tasks:
+                            execute_tasks[shared_task[0]['job_file']].append((task_name,True,shared_task))
+                        else:
+                            execute_tasks[shared_task[0]['job_file']] = [(task_name,True,shared_task)]
                 else:
                     #unshared task
-                    logger.info("Task : {0}  {1} = {2}".format(task_type,task_name,task[0]['job_file']))
+                    if task[0]['job_file'] in execute_tasks:
+                        execute_tasks[task[0]['job_file']].append((task_name,False,task))
+                    else:
+                        execute_tasks[task[0]['job_file']] = [(task_name,False,task)]
+
+        for job_file,tasks in execute_tasks:
+            logger.info("job file({0}): {1}".format(job_file,",".join(["{0}{1}".format(t[0],"(Shared)" if t[1] else "") for t in tasks])))
+
         for task in notify_tasks:
             logger.info("Task : {0}  {1} = {2}".format("send_notify",taskname(task[0],task[1]),task[0]['job_file']))
+        return
 
         #prepare tasks
         for task in prepare_tasks:
             execute_prepare_task(*task)
 
         #execute tasks
-        for task_type in ordered_sync_task_type:
-            for task in sync_tasks[task_type].values():    
-                if isinstance(task,list):
-                    #shared task
-                    for shared_task in task:
-                        execute_task(*shared_task)
-                else:
-                    #unshared task
-                    execute_task(*task)
+        for job_file,tasks in execute_tasks:
+            logger.info("Execute the job({})".format(job_file))
+            for task in tasks:
+                execute_task(*task[2])
 
         if SlaveSyncStatus.all_succeed():
             logger.info("All done!")
