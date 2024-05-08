@@ -222,6 +222,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     <srs>{6}</srs>
     {7}
     {8}
+    <enabled>true</enabled>
     <store class="dataStore">
         <name>{0}:{1}</name>
     </store>
@@ -229,7 +230,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
         <entry key="JDBC_VIRTUAL_TABLE">
             <virtualTable>
                 <name>{2}</name>
-                <sql>{9}</sql>
+                <sql><![CDATA[{9}]]></sql>
                 <escapeSql>{10}</escapeSql>
                 <geometry>
                     <name>{11}</name>
@@ -238,7 +239,6 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
                 </geometry>
             </virtualTable>
         </entry>
-        <entry key="cachingEnabled">{14}</entry>
   </metadata>
 </featureType>
 """.format(
@@ -271,8 +271,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     parameters.get("escapeSql","false"),
     parameters.get("spatial_column"),
     parameters.get("spatial_type"),
-    parameters.get("srs","EPSG:4326")[5:],
-    parameters.get("cachingEnabled","false")
+    parameters.get("srs","EPSG:4326")[5:]
 )
     else:
         featuretype_data = """<?xml version="1.0" encoding="UTF-8"?>
@@ -290,6 +289,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     <srs>{6}</srs>
     {7}
     {8}
+    <enabled>true</enabled>
     <store class="dataStore">
         <name>{0}:{1}</name>
     </store>
