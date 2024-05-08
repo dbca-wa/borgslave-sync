@@ -8,7 +8,7 @@ from slave_sync_env import (
     BORGCOLLECTOR_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER,
     SHARE_LAYER_DATA,SHARE_PREVIEW_DATA,
-    parse_remotefilepath,BORGCOLLECTOR_SERVER,
+    parse_remotefilepath,BORGCOLLECTOR_SERVER,BORGCOLLECTOR_DOWNLOAD_PATH,BORGCOLLECTOR_PREVIEW_PATH,
     now
 )
 from slave_sync_task import (
@@ -48,8 +48,20 @@ def check_file_md5(md5_cmd,md5,task_status = None):
 
 
 def download_file(remote_path,local_path,task_status = None,md5=None):
-    if BORGCOLLECTOR_SERVER:
-        remote_path = "{}:{}".format(BORGCOLLECTOR_SERVER,remote_path.split(":",1)[1])
+    if BORGCOLLECTOR_SERVER and BORGCOLLECTOR_DOWNLOAD_PATH:
+        if remote_path.find("@") > 0:
+            remote_path = "{}:{}{}".format(BORGCOLLECTOR_SERVER,BORGCOLLECTOR_DOWNLOAD_PATH,remote_path.split(":",1)[1].split("download",1)[1])
+        else:
+            remote_path = "{}{}".format(BORGCOLLECTOR_DOWNLOAD_PATH,remote_path.split("download",1)[1])
+    elif BORGCOLLECTOR_SERVER:
+        if remote_path.find("@") > 0:
+            remote_path = "{}:{}".format(BORGCOLLECTOR_SERVER,remote_path.split(":",1)[1])
+    elif BORGCOLLECTOR_DOWNLOAD_PATH:
+        if remote_path.find("@") > 0:
+            remote_path = "{}:{}{}".format(remote_path.split(":",1)[0],BORGCOLLECTOR_DOWNLOAD_PATH,remote_path.split(":",1)[1].split("download",1)[1])
+        else:
+            remote_path = "{}{}".format(BORGCOLLECTOR_DOWNLOAD_PATH,remote_path.split("download",1)[1])
+
     if md5:
         #check file md5 before downloading.
         remote_file_path = remote_path
@@ -197,8 +209,20 @@ def load_gs_stylefile(sync_job,task_metadata,task_status):
 upload_cmd = ["rsync", "-azR" ,"-e", BORGCOLLECTOR_SSH,None,None]
 
 def upload_file(local_file,remote_path,task_status):
-    if BORGCOLLECTOR_SERVER:
-        remote_path = "{}:{}".format(BORGCOLLECTOR_SERVER,remote_path.split(":",1)[1])
+    if BORGCOLLECTOR_SERVER and BORGCOLLECTOR_PREVIEW_PATH:
+        if remote_path.find("@") > 0:
+            remote_path = "{}:{}{}".format(BORGCOLLECTOR_SERVER,BORGCOLLECTOR_PREVIEW_PATH,remote_path.split(":",1)[1].split("preview",1)[1])
+        else:
+            remote_path = "{}{}".format(BORGCOLLECTOR_PREVIEW_PATH,remote_path.split("preview",1)[1])
+    elif BORGCOLLECTOR_SERVER:
+        if remote_path.find("@") > 0:
+            remote_path = "{}:{}".format(BORGCOLLECTOR_SERVER,remote_path.split(":",1)[1])
+    elif BORGCOLLECTOR_PREVIEW_PATH:
+        if remote_path.find("@") > 0:
+            remote_path = "{}:{}{}".format(remote_path.split(":",1)[0],BORGCOLLECTOR_PREVIEW_PATH,remote_path.split(":",1)[1].split("preview",1)[1])
+        else:
+            remote_path = "{}{}".format(BORGCOLLECTOR_PREVIEW_PATH,remote_path.split("preview",1)[1])
+
     # sync over PostgreSQL dump with rsync
     upload_cmd[len(upload_cmd) - 2] = local_file
     upload_cmd[len(upload_cmd) - 1] = remote_path
