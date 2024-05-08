@@ -37,6 +37,7 @@ if not os.path.exists(PREVIEW_ROOT_PATH):   os.makedirs(PREVIEW_ROOT_PATH)
 SYNC_STATUS_PATH = os.environ.get("SYNC_STATUS_PATH",os.path.join(PATH,'.sync_status'))
 if not os.path.exists(SYNC_STATUS_PATH):   os.makedirs(SYNC_STATUS_PATH)
 
+BORGCOLLECTOR_SERVER = os.environ.get("BORGCOLLECTOR_SERVER",None)
 
 DEBUG = bool(os.environ.get("DEBUG","false").lower() in ["true","yes","on"])
 if DEBUG:

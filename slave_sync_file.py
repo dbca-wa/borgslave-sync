@@ -8,7 +8,7 @@ from slave_sync_env import (
     BORGCOLLECTOR_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER,
     SHARE_LAYER_DATA,SHARE_PREVIEW_DATA,
-    parse_remotefilepath,
+    parse_remotefilepath,BORGCOLLECTOR_SERVER,
     now
 )
 from slave_sync_task import (
@@ -48,6 +48,8 @@ def check_file_md5(md5_cmd,md5,task_status = None):
 
 
 def download_file(remote_path,local_path,task_status = None,md5=None):
+    if BORGCOLLECTOR_SERVER:
+        remote_path = "{}:{}".format(BORGCOLLECTOR_SERVER,remote_path.split(":",1)[1])
     if md5:
         #check file md5 before downloading.
         remote_file_path = remote_path
@@ -195,6 +197,8 @@ def load_gs_stylefile(sync_job,task_metadata,task_status):
 upload_cmd = ["rsync", "-azR" ,"-e", BORGCOLLECTOR_SSH,None,None]
 
 def upload_file(local_file,remote_path,task_status):
+    if BORGCOLLECTOR_SERVER:
+        remote_path = "{}:{}".format(BORGCOLLECTOR_SERVER,remote_path.split(":",1)[1])
     # sync over PostgreSQL dump with rsync
     upload_cmd[len(upload_cmd) - 2] = local_file
     upload_cmd[len(upload_cmd) - 1] = remote_path
