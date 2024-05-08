@@ -621,12 +621,11 @@ def update_wmsstore(geoserver_url,username,password,workspace,storename,paramete
         <name>{0}</name>
     </workspace>
     <metadata>
-        <entry>
-            <@key>useConnectionPooling</@key>
+        <entry key="useConnectionPooling">
             <text>true</text>
         </entry>
     </metadata>
-    <capabilitiesURL>{2]</capabilitiesURL>
+    <capabilitiesURL>{2}</capabilitiesURL>
     {3}
     {4}
     {5}
@@ -642,7 +641,6 @@ def update_wmsstore(geoserver_url,username,password,workspace,storename,paramete
     "<maxConnections>{}</maxConnections>".format(parameters.get("max_connections")) if parameters.get("max_connections") else "",
     "<readTimeout>{}</readTimeout>".format(parameters.get("read_timeout")) if parameters.get("read_timeout") else "",
     "<connectTimeout>{}</connectTimeout>".format(parameters.get("connect_timeout")) if parameters.get("connect_timeout") else ""
-
 )
 
     r = func(url, auth=(username, password), headers=contenttype_header("xml"), data=store_data)
