@@ -685,7 +685,7 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
         if has_wmslayer(geoserver_url,username,password,workspace,layername,storename=storename):
             #layer exists and in the same wmsstore
             func = requests.put
-            url = wmsstore_layer_url(geoserver_url,workspace,storename,layername)
+            url = wmslayer_url(geoserver_url,workspace,layername)
         else:
             #layer exists,but in different wmsstore
             #delete the wmslayer and recreate it
