@@ -38,19 +38,9 @@ if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]
     #the normal sync is not started.
     if [[ "${INITIAL_SYNC}" == "True" ]]; then
         #initial sync is required
-        echo "Begin to perform the initial sync."
-        if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/initial_sync_in_progress.sh" ]]; then
-            #The hook is not added
-            echo "Enable the denied hook for initial sync."
-            enable_hook "initial_sync"
-        fi
+        echo "Pull the borg state repository"
+        cd ${BORG_STATE_HOME} && hg pull
 
-        if [[ "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/initial_sync_in_progress.sh" ]]; then
-            echo "The denied hook for initial sync was enabled"
-        else
-            echo "Failed to enable the denied hook for initial sync"
-            exit 1
-        fi
         echo "Begin to perform the initial sync."
         cd ${SCRIPT_DIR} && python slave_sync.py
         if [[ $? -ne 0 ]]; then
