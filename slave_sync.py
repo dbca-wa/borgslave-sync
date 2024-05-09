@@ -248,7 +248,7 @@ def sync():
             succeed = True
             for task in tasks:
                 if not execute_task(*task[3]):
-                    suceed = False
+                    succeed = False
                     break
 
             if succeed:
