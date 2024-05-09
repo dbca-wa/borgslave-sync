@@ -555,8 +555,6 @@ def gwc_update_layer(geoserver_url,username,password,workspace,layername,paramet
 def gwc_empty_layer(geoserver_url,username,password,workspace,layername):
     for gridset in ("gda94","mercator"):
         for f in ("image/png","image/jpeg"):
-            data = template.render({'layer':layer,'format':f,'gridset':gridset})
-            resp = http_method(url, auth=(username,password), headers={'content-type':'text/xml'}, data=data)
             layer_data = """<?xml version="1.0" encoding="UTF-8"?>
 <seedRequest>
     <name>{0}:{1}</name>
