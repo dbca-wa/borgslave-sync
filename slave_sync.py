@@ -55,6 +55,7 @@ import os
 import traceback
 import sys
 import hglib
+from collections import OrderedDict
 
 from slave_sync_env import (
     PATH,HG_NODE,LISTEN_CHANNELS,ROLLBACK,
@@ -273,8 +274,9 @@ def sync():
         #save notify status 
         SlaveSyncStatus.save_all()
         #send notify
-        for task in notify_tasks:
-            execute_notify_task(*task)
+        if HG_NODE != "0":
+            for task in notify_tasks:
+                execute_notify_task(*task)
 
         #clear all tasks
         for k in sync_tasks.keys():
