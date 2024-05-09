@@ -173,6 +173,16 @@ def parse_remotefilepath(f):
         "file":m.group("file")
     }
 
+def remotepath_to_localpath(remote_path):
+    """
+    Map the remote file path to local file path, used when SHARE_LAYER_DATA is True
+    """
+    if BORGCOLLECTOR_DOWNLOAD_PATH:
+        return "{}{}".format(BORGCOLLECTOR_DOWNLOAD_PATH,remote_path.split("download",1)[1])
+    elif remote_path.find("@") > 0:
+        return remote_path.split(":",1)[1]
+    else:
+        return remote_path
 
 def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if GEOSERVER_CLUSTERING else len(GEOSERVER_URL)):
     if len(GEOSERVER_URL[start:end]) == 1:

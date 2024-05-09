@@ -8,7 +8,7 @@ from slave_sync_env import (
     BORGCOLLECTOR_SSH,env,SLAVE_NAME,PUBLISH_PATH,CACHE_PATH,
     PREVIEW_ROOT_PATH,SYNC_PATH,SYNC_SERVER,
     SHARE_LAYER_DATA,SHARE_PREVIEW_DATA,
-    parse_remotefilepath,BORGCOLLECTOR_SERVER,BORGCOLLECTOR_DOWNLOAD_PATH,BORGCOLLECTOR_PREVIEW_PATH,
+    remotepath_to_localpath,BORGCOLLECTOR_SERVER,BORGCOLLECTOR_DOWNLOAD_PATH,BORGCOLLECTOR_PREVIEW_PATH,
     now
 )
 from slave_sync_task import (
@@ -124,7 +124,7 @@ def load_metafile(sync_job):
     logger.info("Begin to load meta data for job({})".format(sync_job['job_file']))
     task_status.last_process_time = now()
     if SHARE_LAYER_DATA:
-        sync_job['meta']['local_file'] = parse_remotefilepath(sync_job["meta"]["file"])["file"]
+        sync_job['meta']['local_file'] = remotepath_to_localpath(sync_job["meta"]["file"])
         meta_data = None
         with open(sync_job['meta']['local_file'],"r") as f:
             meta_data = json.loads(f.read())
