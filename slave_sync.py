@@ -235,7 +235,7 @@ def sync():
                 execute_tasks[f] = tasks
 
 
-        for job_file,tasks in execute_tasks:
+        for job_file,tasks in execute_tasks.items():
             logger.info("job file({0}): {1}".format(job_file,",".join(["{0}{1}".format(t[0],"(Shared)" if t[1] else "") for t in tasks])))
 
         for task in notify_tasks:
@@ -247,7 +247,7 @@ def sync():
             execute_prepare_task(*task)
 
         #execute tasks
-        for job_file,tasks in execute_tasks:
+        for job_file,tasks in execute_tasks.items():
             logger.info("Begin to execute the job({})".format(job_file))
             succeed = True
             for task in tasks:
@@ -300,24 +300,24 @@ def is_sync_task(sync_job,segments,action,task_metadata):
 
         if task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX] and not segments[1] == task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]:
             #check the job folder
-            logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[1],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
+            #logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[1],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
             return False
     else:
         #not support channel
         if task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX] and not segments[0] == task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]:
             #check the job folder
-            logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[0],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
+            #logger.debug("The folder '{3}' of the job '{1}' is not match the folder '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],segments[0],task_metadata[JOB_DEF_INDEX][JOB_FOLDER_INDEX]))
             return False
         sync_job["channel"] = None
 
     if task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX] and action != task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX]:
         #The action is not equal with the action of this type
-        logger.debug("The action '{3}' of the job '{1}' is not match the action '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],action,task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX]))
+        #logger.debug("The action '{3}' of the job '{1}' is not match the action '{2}' of the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX],action,task_metadata[JOB_DEF_INDEX][JOB_ACTION_INDEX]))
         return False
 
     if task_metadata[JOB_DEF_INDEX][IS_JOB_INDEX] and not task_metadata[JOB_DEF_INDEX][IS_JOB_INDEX](segments[len(segments) - 1]):
         #The job file is belonging to this job type
-        logger.debug("The job '{1}' is not a job  for the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
+        #logger.debug("The job '{1}' is not a job  for the file '{0}',ignore".format(sync_job['job_file'],task_metadata[TASK_TYPE_INDEX]))
         return False
 
     if task_metadata[JOB_DEF_INDEX][IS_VALID_JOB_INDEX] and not task_metadata[JOB_DEF_INDEX][IS_VALID_JOB_INDEX](sync_job):
