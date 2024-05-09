@@ -28,7 +28,7 @@ def get_storename(sync_job):
     if sync_job["job_type"] == "live_store":
         return sync_job["name"]
     elif sync_job["job_type"] == "live_layer":
-        return sync_job["datastore"]
+        return sync_job.get("datastore") or None
     elif sync_job["job_type"] == "feature":
         return settings.GEOSERVER_DATASTORE_NAMESPACE.format(sync_job['workspace'])
     else:

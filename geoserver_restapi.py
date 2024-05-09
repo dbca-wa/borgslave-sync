@@ -75,7 +75,10 @@ def featuretypes_url(geoserver_url,workspace,storename):
     return "{0}/rest/workspaces/{1}/datastores/{2}/featuretypes".format(geoserver_url,workspace,storename)
 
 def featuretype_url(geoserver_url,workspace,storename,featurename):
-    return "{0}/rest/workspaces/{1}/datastores/{2}/featuretypes/{3}".format(geoserver_url,workspace,storename,featurename)
+    if storename:
+        return "{0}/rest/workspaces/{1}/datastores/{2}/featuretypes/{3}".format(geoserver_url,workspace,storename,featurename)
+    else:
+        return "{0}/rest/workspaces/{1}/featuretypes/{2}".format(geoserver_url,workspace,featurename)
 
 def styles_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/styles".format(geoserver_url,workspace)
