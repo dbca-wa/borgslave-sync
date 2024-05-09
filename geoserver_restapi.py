@@ -197,7 +197,8 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
 
 def delete_datastore(geoserver_url,username,password,workspace,storename):
     if not has_datastore(geoserver_url,username,password,workspace,storename):
-        logger.debug("The datastore({}:{}) already exists".format(workspace,storename))
+        logger.debug("The datastore({}:{}) doesn't exists".format(workspace,storename))
+        return
 
     r = requests.delete("{}?recurse=false".format(datastore_url(geoserver_url,workspace,storename)),auth=(username,password))
     if r.status_code >= 300:
