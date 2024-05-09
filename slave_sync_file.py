@@ -250,16 +250,31 @@ def delete_table_dumpfile(sync_job):
     if f and os.path.exists(f):
         os.remove(f)
 
-def delete_dumpfile(sync_job,task_metadata,task_status):
+def delete_dbfile(sync_job,task_metadata,task_status):
     """
     Delete the dump files
     1. table data file
-    2. meta file
-    3. style files
+    """
+    messages = [] 
+    local_file = sync_job.get('data',{}).get('local_file')
+    if local_file:
+        try:
+            if os.path.exists(local_file):
+                os.remove(local_file)
+        except:
+            message = traceback.format_exc()
+            logger.error("Remove db file ({}) failed. {}".format(local_file,message))
+            messages.append("Failed to remove db file({}). {}".format(local_file,message))
+            task_status.task_failed()
+
+def delete_dumpfile(sync_job,task_metadata,task_status):
+    """
+    Delete the dump files
+    1. meta file
+    2. style files
     """
     messages = [] 
     for f in [local_file for local_file in (
-        [sync_job.get('data',{}).get('local_file')] + 
         [sync_job.get('meta',{}).get('local_file')] + 
         [style_file.get('local_file') for style_file in (sync_job.get('styles') or {}).values() ]
         ) if local_file ]:
@@ -304,6 +319,8 @@ if not SHARE_LAYER_DATA and not SHARE_PREVIEW_DATA:
                         ("delete_dumpfile"  , remove_feature_job, None, task_name, delete_dumpfile),
                         ("delete_dumpfile"  , update_feature_metadata_job, None, task_name, delete_dumpfile),
     
+                        ("delete_dbfile"  , update_feature_job, None, task_name, delete_dbfile),
+
                         ("delete_dumpfile"  , update_workspace_job, None, task_name, delete_dumpfile),
     ]
 elif SHARE_LAYER_DATA and SHARE_PREVIEW_DATA:

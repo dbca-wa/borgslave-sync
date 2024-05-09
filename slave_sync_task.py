@@ -67,6 +67,7 @@ sync_tasks = {
     "send_layer_preview":{},
 
     "delete_dumpfile":{},
+    "delete_dbfile":{},
     "purge_fastly_cache":{}
 
 }
@@ -75,7 +76,7 @@ ordered_sync_task_type = [
             "update_access_rules",
             #"load_table_dumpfile",
             "load_gs_stylefile",
-            "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","restore_foreignkey","create_access_view","drop_outdated_table",
+            "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","restore_foreignkey","create_access_view","drop_outdated_table","delete_dbfile",
             "create_workspace",
             "delete_feature",
             "delete_datastore",
@@ -285,13 +286,14 @@ def execute_prepare_task(sync_job,task_metadata,task_logger):
 def execute_task(sync_job,task_metadata,task_logger):
     """
     execute the task, based on tasks_metadata
+    Return True if succeed otherwise return False
     """
     task_name = taskname(sync_job,task_metadata)
     task_status = sync_job['status'].get_task_status(task_metadata[TASK_TYPE_INDEX])
 
     if task_status.is_succeed: 
         #this task has been executed successfully
-        return
+        return True
 
     if sync_job['status'].is_failed:
         #some proceding task are failed,so can't execute this task
@@ -299,7 +301,7 @@ def execute_task(sync_job,task_metadata,task_logger):
             #this task is shared, but this task can't executed for this job, change the task's status object to a private status object
             from slave_sync_status import SlaveSyncTaskStatus
             sync_job['status'].set_task_status(task_metadata[TASK_TYPE_INDEX],SlaveSyncTaskStatus())
-        return
+        return False
 
     task_logger.info("Begin to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared " if task_status.shared else ""))
     sync_job['status'].last_process_time = now()
@@ -311,9 +313,11 @@ def execute_task(sync_job,task_metadata,task_logger):
             task_status.set_message("message","succeed")
         task_status.succeed()
         task_logger.info("Succeed to process the {3}task ({0} - {1} {2}).".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],"shared " if task_status.shared else ""))
+        return True
     except:
         task_status.failed()
         message = traceback.format_exc()
         task_status.set_message("message",message)
         task_logger.error("Failed to Process the {4}task ({0} - {1} {2}).{3}".format(task_metadata[TASK_TYPE_INDEX],task_name,sync_job["job_file"],message,"shared " if task_status.shared else ""))
+        return False
 

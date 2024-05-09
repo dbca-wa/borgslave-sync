@@ -206,7 +206,9 @@ def sync():
         logger.info("HG_NODE: {}".format(HG_NODE))
         #sort the tasks
         execute_tasks = OrderedDict()
+        job_files = []
         for task_type in ordered_sync_task_type:
+            job_files.clear()
             for task_name,task in sync_tasks[task_type].items():    
                 if isinstance(task,list):
                     #shared task
@@ -215,12 +217,22 @@ def sync():
                             execute_tasks[shared_task[0]['job_file']].append((task_name,True,shared_task))
                         else:
                             execute_tasks[shared_task[0]['job_file']] = [(task_name,True,shared_task)]
+                            job_files.append(shared_task[0]['job_file'])
                 else:
                     #unshared task
                     if task[0]['job_file'] in execute_tasks:
                         execute_tasks[task[0]['job_file']].append((task_name,False,task))
                     else:
                         execute_tasks[task[0]['job_file']] = [(task_name,False,task)]
+                        job_files.append(task[0]['job_file'])
+
+            #order the job_files
+            job_files.sort()
+            for f in job_files:
+                tasks = execute_tasks[f]
+                del execute_tasks[f]
+                execute_tasks[f] = tasks
+
 
         for job_file,tasks in execute_tasks:
             logger.info("job file({0}): {1}".format(job_file,",".join(["{0}{1}".format(t[0],"(Shared)" if t[1] else "") for t in tasks])))
@@ -235,9 +247,17 @@ def sync():
 
         #execute tasks
         for job_file,tasks in execute_tasks:
-            logger.info("Execute the job({})".format(job_file))
+            logger.info("Begin to execute the job({})".format(job_file))
+            succeed = True
             for task in tasks:
-                execute_task(*task[2])
+                if not execute_task(*task[2]):
+                    suceed = False
+                    break
+
+            if succeed:
+                logger.info("Succeed to execute the job({})".format(job_file))
+            else:
+                logger.info("Failed to execute the job({})".format(job_file))
 
         if SlaveSyncStatus.all_succeed():
             logger.info("All done!")
