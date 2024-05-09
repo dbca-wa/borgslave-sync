@@ -2,10 +2,25 @@ import logging
 import collections
 import slave_sync_env as settings
 import os
+import string
 import requests
 
 logger = logging.getLogger(__name__)
 
+def encode_xmltext(text):
+    if not text:
+        return ""
+    result = None
+    for i in range(len(text)):
+        if text[i] in string.printable:
+            if result :
+                result += text[i]
+        else:
+            if result is None:
+                result = text[:i]
+            result += "&#{};".format(ord(text[i]))
+
+    return result if result else text
 def contenttype_header(f = "xml"):
     if f == "xml":
         return {"content-type": "application/xml"}
@@ -218,8 +233,8 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     <namespace>
         <name>{0}</name>
     </namespace>
-    <title>{3}</title>
-    <abstract>{4}</abstract>
+    {3}
+    {4}
     <keywords>
         {5}
     </keywords>
@@ -249,8 +264,8 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     workspace,
     storename,
     layername,
-    parameters.get('title') or "", 
-    parameters.get('abstract') or "", 
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "", 
+    "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     parameters.get("srs","EPSG:4326"),
     """
@@ -285,8 +300,8 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     <namespace>
         <name>{0}</name>
     </namespace>
-    <title>{3}</title>
-    <abstract>{4}</abstract>
+    {3}
+    {4}
     <keywords>
         {5}
     </keywords>
@@ -302,8 +317,8 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     workspace,
     storename,
     layername,
-    parameters.get('title') or "", 
-    parameters.get('abstract') or "", 
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "",
+    "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     parameters.get("srs","EPSG:4326"),
     """
@@ -724,9 +739,9 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
     workspace,
     storename,
     layername,
-    "<title>{}</title>".format(parameters.get("title")) if parameters.get("title") else "",
-    "<abstract>{}</abstract>".format(parameters.get("abstract")) if parameters.get("abstract") else "",
-    "<description>{}</description>".format(parameters.get("description")) if parameters.get("description") else "",
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "",
+    "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
+    "<description>{}</description>".format(encode_xmltext(parameters.get("description"))) if parameters.get("description") else "",
     "<nativeName>{}</nativeName>".format(parameters.get("native_name")) if parameters.get("native_name") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     "<nativeCRS>{}</nativeCRS>".format(parameters.get("nativeCRS")) if parameters.get("nativeCRS") else "",
@@ -787,8 +802,8 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
 <layerGroup>
     <name>{1}</name>
     <mode>SINGLE</mode>
-    <title>{2}</title>
-    <abstractTxt>{3}</abstractTxt>
+    {2}
+    {3}
     <workspace>
         <name>{0}</name>
     </workspace>
@@ -802,8 +817,8 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
 """.format(
     workspace,
     groupname,
-    parameters.get("title",""),
-    parameters.get("abstract",""),
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "",
+    "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     os.linesep.join("""
         <published>
