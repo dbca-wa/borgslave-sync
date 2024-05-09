@@ -240,7 +240,8 @@ def sync():
 
         for task in notify_tasks:
             logger.info("Task : {0}  {1} = {2}".format("send_notify",taskname(task[0],task[1]),task[0]['job_file']))
-        return
+        
+        raise Exception("Rollback")
 
         #prepare tasks
         for task in prepare_tasks:

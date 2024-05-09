@@ -8,7 +8,7 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-echo "Initialize borg state repository"
+echo "Begin to initialize borg state repository"
 function enable_hook() {
     if [[ "$1" == "initial_sync" ]]; then
         hook="/bin/bash ${SCRIPT_DIR}/initial_sync_in_progress.sh"
@@ -32,6 +32,7 @@ if [[ ! -d ${BORG_STATE_HOME}/.hg ]]; then
         exit 1
     fi
 fi
+echo "The borg state repository was cloned"
 
 if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]; then
     #the normal sync is not started.
