@@ -72,11 +72,20 @@ sync_tasks = {
 
 }
 ordered_sync_task_type = [
+            "create_postgis_extension",
+            "create_db_schema",
+            "move_outdated_table",
+            "restore_table",
+            "restore_foreignkey",
+            "create_access_view",
+            "drop_outdated_table",
+            "drop_table",
+            "delete_dbfile",
+
             #"update_auth",
             "update_access_rules",
             #"load_table_dumpfile",
             "load_gs_stylefile",
-            "create_postgis_extension","create_db_schema","move_outdated_table","restore_table","restore_foreignkey","create_access_view","drop_outdated_table","delete_dbfile",
             "create_workspace",
             "delete_feature",
             "delete_datastore",
@@ -85,9 +94,9 @@ ordered_sync_task_type = [
             "reload_geoserver",
             "create_feature","create_style","set_feature_styles",
             "update_gwc","empty_gwc",
-            "drop_table",
             "purge_fastly_cache",
-            "get_layer_preview","send_layer_preview",
+            "get_layer_preview",
+            "send_layer_preview",
             "delete_dumpfile"
 ]
 
