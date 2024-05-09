@@ -236,9 +236,7 @@ def sync():
 
 
         for job_file,tasks in execute_tasks.items():
-            logger.info("Job({0}): {1}".format(job_file,",".join(["{0}('{1}'-{2})".format(t[0],t[1],"(Shared)" if t[2] else "") for t in tasks])))
-
-        raise Exception("Rollback")
+            logger.info("Job({0}): {1}".format(job_file,",".join(["{0}('{1}'{2})".format(t[0],t[1],"<Shared>" if t[2] else "") for t in tasks])))
 
         #prepare tasks
         for task in prepare_tasks:
