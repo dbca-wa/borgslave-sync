@@ -910,5 +910,5 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
         else:
             raise Exception("Failed to {} the layergroup({}:{}). code = {} , message = {}".format("create" if create else "update",workspace,groupname,r.status_code, r.content))
 
-    logger.debug("Succeed to {} the layergroup({}:{}:{}). ".format("create" if create else "update",workspace,groupname))
+    logger.debug("Succeed to {} the layergroup({}:{}). ".format("create" if create else "update",workspace,groupname))
 
