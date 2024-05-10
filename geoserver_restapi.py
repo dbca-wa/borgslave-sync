@@ -47,6 +47,7 @@ generic_style   = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <NamedLayer>
     <Name>{0}</Name>
     <UserStyle>
+      <Name>{0}</Name>
       <Title>A orange generic style</Title>
       <FeatureTypeStyle>
         <Rule>
