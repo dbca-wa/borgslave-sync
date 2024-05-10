@@ -12,7 +12,7 @@ def encode_xmltext(text):
         return ""
     result = None
     for i in range(len(text)):
-        if text[i] in string.printable:
+        if text[i] not in ['&'] and text[i] in string.printable:
             if result :
                 result += text[i]
         else:
