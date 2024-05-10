@@ -6,6 +6,7 @@ import collections
 import os
 import sys
 import json
+import re
 import geoserver_restapi as gs
 
 import slave_sync_env as settings
@@ -290,7 +291,7 @@ def create_style(sync_job,task_metadata,task_status):
 def _update_access_rules(geoserver_url,username,password,sync_job,task_metadata,task_status,stage=None):
     layer_access_rules = {}
     catalogue_mode = "CHALLENGE"
-    for line in re.split("\n|\r\n",sync_job["job_file_content"]):
+    for line in re.split("\n|\r\n",sync_job["job_file_content"].decode()):
         line = line.strip()
         if not line:
             continue
@@ -302,8 +303,8 @@ def _update_access_rules(geoserver_url,username,password,sync_job,task_metadata,
         else:
             layer_access_rules[data[0]] = data[1]
 
-    gs.set_catalogue_mode(geoserver_url,catalogue_mode,username,password)
-    gs.update_layer_access_rules(geoserver_url,layer_access_rules,username,password)
+    gs.set_catalogue_mode(geoserver_url,username,password,catalogue_mode)
+    gs.update_layer_access_rules(geoserver_url,username,password,layer_access_rules)
 
 def update_access_rules(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_access_rules)
