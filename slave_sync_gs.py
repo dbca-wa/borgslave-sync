@@ -267,7 +267,7 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
             gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
             created_styles.append(task_style_name(sync_job))
         except:
-            if sync_job.get("default_style","") == style:
+            if sync_job.get("default_style","") == name:
                 raise
             else:
                 failed_styles.append(task_style_name(sync_job))

@@ -464,6 +464,7 @@ def update_style(geoserver_url,username,password,workspace,stylename,sldversion,
         placeholder_data = generic_style.format(stylename)
         r = requests.post(styles_url(geoserver_url,workspace),data=placeholder_data, headers=headers,auth=(username,password))
         if r.status_code >= 300:
+            logger.error("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
             raise Exception("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
 
@@ -476,6 +477,7 @@ def update_style(geoserver_url,username,password,workspace,stylename,sldversion,
     r = requests.put(style_url(geoserver_url,workspace,stylename),data=slddata, headers=headers,auth=(username,password))
 
     if r.status_code >= 300:
+        logger.error("Failed to update the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
         raise Exception("Failed to update the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
 
     logger.debug("Succeed to update the style({}:{})".format(workspace,stylename))
