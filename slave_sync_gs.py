@@ -253,6 +253,7 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
     """
     workspace = sync_job['workspace']
     created_styles = []
+    failed_styles = []
     messages = []
     #create styles
     for name,style in sync_job["styles"].items():
@@ -262,12 +263,21 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
             slddata = f.read()
 
         sldversion = "1.1.0" if "version=\"1.1.0\"" in slddata else "1.0.0"
-
-        gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
-        created_styles.append(task_style_name(sync_job))
-    
-    if created_styles:
-        messages.append("Succeed to create styles ({}).".format(" , ".join(created_styles)))
+        try:
+            gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
+            created_styles.append(task_style_name(sync_job))
+        except:
+            if sync_job.get("default_style","") == style:
+                raise
+            else:
+                failed_styles.append(task_style_name(sync_job))
+                
+    if created_styles and failed_styles:
+        messages.append("Succeed to create styles ({}), Failed to create styles({})".format(" , ".join(created_styles)," , ".join(failed_styles)))
+    elif created_styles:
+        messages.append("Succeed to create styles ({})".format(" , ".join(created_styles)))
+    elif failed_styles:
+        messages.append("Failed to create styles({})".format(" , ".join(failed_styles)))
     else:
         messages.append("No styles has been created")
 
