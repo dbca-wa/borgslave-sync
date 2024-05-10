@@ -896,10 +896,10 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
     "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     os.linesep.join("""
-        <published>
+        <published type="{}">
             <name>{}:{}</name>
         </published>
-""".format(layer["workspace"],layer["name"]) for layer in parameters.get("layers",{}))
+""".format("layerGroup" if layer["type"] == "group" else "layer",layer["workspace"],layer["name"]) for layer in parameters.get("layers",{}))
 )
     r = func(url, auth=(username, password), headers=contenttype_header("xml"), data=group_data)
     if r.status_code >= 300:
