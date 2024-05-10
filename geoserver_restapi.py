@@ -129,7 +129,7 @@ def wmslayers_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/wmslayers".format(geoserver_url,workspace,storename)
 
 def wmslayer_url(geoserver_url,workspace,layername,f=None):
-    return "{0}/rest/workspaces/{1}/wmslayers/{2}".format(geoserver_url,workspace,layername,".{}".format(f) if f else "")
+    return "{0}/rest/workspaces/{1}/wmslayers/{2}{3}".format(geoserver_url,workspace,layername,".{}".format(f) if f else "")
 
 def layergroups_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/layergroups".format(geoserver_url,workspace)
