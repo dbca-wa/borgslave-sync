@@ -196,7 +196,7 @@ def layer_access_rules_url(geoserver_url):
     return "{0}/rest/security/acl/layers".format(geoserver_url)
 
 def layer_access_rule_url(geoserver_url,layerrule):
-    return "{0}/rest/security/acl/layers/{}".format(geoserver_url,layerrule)
+    return "{0}/rest/security/acl/layers/{1}".format(geoserver_url,layerrule)
 
 def wmsstores_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/wmsstores".format(geoserver_url,workspace)
@@ -556,7 +556,7 @@ def update_layer_access_rules(geoserver_url,username,password,layer_access_rules
     if update_layer_access_rules:
         data="""<?xml version="1.0" encoding="UTF-8"?><rules>
 {}
-</rules>""".format(os.linesep.join("""<rule resource="{0}">{1}</rule>""".format(k,v) for k,v in update_layer_access_rules.items())
+</rules>""".format(os.linesep.join("""<rule resource="{0}">{1}</rule>""".format(k,v) for k,v in update_layer_access_rules.items()))
         r = requests.put(layer_access_rules_url(geoserver_url),data=data,headers=contenttype_header("xml"),auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to update layer access rules({}). code = {} , message = {}".format(update_layer_access_rules,r.status_code, r.content))
@@ -564,7 +564,7 @@ def update_layer_access_rules(geoserver_url,username,password,layer_access_rules
     if new_layer_access_rules:
         data="""<?xml version="1.0" encoding="UTF-8"?><rules>
 {}
-</rules>""".format(os.linesep.join("""<rule resource="{0}">{1}</rule>""".format(k,v) for k,v in new_layer_access_rules.items())
+</rules>""".format(os.linesep.join("""<rule resource="{0}">{1}</rule>""".format(k,v) for k,v in new_layer_access_rules.items()))
         r = requests.post(layer_access_rules_url(geoserver_url),data=data,headers=contenttype_header("xml"),auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to create layer access rules({}). code = {} , message = {}".format(new_layer_access_rules,r.status_code, r.content))
