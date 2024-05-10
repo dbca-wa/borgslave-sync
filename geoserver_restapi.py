@@ -140,8 +140,8 @@ def layergroup_url(geoserver_url,workspace,groupname):
 def gwc_layers_url(geoserver_url):
     return "{0}/gwc/rest/layers".format(geoserver_url)
 
-def gwc_layer_url(geoserver_url,workspace,layername):
-    return "{0}/gwc/rest/layers/{1}:{2}".format(geoserver_url,workspace,layername)
+def gwc_layer_url(geoserver_url,workspace,layername,f=None):
+    return "{0}/gwc/rest/layers/{1}:{2}{3}".format(geoserver_url,workspace,layername,".{}".format(f) if f else "")
 
 def gwc_layer_seed_url(geoserver_url,workspace,layername):
     return "{0}/gwc/rest/seed/{1}:{2}.xml".format(geoserver_url,workspace,layername)
@@ -506,12 +506,12 @@ def reload(geoserver_url,username,password):
         logger.debug("Succeed to reload the geoserver catalogue.")
 
 def gwc_has_layer(geoserver_url,username,password,workspace,layername):
-    r = requests.get(gwc_layer_url(geoserver_url,workspace,layername),headers=accept_header("json"), auth=(username,password))
+    r = requests.get(gwc_layer_url(geoserver_url,workspace,layername,f="json"),headers=accept_header("json"), auth=(username,password))
     return True if r.status_code == 200 else False
 
 def gwc_delete_layer(geoserver_url,username,password,workspace,layername):
     if gwc_has_layer(geoserver_url,username,password,workspace,layername):
-        r = requests.delete(gwc_layer_url(geoserver_url,workspace,layername), auth=(username,password))
+        r = requests.delete(gwc_layer_url(geoserver_url,workspace,layername,f="xml"), auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to delete the gwc layer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
         logger.debug("Succeed to delete the gwc layer({}:{})".format(workspace,layername))
@@ -564,7 +564,7 @@ def gwc_update_layer(geoserver_url,username,password,workspace,layername,paramet
     parameters.get("geoserver_setting",{}).get("client_cache_expire")
 )
 
-    r = requests.put(gwc_layer_url(geoserver_url,workspace,layername), auth=(username,password), headers=contenttype_header("xml"), data=layer_data)
+    r = requests.put(gwc_layer_url(geoserver_url,workspace,layername,f="xml"), auth=(username,password), headers=contenttype_header("xml"), data=layer_data)
         
     if r.status_code >= 300:
         raise Exception("Failed to update the gwc layer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
