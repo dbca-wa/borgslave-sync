@@ -119,17 +119,17 @@ def wmsstores_url(geoserver_url,workspace):
 def wmsstore_url(geoserver_url,workspace,storename):
     return "{0}/rest/workspaces/{1}/wmsstores/{2}".format(geoserver_url,workspace,storename)
 
-def wmsstore_layers_url(geoserver_url,workspace,storename):
+def wmsstore_layers_url(geoserver_url,workspace,storename,f=None):
     return "{0}/rest/workspaces/{1}/wmsstores/{2}/wmslayers".format(geoserver_url,workspace,storename)
 
-def wmsstore_layer_url(geoserver_url,workspace,storename,layername):
-    return "{0}/rest/workspaces/{1}/wmsstores/{2}/wmslayers/{3}".format(geoserver_url,workspace,storename,layername)
+def wmsstore_layer_url(geoserver_url,workspace,storename,layername,f=None):
+    return "{0}/rest/workspaces/{1}/wmsstores/{2}/wmslayers/{3}{4}".format(geoserver_url,workspace,storename,layername,".{}".format(f) if f else "")
 
 def wmslayers_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/wmslayers".format(geoserver_url,workspace,storename)
 
-def wmslayer_url(geoserver_url,workspace,layername):
-    return "{0}/rest/workspaces/{1}/wmslayers/{2}".format(geoserver_url,workspace,layername)
+def wmslayer_url(geoserver_url,workspace,layername,f=None):
+    return "{0}/rest/workspaces/{1}/wmslayers/{2}".format(geoserver_url,workspace,layername,".{}".format(f) if f else "")
 
 def layergroups_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/layergroups".format(geoserver_url,workspace)
@@ -677,7 +677,7 @@ def delete_wmsstore(geoserver_url,username,password,workspace,storename):
     logger.debug("Succeed to delete the wmsstore({}:{})".format(workspace,storename))
 
 def has_wmslayer(geoserver_url,username,password,workspace,layername,storename=None):
-    url = wmsstore_layer_url(geoserver_url,workspace,storename,layername) if storename else wmslayer_url(geoserver_url,workspace,layername)
+    url = wmsstore_layer_url(geoserver_url,workspace,storename,layername) if storename else wmslayer_url(geoserver_url,workspace,layername,f="json")
     r = requests.get(url,headers=accept_header("json"), auth=(username,password))
     return True if r.status_code == 200 else False
 
@@ -688,7 +688,7 @@ def delete_wmslayer(geoserver_url,username,password,workspace,layername):
             gwc_delete_layer(geoserver_url,username,password,workspace,layername)
         return
 
-    r = requests.delete("{}?recurse=true".format(wmslayer_url(geoserver_url,workspace,layername)), auth=(username, password))
+    r = requests.delete("{}?recurse=true".format(wmslayer_url(geoserver_url,workspace,layername,f="xml")), auth=(username, password))
     if r.status_code >= 300:
         raise Exception("Failed to delete the wmslayer({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
@@ -700,7 +700,7 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
         if has_wmslayer(geoserver_url,username,password,workspace,layername,storename=storename):
             #layer exists and in the same wmsstore
             func = requests.put
-            url = wmslayer_url(geoserver_url,workspace,layername)
+            url = wmslayer_url(geoserver_url,workspace,layername,f="xml")
         else:
             #layer exists,but in different wmsstore
             #delete the wmslayer and recreate it
