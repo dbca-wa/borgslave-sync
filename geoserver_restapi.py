@@ -37,6 +37,90 @@ def accept_header(f = "xml"):
     else:
         raise Exception("Format({}) Not Support".format(f))
 
+generic_style   = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.0.0" 
+                       xsi:schemaLocation="http://www.opengis.net/sld StyledLayerDescriptor.xsd" 
+                       xmlns="http://www.opengis.net/sld" 
+                       xmlns:ogc="http://www.opengis.net/ogc" 
+                       xmlns:xlink="http://www.w3.org/1999/xlink" 
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <NamedLayer>
+    <Name>{0}</Name>
+    <UserStyle>
+      <Title>A orange generic style</Title>
+      <FeatureTypeStyle>
+        <Rule>
+          <Name>raster</Name>
+          <Title>raster</Title>
+          <ogc:Filter>
+            <ogc:PropertyIsEqualTo>
+              <ogc:Function name="isCoverage"/>
+              <ogc:Literal>true</ogc:Literal>
+            </ogc:PropertyIsEqualTo>
+          </ogc:Filter>
+          <RasterSymbolizer>
+            <Opacity>1.0</Opacity>
+          </RasterSymbolizer>
+        </Rule>
+        <Rule>
+          <Title>orange polygon</Title>
+          <ogc:Filter>
+            <ogc:PropertyIsEqualTo>
+              <ogc:Function name="dimension">
+                <ogc:Function name="geometry"/>
+              </ogc:Function>
+              <ogc:Literal>2</ogc:Literal>
+            </ogc:PropertyIsEqualTo>
+          </ogc:Filter>
+          <PolygonSymbolizer>
+            <Fill>
+              <CssParameter name="fill">#ff6600</CssParameter>
+            </Fill>
+            <Stroke>
+              <CssParameter name="stroke">#000000</CssParameter>
+              <CssParameter name="stroke-width">0.5</CssParameter>
+            </Stroke>
+          </PolygonSymbolizer>
+        </Rule>
+        <Rule>
+          <Title>orange line</Title>
+          <ogc:Filter>
+            <ogc:PropertyIsEqualTo>
+              <ogc:Function name="dimension">
+                <ogc:Function name="geometry"/>
+              </ogc:Function>
+              <ogc:Literal>1</ogc:Literal>
+            </ogc:PropertyIsEqualTo>
+          </ogc:Filter>
+          <LineSymbolizer>
+            <Stroke>
+              <CssParameter name="stroke">#ff6600</CssParameter>
+              <CssParameter name="stroke-opacity">1</CssParameter>
+            </Stroke>
+          </LineSymbolizer>
+        </Rule>
+        <Rule>
+          <Title>orange point</Title>
+          <ElseFilter/>
+          <PointSymbolizer>
+            <Graphic>
+              <Mark>
+                <WellKnownName>square</WellKnownName>
+                <Fill>
+                  <CssParameter name="fill">#ff6600</CssParameter>
+                </Fill>
+              </Mark>
+              <Size>6</Size>
+            </Graphic>
+          </PointSymbolizer>
+        </Rule>
+        <VendorOption name="ruleEvaluation">first</VendorOption>
+      </FeatureTypeStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>
+"""
+
 def reload_url(geoserver_url):
     return "{0}/rest/reload".format(geoserver_url)
 
@@ -377,30 +461,7 @@ def delete_style(geoserver_url,username,password,workspace,stylename):
 def update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata):
     if not has_style(geoserver_url,username,password,workspace,stylename):
         headers = {"content-type": "application/vnd.ogc.sld+xml"}
-        placeholder_data = """<?xml version="1.0" encoding="UTF-8"?><sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/sld" version="1.0.0">
-  <sld:NamedLayer>
-    <sld:Name>{0}</sld:Name>
-    <sld:UserStyle>
-      <sld:Name>{0}</sld:Name>
-      <sld:Title>Default Line</sld:Title>
-      <sld:Abstract>A sample style that draws a line</sld:Abstract>
-      <sld:FeatureTypeStyle>
-        <sld:Name>name</sld:Name>
-        <sld:Rule>
-          <sld:Name>rule1</sld:Name>
-          <sld:Title>Blue Line</sld:Title>
-          <sld:Abstract>A solid blue line with a 1 pixel width</sld:Abstract>
-          <sld:LineSymbolizer>
-            <sld:Stroke>
-              <sld:CssParameter name="stroke">#0000FF</sld:CssParameter>
-            </sld:Stroke>
-          </sld:LineSymbolizer>
-        </sld:Rule>
-      </sld:FeatureTypeStyle>
-    </sld:UserStyle>
-  </sld:NamedLayer>
-</sld:StyledLayerDescriptor>
-""".format(stylename)
+        placeholder_data = generic_style.format(stylename)
         r = requests.post(styles_url(geoserver_url,workspace),data=placeholder_data, headers=headers,auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to create the style({}:{}). code = {} , message = {}".format(workspace,stylename,r.status_code, r.content))
