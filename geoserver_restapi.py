@@ -34,6 +34,8 @@ def accept_header(f = "xml"):
         return {"Accept": "application/xml"}
     elif f == "json":
         return {"Accept": "application/json"}
+    elif f == "html":
+        return {"Accept": "text/html"}
     else:
         raise Exception("Format({}) Not Support".format(f))
 
@@ -220,7 +222,7 @@ def layergroups_url(geoserver_url,workspace):
     return "{0}/rest/workspaces/{1}/layergroups".format(geoserver_url,workspace)
 
 def layergroup_url(geoserver_url,workspace,groupname):
-    return "{0}/rest/workspaces/{1}/layergroups/{}".format(geoserver_url,workspace,groupname)
+    return "{0}/rest/workspaces/{1}/layergroups/{2}".format(geoserver_url,workspace,groupname)
 
 def gwc_layers_url(geoserver_url):
     return "{0}/gwc/rest/layers".format(geoserver_url)
@@ -845,7 +847,7 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
     logger.debug("Succeed to update the wmslayer({}:{}:{}). ".format(workspace,storename,layername))
 
 def has_layergroup(geoserver_url,username,password,workspace,groupname):
-    r = requests.get(layergroup_url(geoserver_url,workspace,groupname),headers=accept_header("json"), auth=(username,password))
+    r = requests.get(layergroup_url(geoserver_url,workspace,groupname),headers=accept_header("html"), auth=(username,password))
     return True if r.status_code == 200 else False
 
 
@@ -895,9 +897,9 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     os.linesep.join("""
         <published>
-            <name>{}</name>
+            <name>{}:{}</name>
         </published>
-""".format(layer.name) for layer in parameters.get("layers",[]))
+""".format(layer["workspace"],layer["name"]) for layer in parameters.get("layers",{}))
 )
     r = func(url, auth=(username, password), headers=contenttype_header("xml"), data=group_data)
     if r.status_code >= 300:
