@@ -181,13 +181,13 @@ def update_datastore(geoserver_url,username,password,workspace,storename,paramet
     connection_parameters = None
     for k,v in postgis_connection_parameters.items():
         if k in parameters:
-            if not parameters[k] :
+            if parameters[k] is None:
                 continue
             else:
                 value = str(parameters[k])
         elif v:
             value = v
-        else:
+        elif v is None:
             continue
 
         if connection_parameters:
@@ -652,8 +652,8 @@ def update_wmsstore(geoserver_url,username,password,workspace,storename,paramete
     workspace,
     storename,
     parameters.get("capability_url"),
-    "<user>{}</user>".format(parameters.get("username")) if parameters.get("username") else "",
-    "<password>{}</password>".format(parameters.get("password")) if parameters.get("password") else "",
+    "<user>{}</user>".format(parameters.get("username") or ""),
+    "<password>{}</password>".format(parameters.get("password") or ""),
     "<maxConnections>{}</maxConnections>".format(parameters.get("max_connections")) if parameters.get("max_connections") else "",
     "<readTimeout>{}</readTimeout>".format(parameters.get("read_timeout")) if parameters.get("read_timeout") else "",
     "<connectTimeout>{}</connectTimeout>".format(parameters.get("connect_timeout")) if parameters.get("connect_timeout") else ""
