@@ -195,7 +195,7 @@ def catalogue_mode_url(geoserver_url):
 def layer_access_rules_url(geoserver_url):
     return "{0}/rest/security/acl/layers".format(geoserver_url)
 
-def layer_access_url(geoserver_url,layerrule):
+def layer_access_rule_url(geoserver_url,layerrule):
     return "{0}/rest/security/acl/layers/{}".format(geoserver_url,layerrule)
 
 def wmsstores_url(geoserver_url,workspace):
@@ -518,7 +518,10 @@ def get_catalogue_mode(geoserver_url,username,password):
         raise Exception("Failed to get catalogue mode. code = {} , message = {}".format(r.status_code, r.content))
 
 def set_catalogue_mode(geoserver_url,username,password,mode):
-    r = requests.put(catalogue_mode_url(geoserver_url),data = {"mode":mode},headers=contenttype_header("json"),auth=(username,password))
+    data="""<?xml version="1.0" encoding="UTF-8"?><catalog>
+<mode>{}</mode>
+</catalog>""".format(mode)
+    r = requests.put(catalogue_mode_url(geoserver_url),data = data,headers=contenttype_header("xml"),auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to set the catalogue mode({}). code = {} , message = {}".format(mode,r.status_code, r.content))
 
@@ -539,7 +542,7 @@ def update_layer_access_rules(geoserver_url,username,password,layer_access_rules
     #delete the not required layer access rules
     for permission,groups in existing_layer_access_rules.items():
         if permission not in layer_access_rules:
-            r = requests.delete(layer_access_url(geoserver_url,permission),auth=(username,password))
+            r = requests.delete(layer_access_rule_url(geoserver_url,permission),auth=(username,password))
             if r.status_code >= 300:
                 raise Exception("Failed to delete layer access rules({} = {}). code = {} , message = {}".format(permission,groups,r.status_code, r.content))
         else:
@@ -551,12 +554,18 @@ def update_layer_access_rules(geoserver_url,username,password,layer_access_rules
             new_layer_access_rules[permission] = groups
 
     if update_layer_access_rules:
-        r = requests.put(layer_access_rules_url(geoserver_url),data=update_layer_access_rules,headers=contenttype_header("json"),auth=(username,password))
+        data="""<?xml version="1.0" encoding="UTF-8"?><rules>
+{}
+</rules>""".format(os.linesep.join("""<rule resource="{0}">{1}</rule>""".format(k,v) for k,v in update_layer_access_rules.items())
+        r = requests.put(layer_access_rules_url(geoserver_url),data=data,headers=contenttype_header("xml"),auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to update layer access rules({}). code = {} , message = {}".format(update_layer_access_rules,r.status_code, r.content))
 
     if new_layer_access_rules:
-        r = requests.post(layer_access_rules_url(geoserver_url),data=new_layer_access_rules,headers=contenttype_header("json"),auth=(username,password))
+        data="""<?xml version="1.0" encoding="UTF-8"?><rules>
+{}
+</rules>""".format(os.linesep.join("""<rule resource="{0}">{1}</rule>""".format(k,v) for k,v in new_layer_access_rules.items())
+        r = requests.post(layer_access_rules_url(geoserver_url),data=data,headers=contenttype_header("xml"),auth=(username,password))
         if r.status_code >= 300:
             raise Exception("Failed to create layer access rules({}). code = {} , message = {}".format(new_layer_access_rules,r.status_code, r.content))
 
