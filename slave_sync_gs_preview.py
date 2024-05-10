@@ -65,7 +65,7 @@ def _get_layer_preview(sync_job,task_metadata,task_status):
     index = 0
     for url in urls:
         index += 1
-        resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[0],settings.GEOSERVER_PASSWORD[0]))
+        resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[0],settings.GEOSERVER_PASSWORD[0]),timeout=60)
         if resp.status_code >= 400:
             task_status.del_message("preview_file")
             if index == len(urls):
@@ -108,7 +108,7 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
         stagename = settings.GEOSERVER_HOST[i]
         try:
             if task_status.is_stage_not_succeed(stagename):
-                urls = layer_preview_urls(sync_job,geoserver_url=settings.GEOSERVER_URL[i])
+                urls = layer_preview_urls(sync_job,geoserver_url=settings.GEOSERVER_URL[i],timeout=60)
                 index = 0
                 for url in urls:
                     index += 1
