@@ -108,11 +108,11 @@ def _get_layer_preview_with_dependent_geoservers(sync_job,task_metadata,task_sta
         stagename = settings.GEOSERVER_HOST[i]
         try:
             if task_status.is_stage_not_succeed(stagename):
-                urls = layer_preview_urls(sync_job,geoserver_url=settings.GEOSERVER_URL[i],timeout=60)
+                urls = layer_preview_urls(sync_job,geoserver_url=settings.GEOSERVER_URL[i])
                 index = 0
                 for url in urls:
                     index += 1
-                    resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[i],settings.GEOSERVER_PASSWORD[i]))
+                    resp = requests.get(url[0], auth=(settings.GEOSERVER_USERNAME[i],settings.GEOSERVER_PASSWORD[i]),timeout=60)
                     if resp.status_code >= 400:
                         if index == len(urls):
                             raise Exception("Failed to get layer's preview image from '{2}'. ({0}: {1})".format(resp.status_code, resp.content,settings.GEOSERVER_HOST[i]))

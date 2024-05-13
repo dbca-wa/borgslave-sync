@@ -38,14 +38,18 @@ def prepare_feature(sync_job,task_metadata,task_status):
 
     if 'styles' in sync_job and sync_job["styles"]:
         #have styles. populate the local cached file
-        for name in sync_job['styles'].keys():
-            if SHARE_LAYER_DATA:
-                sync_job['styles'][name]['local_file'] = remotepath_to_localpath(sync_job['styles'][name]['file'])
-            else:
-                if name == "builtin":
-                    sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.sld".format(sync_job["workspace"],sync_job["name"]))
+        for name in list(sync_job['styles'].keys()):
+            try:
+                if SHARE_LAYER_DATA:
+                    sync_job['styles'][name]['local_file'] = remotepath_to_localpath(sync_job['styles'][name]['file'])
                 else:
-                    sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.{}.sld".format(sync_job["workspace"],sync_job["name"],name))
+                    if name == "builtin":
+                        sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.sld".format(sync_job["workspace"],sync_job["name"]))
+                    else:
+                        sync_job['styles'][name]['local_file'] = os.path.join(CACHE_PATH, "{}.{}.{}.sld".format(sync_job["workspace"],sync_job["name"],name))
+            except:
+                del sync_job["styles"][name]
+
     else:
         sync_job['styles'] = {}
 
