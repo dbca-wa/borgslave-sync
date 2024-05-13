@@ -975,7 +975,7 @@ def list_layers(geoserver_url,username,password):
             
         for s in list_wmsstores(geoserver_url,username,password,w):
             if not wmslayers or wmslayers[-1][0] != w:
-                wmslayers.append((w,([s,[])]))
+                wmslayers.append((w,[(s,[])]))
             else:
                 wmslayers[-1][1].append((s,[]))
             for l in list_wmslayerss(geoserver_url,username,password,w,s):
