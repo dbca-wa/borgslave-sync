@@ -248,6 +248,9 @@ def sync():
             succeed = True
             for task in tasks:
                 if not execute_task(*task[3]):
+                    if HG_NODE == "0" and task[0] in ("get_layer_preview","send_layer_preview"):
+                        #initial sync, preview related tasks are failed, ignore
+                        continue
                     succeed = False
                     break
 
