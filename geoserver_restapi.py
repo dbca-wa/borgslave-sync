@@ -978,7 +978,7 @@ def list_layers(geoserver_url,username,password):
                 wmslayers.append((w,[(s,[])]))
             else:
                 wmslayers[-1][1].append((s,[]))
-            for l in list_wmslayerss(geoserver_url,username,password,w,s):
+            for l in list_wmslayers(geoserver_url,username,password,w,s):
                 wmslayers[-1][1][-1][1].append(l)
             
         for l in list_layergroups(geoserver_url,username,password,w):
