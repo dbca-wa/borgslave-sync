@@ -237,6 +237,16 @@ def has_workspace(geoserver_url,username,password,workspace):
     res = requests.get(workspace_url(geoserver_url,workspace), auth=(username,password))
     return True if res.status_code == 200 else False
 
+def list_workspaces(geoserver_url,username,password):
+    """
+    Return unordered workspace list.
+    """
+    r = requests.get(workspaces_url(geoserver_url), auth=(username,password))
+    if r.status_code >= 300:
+        raise Exception("Failed to list the workspaces. code = {},message = {}".format(r.status_code, r.content))
+
+    return [w["name"] for w in (r.json().get("workspaces") or {}).get("workspace") or [] ]
+
 def create_workspace(geoserver_url,username,password,workspace):
     data = """<?xml version="1.0" encoding="UTF-8"?>
 <workspace>
@@ -252,6 +262,13 @@ def create_workspace(geoserver_url,username,password,workspace):
 def has_datastore(geoserver_url,username,password,workspace,storename):
     res = requests.get(datastore_url(geoserver_url,workspace,storename), auth=(username,password))
     return True if res.status_code == 200 else False
+
+def list_datastores(geoserver_url,username,password,workspace):
+    r = requests.get(datastores_url(geoserver_url,workspace), auth=(username,password))
+    if r.status_code >= 300:
+        raise Exception("Failed to list the datastores in workspace({}). code = {},message = {}".format(workspace,r.status_code, r.content))
+
+    return [d["name"] for d in (r.json().get("dataStores") or {}).get("dataStore") or [] ]
 
 def update_datastore(geoserver_url,username,password,workspace,storename,parameters,create=None):
     if create is None:
@@ -311,6 +328,13 @@ def delete_datastore(geoserver_url,username,password,workspace,storename):
 def has_featuretype(geoserver_url,username,password,workspace,storename,layername):
     r = requests.get(featuretype_url(geoserver_url,workspace,storename,layername),headers=accept_header(),auth=(username,password))
     return True if r.status_code == 200 else False
+
+def list_featuretypes(geoserver_url,username,password,workspace,storename):
+    r = requests.get(featuretypes_url(geoserver_url,workspace,storename), auth=(username,password))
+    if r.status_code >= 300:
+        raise Exception("Failed to list the featuretypes in datastore({}:{}). code = {},message = {}".format(workspace,storename,r.status_code, r.content))
+
+    return [f["name"] for f in (r.json().get("featureTypes") or {}).get("featureType") or [] ]
 
 def publish_featuretype(geoserver_url,username,password,workspace,storename,layername,parameters):
     if parameters.get('viewsql'):
@@ -693,6 +717,13 @@ def has_wmsstore(geoserver_url,username,password,workspace,storename):
     r = requests.get(wmsstore_url(geoserver_url,workspace,storename),headers=accept_header("json"), auth=(username,password))
     return True if r.status_code == 200 else False
 
+def list_wmsstores(geoserver_url,username,password,workspace):
+    r = requests.get(wmsstores_url(geoserver_url,workspace), auth=(username,password))
+    if r.status_code >= 300:
+        raise Exception("Failed to list the wmsstores in workspace({}). code = {},message = {}".format(workspace,r.status_code, r.content))
+
+    return [s["name"] for s in (r.json().get("wmsStores") or {}).get("wmsStore") or [] ]
+
 def update_wmsstore(geoserver_url,username,password,workspace,storename,parameters):
     """
     update a store
@@ -755,6 +786,13 @@ def has_wmslayer(geoserver_url,username,password,workspace,layername,storename=N
     url = wmsstore_layer_url(geoserver_url,workspace,storename,layername) if storename else wmslayer_url(geoserver_url,workspace,layername,f="json")
     r = requests.get(url,headers=accept_header("json"), auth=(username,password))
     return True if r.status_code == 200 else False
+
+def list_wmslayers(geoserver_url,username,password,workspace,storename):
+    r = requests.get(wmsstore_layers_url(geoserver_url,workspace,storename), auth=(username,password))
+    if r.status_code >= 300:
+        raise Exception("Failed to list the wmslayers in wmsstore({}:{}). code = {},message = {}".format(workspace,storename,r.status_code, r.content))
+
+    return [l["name"] for l in (r.json().get("wmsLayers") or {}).get("wmsLayer") or [] ]
 
 def delete_wmslayer(geoserver_url,username,password,workspace,layername):
     if not has_wmslayer(geoserver_url,username,password,workspace,layername):
@@ -850,6 +888,13 @@ def has_layergroup(geoserver_url,username,password,workspace,groupname):
     r = requests.get(layergroup_url(geoserver_url,workspace,groupname),headers=accept_header("html"), auth=(username,password))
     return True if r.status_code == 200 else False
 
+def list_layergroups(geoserver_url,username,password,workspace):
+    r = requests.get(layergroups_url(geoserver_url,workspace), auth=(username,password))
+    if r.status_code >= 300:
+        raise Exception("Failed to list the layergroups in workspace({}:{}). code = {},message = {}".format(workspace,r.status_code, r.content))
+
+    return [g["name"] for g in (r.json().get("layerGroups") or {}).get("layerGroup") or [] ]
+
 
 def delete_layergroup(geoserver_url,username,password,workspace,groupname):
     if not has_layergroup(geoserver_url,username,password,workspace,groupname):
@@ -912,3 +957,33 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
 
     logger.debug("Succeed to {} the layergroup({}:{}). ".format("create" if create else "update",workspace,groupname))
 
+def list_layers(geoserver_url,username,password):
+"""
+List a tuple([(workspace,[(datastore,[featuretypes])])],[(workspace,[(wmsstore,[wmslayers])])],[(workspace,[layergroup])])
+"""
+    featuretypes = []
+    wmslayers = []
+    layergroups = []
+    for w in list_workspaces(geoserver_url,username,password):
+        for s in list_datastores(geoserver_url,username,password,w):
+            if not featuretypes or featuretypes[-1][0] != w:
+                featuretypes.append((w,[s,[]]))
+            else:
+                featuretypes[-1][1].append((s,[]))
+            for l in list_featuretypes(geoserver_url,username,password,w,s):
+                featuretypes[-1][1][-1][1].append(l)
+            
+        for s in list_wmsstores(geoserver_url,username,password,w):
+            if not wmslayers or wmslayers[-1][0] != w:
+                wmslayers.append((w,[s,[]]))
+            else:
+                wmslayers[-1][1].append((s,[]))
+            for l in list_wmslayerss(geoserver_url,username,password,w,s):
+                wmslayers[-1][1][-1][1].append(l)
+            
+        for l in list_layergroups(geoserver_url,username,password,w):
+            if not layergroups or layergroups[-1][0] != w:
+                wmslayers.append((w,[l]))
+            else:
+                wmslayers[-1][1].append(l)
+            
