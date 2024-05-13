@@ -241,7 +241,7 @@ def list_workspaces(geoserver_url,username,password):
     """
     Return unordered workspace list.
     """
-    r = requests.get(workspaces_url(geoserver_url), auth=(username,password))
+    r = requests.get(workspaces_url(geoserver_url),headers=accept_header("json"), auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to list the workspaces. code = {},message = {}".format(r.status_code, r.content))
 
@@ -264,7 +264,7 @@ def has_datastore(geoserver_url,username,password,workspace,storename):
     return True if res.status_code == 200 else False
 
 def list_datastores(geoserver_url,username,password,workspace):
-    r = requests.get(datastores_url(geoserver_url,workspace), auth=(username,password))
+    r = requests.get(datastores_url(geoserver_url,workspace), headers=accept_header("json"), auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to list the datastores in workspace({}). code = {},message = {}".format(workspace,r.status_code, r.content))
 
@@ -330,7 +330,7 @@ def has_featuretype(geoserver_url,username,password,workspace,storename,layernam
     return True if r.status_code == 200 else False
 
 def list_featuretypes(geoserver_url,username,password,workspace,storename):
-    r = requests.get(featuretypes_url(geoserver_url,workspace,storename), auth=(username,password))
+    r = requests.get(featuretypes_url(geoserver_url,workspace,storename),headers=accept_header("json"),  auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to list the featuretypes in datastore({}:{}). code = {},message = {}".format(workspace,storename,r.status_code, r.content))
 
@@ -718,7 +718,7 @@ def has_wmsstore(geoserver_url,username,password,workspace,storename):
     return True if r.status_code == 200 else False
 
 def list_wmsstores(geoserver_url,username,password,workspace):
-    r = requests.get(wmsstores_url(geoserver_url,workspace), auth=(username,password))
+    r = requests.get(wmsstores_url(geoserver_url,workspace),headers=accept_header("json"),  auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to list the wmsstores in workspace({}). code = {},message = {}".format(workspace,r.status_code, r.content))
 
@@ -788,7 +788,7 @@ def has_wmslayer(geoserver_url,username,password,workspace,layername,storename=N
     return True if r.status_code == 200 else False
 
 def list_wmslayers(geoserver_url,username,password,workspace,storename):
-    r = requests.get(wmsstore_layers_url(geoserver_url,workspace,storename), auth=(username,password))
+    r = requests.get(wmsstore_layers_url(geoserver_url,workspace,storename),headers=accept_header("json"),  auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to list the wmslayers in wmsstore({}:{}). code = {},message = {}".format(workspace,storename,r.status_code, r.content))
 
@@ -889,7 +889,7 @@ def has_layergroup(geoserver_url,username,password,workspace,groupname):
     return True if r.status_code == 200 else False
 
 def list_layergroups(geoserver_url,username,password,workspace):
-    r = requests.get(layergroups_url(geoserver_url,workspace), auth=(username,password))
+    r = requests.get(layergroups_url(geoserver_url,workspace),headers=accept_header("json"),  auth=(username,password))
     if r.status_code >= 300:
         raise Exception("Failed to list the layergroups in workspace({}:{}). code = {},message = {}".format(workspace,r.status_code, r.content))
 
@@ -958,9 +958,9 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
     logger.debug("Succeed to {} the layergroup({}:{}). ".format("create" if create else "update",workspace,groupname))
 
 def list_layers(geoserver_url,username,password):
-"""
-List a tuple([(workspace,[(datastore,[featuretypes])])],[(workspace,[(wmsstore,[wmslayers])])],[(workspace,[layergroup])])
-"""
+    """
+    List a tuple([(workspace,[(datastore,[featuretypes])])],[(workspace,[(wmsstore,[wmslayers])])],[(workspace,[layergroup])])
+    """
     featuretypes = []
     wmslayers = []
     layergroups = []
