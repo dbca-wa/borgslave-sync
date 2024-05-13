@@ -1002,14 +1002,14 @@ def layers_diff(geoserver1,geoserver2):
     geoserver1 and geoserver2 are tuple(geoserver_url,username,password)
     Return the layers in geoserver1 but not in geoserver2
     """
-    layers1 = list_layers(*geoserver1)
-    layers2 = list_layers(*geoserver2)
+    geoserver1_layers = list_layers(*geoserver1)
+    geoserver2_layers = list_layers(*geoserver2)
     featuretypes = []
     wmslayers1 = []
     layergroups = []
     #featuretype difference
-    for workspace1,stores1 in layers1[0]:
-        workspace2,stores2 = next((d for d in layers2[0] if d[0] == workspace1),(None,None))
+    for workspace1,stores1 in geoserver1_layers[0]:
+        workspace2,stores2 = next((d for d in geoserver2_layers[0] if d[0] == workspace1),(None,None))
         if not workspace2 :
             #workspace1 doesn't exist in geoserver2
             featuretypes.append((workspace1,stores1))
@@ -1040,8 +1040,8 @@ def layers_diff(geoserver1,geoserver2):
             
 
     #wmslayer difference
-    for workspace1,stores1 in layers1[1]:
-        workspace2,stores2 = next((d for d in layers2[1] if d[0] == workspace1),(None,None))
+    for workspace1,stores1 in geoserver1_layers[1]:
+        workspace2,stores2 = next((d for d in geoserver2_layers[1] if d[0] == workspace1),(None,None))
         if not workspace2 :
             #workspace1 doesn't exist in geoserver2
             wmslayers.append((workspace1,stores1))
@@ -1072,8 +1072,8 @@ def layers_diff(geoserver1,geoserver2):
             
 
     #layergroup difference
-    for workspace1,groups1 in layers1[2]:
-        workspace2,groups2 = next((d for d in layers2[2] if d[0] == workspace1),(None,None))
+    for workspace1,groups1 in geoserver1_layers[2]:
+        workspace2,groups2 = next((d for d in geoserver2_layers[2] if d[0] == workspace1),(None,None))
         if not workspace2 :
             #workspace1 doesn't exist in geoserver2
             layergroups.append((workspace1,groups1))
