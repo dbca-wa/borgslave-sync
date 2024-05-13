@@ -42,11 +42,16 @@ if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]
         cd ${BORG_STATE_HOME} && hg pull -e "${BORG_STATE_SSH}"
 
         echo "Begin to perform the initial sync."
-        cd ${SCRIPT_DIR} && python slave_sync.py
-        if [[ $? -ne 0 ]]; then
-            echo "Failed to perform the initial sync"
-            exit 1
-        fi
+        while true
+        do
+            cd ${SCRIPT_DIR} && git pull && python slave_sync.py
+            if [[ $? -ne 0 ]]; then
+                echo "Failed to perform the initial sync"
+                sleep 60
+            else
+                break
+            fi
+        done
         echo "Succeed to perform the initial sync, enable the sync hook"
         enable_hook "sync"
     else
