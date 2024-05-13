@@ -406,7 +406,7 @@ def get_tasks(pull_status):
                         #check whether this task is already executed or not
                         if not job_failed and sync_job['status'].get_task_status(task_type).is_succeed:
                             #this task is already succeed, continue
-                            logger.debug("The task '{1}' is already done on the file '{0}',ignore".format(file_name,task_type))
+                            #logger.debug("The task '{1}' is already done on the file '{0}',ignore".format(file_name,task_type))
                             break
             
                         #this task is not succeed or executed before, add this task to sync tasks
@@ -491,4 +491,8 @@ def get_tasks(pull_status):
             logger.error("Add the '{1}' task for ({0}) failed.{2}".format(file_name,action,traceback.format_exc()))
 
 if __name__ == "__main__":
+    """
+    init sync
+    """
+    slave_sync_notify.SlaveServerSyncNotify.send_last_poll_time()
     sync()
