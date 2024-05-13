@@ -1013,70 +1013,76 @@ def layers_diff(geoserver1,geoserver2):
     layergroups = []
     #featuretype difference
     for workspace1,stores1 in geoserver1_layers[0]:
+        if not stores1:
+            continue
         workspace2,stores2 = next((d for d in geoserver2_layers[0] if d[0] == workspace1),(None,None))
-        if not workspace2 :
+        if not stores2 :
             #workspace1 doesn't exist in geoserver2
             featuretypes.append((workspace1,stores1))
             continue
 
+        data = (workspace1,[])
         for store1,layers1 in stores1:
-            store2,layers2 = next((d for d in stores2 if d[0] == store1),(None,None))
-            if not store2:
-                #store1 doesn't exist in geoserver2
-                if not featuretypes or featuretypes[-1][0] != workspace1:
-                    featuretypes.append((workspace1,[(store1,layers1)]))
-                else:
-                    featuretypes[-1][1].append((store1,layers1))
+            if not layers1:
                 continue
 
-            if not featuretypes or featuretypes[-1][0] != workspace1:
-                featuretypes.append((workspace1,[(store1,[])]))
-            else:
-                featuretypes[-1][1].append((store1,[]))
+            store2,layers2 = next((d for d in stores2 if d[0] == store1),(None,None))
+            if not layers2:
+                #store1 doesn't exist in geoserver2
+                data[1].append((store1,layers1))
+                continue
+
+            data[1].append((store1,[]))
             for layer1 in layers1:
                 if layer1 in layers2:
                     continue
-                featuretypes[-1][1][-1][1].append(layer1)
+                data[1][-1][1].append(layer1)
 
-            if not featuretypes[-1][1][-1][1]:
+            if not data[1][-1][1]:
                 #all layers in datastore in geoserver1 exist in geoserver2 too. ,delete the datastore
-                del featuretypes[-1][1][-1]
+                del data[1][-1]
+
+        if data[1]:
+            featuretypes.append(data)
             
 
     #wmslayer difference
     for workspace1,stores1 in geoserver1_layers[1]:
+        if not stores1:
+            continue
         workspace2,stores2 = next((d for d in geoserver2_layers[1] if d[0] == workspace1),(None,None))
-        if not workspace2 :
+        if not stores2 :
             #workspace1 doesn't exist in geoserver2
             wmslayers.append((workspace1,stores1))
             continue
 
+        data = (workspace1,[])
         for store1,layers1 in stores1:
+            if not layers1:
+                continue
             store2,layers2 = next((d for d in stores2 if d[0] == store1),(None,None))
-            if not store2:
+            if not layers2:
                 #store1 doesn't exist in geoserver2
-                if not wmslayers or wmslayers[-1][0] != workspace1:
-                    wmslayers.append((workspace1,[(store1,layers1)]))
-                else:
-                    wmslayers[-1][1].append((store1,layers1))
+                data[1].append((store1,layers1))
                 continue
 
-            if not wmslayers or wmslayers[-1][0] != workspace1:
-                wmslayers.append((workspace1,[(store1,[])]))
-            else:
-                wmslayers[-1][1].append((store1,[]))
+            data[1].append((store1,[]))
             for layer1 in layers1:
                 if layer1 in layers2:
                     continue
-                wmslayers[-1][1][-1][1].append(layer1)
+                data[1][-1][1].append(layer1)
 
-            if not wmslayers[-1][1][-1][1]:
+            if not data[1][-1][1]:
                 #all layers in datastore in geoserver1 exist in geoserver2 too. ,delete the datastore
-                del wmslayers[-1][1][-1]
+                del data[1][-1]
             
+        if data[1]:
+            featuretypes.append(data)
 
     #layergroup difference
     for workspace1,groups1 in geoserver1_layers[2]:
+        if not groups1:
+            continue
         workspace2,groups2 = next((d for d in geoserver2_layers[2] if d[0] == workspace1),(None,None))
         if not workspace2 :
             #workspace1 doesn't exist in geoserver2
@@ -1087,7 +1093,7 @@ def layers_diff(geoserver1,geoserver2):
             if group1 in groups2:
                 continue
             if not layergroups or layergroups[-1][0] != workspace1:
-                layergroups.append((workspaces1,[group1]))
+                layergroups.append((workspace1,[group1]))
             else:
                 layergroups[-1][1].append(group1)
 
