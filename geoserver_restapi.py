@@ -967,7 +967,7 @@ def list_layers(geoserver_url,username,password):
     for w in list_workspaces(geoserver_url,username,password):
         for s in list_datastores(geoserver_url,username,password,w):
             if not featuretypes or featuretypes[-1][0] != w:
-                featuretypes.append((w,[s,[]]))
+                featuretypes.append((w,[(s,[])]))
             else:
                 featuretypes[-1][1].append((s,[]))
             for l in list_featuretypes(geoserver_url,username,password,w,s):
@@ -975,7 +975,7 @@ def list_layers(geoserver_url,username,password):
             
         for s in list_wmsstores(geoserver_url,username,password,w):
             if not wmslayers or wmslayers[-1][0] != w:
-                wmslayers.append((w,[s,[]]))
+                wmslayers.append((w,([s,[])]))
             else:
                 wmslayers[-1][1].append((s,[]))
             for l in list_wmslayerss(geoserver_url,username,password,w,s):
