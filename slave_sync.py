@@ -273,9 +273,8 @@ def sync():
         #save notify status 
         SlaveSyncStatus.save_all()
         #send notify
-        if HG_NODE != "0":
-            for task in notify_tasks:
-                execute_notify_task(*task)
+        for task in notify_tasks:
+            execute_notify_task(*task)
 
         #clear all tasks
         for k in sync_tasks.keys():
