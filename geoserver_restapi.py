@@ -965,41 +965,39 @@ def list_layers(geoserver_url,username,password):
     wmslayers = []
     layergroups = []
     for w in list_workspaces(geoserver_url,username,password):
-        featuretypes.append((w,[]))
+        data = (w,[])
         for s in list_datastores(geoserver_url,username,password,w):
-            featuretypes[-1][1].append((s,[]))
+            data[1].append((s,[]))
             for l in list_featuretypes(geoserver_url,username,password,w,s):
-                featuretypes[-1][1][-1][1].append(l)
+                data[1][-1][1].append(l)
 
-            if not featuretypes[-1][1][-1][1]:
+            if not data[1][-1][1]:
                 #no layers in datastore,delete the datastore
-                del featuretypes[-1][1][-1]
+                del data[1][-1]
 
-        if not featuretypes[-1][1]:
-            #no layers in workspace,delete the workspace
-            del featuretypes[-1]
+        if data[1]:
+            featuretypes.append(data)
             
-        wmslayers.append((w,[]))
+        data = (w,[])
         for s in list_wmsstores(geoserver_url,username,password,w):
-            wmslayers[-1][1].append((s,[]))
+            data[1].append((s,[]))
             for l in list_wmslayers(geoserver_url,username,password,w,s):
-                wmslayers[-1][1][-1][1].append(l)
+                data[1][-1][1].append(l)
             
-            if not wmslayers[-1][1][-1][1]:
+            if not data[1][-1][1]:
                 #no layers in wmsstore,delete the wmsstore
-                del wmslayers[-1][1][-1]
+                del data[1][-1]
 
-        if not wmslayers[-1][1]:
-            #no layers in workspace,delete the workspace
-            del wmslayers[-1]
-         
-        layergroups.append((w,[]))
+        if data[1]:
+            wmslayers.append(data)
+
+        data = (w,[])
         for l in list_layergroups(geoserver_url,username,password,w):
-            layergroups[-1][1].append(l)
+            data[1].append(l)
 
-        if not layergroups[-1][1]:
+        if data[1]:
             #no layergroupss in workspace,delete the workspace
-            del layergroups[-1]
+            layergroups.append(data)
          
     return (featuretypes,wmslayers,layergroups)
 
@@ -1088,7 +1086,7 @@ def layers_diff(geoserver1,geoserver2):
         for group1 in groups1:
             if group1 in groups2:
                 continue
-            if layergroups[-1][0] != workspace1:
+            if not layergroups or layergroups[-1][0] != workspace1:
                 layergroups.append((workspaces1,[group1]))
             else:
                 layergroups[-1][1].append(group1)
