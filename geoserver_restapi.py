@@ -1020,9 +1020,9 @@ def layers_diff(geoserver1,geoserver2):
             if not store2:
                 #store1 doesn't exist in geoserver2
                 if not featuretypes or featuretypes[-1][0] != workspace1:
-                    featuretypes.append((workspace1,[stores1]))
+                    featuretypes.append((workspace1,[(store1,layers1)]))
                 else:
-                    featuretypes[-1][1].append(stores1)
+                    featuretypes[-1][1].append((store1,layers1))
                 continue
 
             if not featuretypes or featuretypes[-1][0] != workspace1:
@@ -1052,9 +1052,9 @@ def layers_diff(geoserver1,geoserver2):
             if not store2:
                 #store1 doesn't exist in geoserver2
                 if not wmslayers or wmslayers[-1][0] != workspace1:
-                    wmslayers.append((workspace1,[stores1]))
+                    wmslayers.append((workspace1,[(store1,layers1)]))
                 else:
-                    wmslayers[-1][1].append(stores1)
+                    wmslayers[-1][1].append((store1,layers1))
                 continue
 
             if not wmslayers or wmslayers[-1][0] != workspace1:
