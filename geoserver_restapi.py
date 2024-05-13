@@ -986,4 +986,6 @@ def list_layers(geoserver_url,username,password):
                 wmslayers.append((w,[l]))
             else:
                 wmslayers[-1][1].append(l)
+
+    return (featuretypes,wmslayers,layergroups)
             
