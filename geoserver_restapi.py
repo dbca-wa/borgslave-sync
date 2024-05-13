@@ -1077,7 +1077,7 @@ def layers_diff(geoserver1,geoserver2):
                 del data[1][-1]
             
         if data[1]:
-            featuretypes.append(data)
+            wmslayers.append(data)
 
     #layergroup difference
     for workspace1,groups1 in geoserver1_layers[2]:
