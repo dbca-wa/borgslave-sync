@@ -113,6 +113,10 @@ class SlaveSyncStatus(object):
                 self._info['tasks'][name] = SlaveSyncTaskStatus(task_status)
 
     @property
+    def failed_tasks(self):
+        return [k for k,s in self._info.get("tasks",{}).items() if s.is_failed ]
+
+    @property
     def is_succeed(self):
         return all([s.is_succeed for s in self._info.get("tasks",{}).values()])
 

@@ -264,9 +264,13 @@ def sync():
             logger.info("All done!")
         elif HG_NODE == "0":
             #initial sync,ignore preview tasks
-            raise Exception("Some files({0}) are processed failed.".format(' , '.join([s.file for s in SlaveSyncStatus.get_failed_status_objects(ignore_preview_tasks=True)])))
+            failed_jobs = ["{}({})".format(s.file,",".join(s.failed_tasks)) for s in SlaveSyncStatus.get_failed_status_objects(ignore_preview_tasks=True)]
+            if failed_jobs:
+                raise Exception("Some files({0}) are processed failed.".format(' , '.join(failed_jobs)))
+            else:
+                logger.warning("Some minor issues happened during synchronizing files({0})  ".format(' , '.join(failed_jobs)))
         else:
-            raise Exception("Some files({0}) are processed failed.".format(' , '.join([s.file for s in SlaveSyncStatus.get_failed_status_objects()])))
+            raise Exception("Some files({0}) are processed failed.".format(' , '.join(["{}({})".format(s.file,",".join(s.failed_tasks)) for s in SlaveSyncStatus.get_failed_status_objects()])))
 
         if ignore_files:
             raise Exception("{} files are ignored in debug mode,rollback!".format(ignore_files))
