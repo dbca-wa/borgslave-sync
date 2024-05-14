@@ -124,6 +124,10 @@ class SlaveSyncStatus(object):
     def is_not_succeed(self):
         return any([s.is_not_succeed  for s in self._info.get("tasks",{}).values()])
         
+    @property
+    def is_not_succeed_except_preview_tasks(self):
+        return any([s.is_not_succeed  for k,s in self._info.get("tasks",{}).items() for k not in ("get_layer_preview","send_layer_preview")])
+        
     @staticmethod
     def all_succeed():
         """
@@ -140,11 +144,14 @@ class SlaveSyncStatus(object):
             s.save()
 
     @staticmethod
-    def get_failed_status_objects():
+    def get_failed_status_objects(ignore_preview_tasks=False):
         """
         Return all status object for failed files.
         """
-        return [s for s in SlaveSyncStatus._status_objects if s.is_not_succeed]
+        if ignore_preview_tasks:
+            return [s for s in SlaveSyncStatus._status_objects if s.is_not_succeed_except_preview_tasks]
+        else:
+            return [s for s in SlaveSyncStatus._status_objects if s.is_not_succeed]
 
     @property
     def is_processed(self):

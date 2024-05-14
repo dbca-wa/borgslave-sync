@@ -261,6 +261,9 @@ def sync():
 
         if SlaveSyncStatus.all_succeed():
             logger.info("All done!")
+        elif HG_NODE == "0":
+            #initial sync,ignore preview tasks
+            raise Exception("Some files({0}) are processed failed.".format(' , '.join([s.file for s in SlaveSyncStatus.get_failed_status_objects(ignore_preview_tasks=True)])))
         else:
             raise Exception("Some files({0}) are processed failed.".format(' , '.join([s.file for s in SlaveSyncStatus.get_failed_status_objects()])))
 
