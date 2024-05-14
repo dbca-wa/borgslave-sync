@@ -268,7 +268,7 @@ def sync():
             if failed_jobs:
                 raise Exception("Some files({0}) are processed failed.".format(' , '.join(failed_jobs)))
             else:
-                logger.warning("Some minor issues happened during synchronizing files({0})  ".format(' , '.join(failed_jobs)))
+                logger.warning("Some minor issues happened during synchronizing files({0})  ".format(' , '.join(["{}({})".format(s.file,",".join(s.failed_tasks)) for s in SlaveSyncStatus.get_failed_status_objects()])))
         else:
             raise Exception("Some files({0}) are processed failed.".format(' , '.join(["{}({})".format(s.file,",".join(s.failed_tasks)) for s in SlaveSyncStatus.get_failed_status_objects()])))
 
