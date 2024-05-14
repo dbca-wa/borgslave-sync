@@ -126,7 +126,7 @@ class SlaveSyncStatus(object):
         
     @property
     def is_not_succeed_except_preview_tasks(self):
-        return any([s.is_not_succeed  for k,s in self._info.get("tasks",{}).items() for k not in ("get_layer_preview","send_layer_preview")])
+        return any([s.is_not_succeed  for k,s in self._info.get("tasks",{}).items() if k not in ("get_layer_preview","send_layer_preview")])
         
     @staticmethod
     def all_succeed():
