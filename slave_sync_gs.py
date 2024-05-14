@@ -46,7 +46,7 @@ def get_stylename(sync_job,style_name):
         return "{}_{}".format(sync_job['name'],style_name)
 
 def _create_workspace(geoserver_url,username,password,sync_job,task_metadata,task_status,stage=None):
-    workspace = sync_job['workspace']
+    workspace = sync_job.get('workspace') or sync_job.get("schema")
     if gs.has_workspace(geoserver_url,username,password,workspace):
         #workspace already exists
         return
@@ -350,5 +350,6 @@ tasks_metadata = [
                     ("create_workspace"   , update_livestore_job   , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_layergroup_job  , gs_task_filter         , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
-                    ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace)
+                    ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
+                    ("create_workspace"   , update_workspace_job   ,gs_task_filter          , lambda t: t["schema"]   , create_workspace),
 ]
