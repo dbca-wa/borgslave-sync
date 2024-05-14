@@ -60,7 +60,7 @@ if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]
     fi
 fi
 
-if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]; then
+if [[ "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]; then
     echo "The sync hook was enabled"
 else
     echo "Failed to enable sync hook"
