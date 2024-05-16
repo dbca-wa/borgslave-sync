@@ -319,6 +319,9 @@ def _reload_geoserver(geoserver_url,username,password,sync_job,task_metadata,tas
 def reload_geoserver(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver)
 
+def reload_geoserverworkers(sync_job,task_metadata,task_status):
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver,start=1,end=settings.len(GEOSERVER_URL))
+
 tasks_metadata = [
                     ("create_datastore", update_livestore_job, gs_feature_task_filter      , task_store_name  , update_datastore),
                     ("create_datastore", update_feature_job, gs_feature_task_filter      , task_store_name  , create_datastore),
@@ -352,4 +355,9 @@ tasks_metadata = [
                     ("create_workspace"   , update_feature_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_feature_metadata_job     , gs_feature_task_filter , task_workspace_name  , create_workspace),
                     ("create_workspace"   , update_workspace_job   ,gs_task_filter          , lambda t: t["schema"]   , create_workspace),
+]
+
+if settings.GEOSERVER_CLUSTERING and len(settings.GEOSERVER_URL) > 1:
+    tasks_metadata += [
+        ("reload_geoserver"   , update_layergroup_job     , gs_task_filter , lambda sync_job: "{0}:{1}".format(sync_job["workspace"],sync_job["name"])  , reload_geoserverworkers)
 ]

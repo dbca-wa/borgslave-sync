@@ -172,10 +172,9 @@ if len(settings.GEOSERVER_URL) > 1:
 else:
     get_layer_preview = _get_layer_preview
 
-
 tasks_metadata = [
-                    ("get_layer_preview", update_feature_job, layer_preview_task_filter      , task_layer_name  , get_layer_preview),
-                    ("get_layer_preview", update_livelayer_job, layer_preview_task_filter      , task_layer_name  , get_layer_preview),
-                    ("get_layer_preview", update_wmslayer_job, layer_preview_task_filter      , task_layer_name  , get_layer_preview),
+                    ("get_layer_preview", update_feature_job, layer_preview_task_filter      , task_layer_name  , _get_layer_preview),
+                    ("get_layer_preview", update_livelayer_job, layer_preview_task_filter      , task_layer_name  , _get_layer_preview),
+                    ("get_layer_preview", update_wmslayer_job, layer_preview_task_filter      , task_layer_name  , _get_layer_preview),
 ]
 
