@@ -26,7 +26,7 @@ pretxnchangegroup = ${hook}
 
 if [[ ! -d ${BORG_STATE_HOME}/.hg ]]; then
     echo "Borg state repository wasn't cloned before, clone it"
-    hg clone -e "${BORG_STATE_SSH}" clone ${BORG_STATE_URL} ${BORG_STATE_HOME}
+    hg clone -e "${BORG_STATE_SSH}" ${BORG_STATE_URL} ${BORG_STATE_HOME}
     if [[ $? -ne 0 ]]; then
         echo "Failed to clone borg state repository"
         exit 1
