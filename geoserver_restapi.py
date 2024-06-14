@@ -428,7 +428,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     workspace,
     storename,
     layername,
-    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "",
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title",layername))),
     "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     parameters.get("srs","EPSG:4326"),
@@ -852,7 +852,7 @@ def update_wmslayer(geoserver_url,username,password,workspace,storename,layernam
     workspace,
     storename,
     layername,
-    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "",
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title",layername))),
     "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     "<description>{}</description>".format(encode_xmltext(parameters.get("description"))) if parameters.get("description") else "",
     "<nativeName>{}</nativeName>".format(parameters.get("native_name")) if parameters.get("native_name") else "",
@@ -937,7 +937,7 @@ def update_layergroup(geoserver_url,username,password,workspace,groupname,parame
 """.format(
     workspace,
     groupname,
-    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "",
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title",groupname))),
     "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     os.linesep.join("""
