@@ -758,8 +758,8 @@ def update_wmsstore(geoserver_url,username,password,workspace,storename,paramete
     workspace,
     storename,
     parameters.get("capability_url"),
-    "<user>{}</user>".format(parameters.get("username") or ""),
-    "<password>{}</password>".format(parameters.get("password") or ""),
+    "<user>{}</user>".format(parameters.get("username")) if parameters.get("username") else "",
+    "<password>{}</password>".format(parameters.get("password")) if parameters.get("password") else "",
     "<maxConnections>{}</maxConnections>".format(parameters.get("max_connections")) if parameters.get("max_connections") else "",
     "<readTimeout>{}</readTimeout>".format(parameters.get("read_timeout")) if parameters.get("read_timeout") else "",
     "<connectTimeout>{}</connectTimeout>".format(parameters.get("connect_timeout")) if parameters.get("connect_timeout") else ""
