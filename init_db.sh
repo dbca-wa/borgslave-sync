@@ -71,15 +71,15 @@ function execute_sql() {
     fi
     if [[ "${user}" == "${admin}" ]]; then
         if [[ "${adminpassword}" == "" ]]; then
-            psql -h ${host} -p ${port} -d $1 -U ${admin} -w -c "$2"
+            psql -h ${host} -p ${port} -d $1 -U ${admin} -w -c "$2" >/dev/null 2>&1
         else
-            export PGPASSWORD=${adminpassword} ; psql -h ${host} -p ${port} -d $1 -U ${admin} -w -c "$2"
+            export PGPASSWORD=${adminpassword} ; psql -h ${host} -p ${port} -d $1 -U ${admin} -w -c "$2" >/dev/null 2>&1
         fi
     else
         if [[ "${password}" == "" ]]; then
-            psql -h ${host} -p ${port} -d $1 -U ${dbuser} -w -c "$2"
+            psql -h ${host} -p ${port} -d $1 -U ${dbuser} -w -c "$2" >/dev/null 2>&1
         else
-            export PGPASSWORD=${dbpassword} ; psql -h ${host} -p ${port} -d $1 -U ${dbuser} -w -c "$2"
+            export PGPASSWORD=${dbpassword} ; psql -h ${host} -p ${port} -d $1 -U ${dbuser} -w -c "$2" >/dev/null 2>&1
         fi
     fi
     if [[ $? -ne 0 ]]; then
