@@ -320,7 +320,7 @@ def reload_geoserver(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver)
 
 def reload_geoserverworkers(sync_job,task_metadata,task_status):
-    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver,start=1,end=settings.len(GEOSERVER_URL))
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver,start=1,end=len(settings.GEOSERVER_URL))
 
 tasks_metadata = [
                     ("create_datastore", update_livestore_job, gs_feature_task_filter      , task_store_name  , update_datastore),
