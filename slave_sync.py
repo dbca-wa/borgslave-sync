@@ -369,7 +369,7 @@ def get_tasks(pull_status):
                     file_content = hg.cat([os.path.join(BORG_STATE_HOME,file_name).encode()],rev=pre_rev)
                 except:
                     #can't get the file content
-                    logger.error("Can't get file '{}' content, ignore.".format(file_name))
+                    logger.debug("Can't get file '{}' content, ignore.".format(file_name))
                     pull_status.get_task_status(file_name).set_message("message","Failed to read file content, ignored.")
                     pull_status.get_task_status(file_name).set_message("action",action)
                     pull_status.get_task_status(file_name).succeed()
