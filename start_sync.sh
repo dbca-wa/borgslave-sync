@@ -39,9 +39,9 @@ while [[ ${result} -ne 0 ]]; do
     IFS=',' read -ra URL <<< "${GEOSERVER_URL}"
     for i in "${URL[@]}"; do
         if [[ "${i}" == *"/" ]]; then
-            wget ${i}web
+            wget ${i}web >/dev/null 2>&1
         else
-            wget ${i}/web
+            wget ${i}/web >/dev/null 2>&1
         fi
         result=$?
         if [[ ${result} -ne 0 ]]; then
