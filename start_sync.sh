@@ -67,4 +67,25 @@ else
     exit 1
 fi
 
+result=1
+while [[ ${result} -ne 0 ]]; do
+    IFS=',' read -ra URL <<< "${GEOSERVER_URL}"
+    for i in "${URL[@]}"; do
+        if [[ "${i}" == *"/" ]]; then
+            wget ${i}web
+        else
+            wget ${i}/web
+        fi
+        result=$?
+        if [[ ${result} -ne 0 ]]; then
+            echo "The geoserver(${i}}) is not available,wait 60 seconds and check again."
+            sleep 60
+            break
+        fi
+    done
+done
+echo "All geoservers(${GEOSERVER_URL}) are available"
+
+echo "Begin to perform the initial sync"
+
 cd ${SCRIPT_DIR} && python slave_poll.py

@@ -89,6 +89,18 @@ function execute_sql() {
         return 0
     fi
 }
+#wait until the database is available
+result=1
+while [[ ${result} -ne 0 ]]; do
+    execute_sql ${admindb} "select now();"
+    result=$?
+    if [[ ${result} -ne 0 ]]; then
+        echo "Database(${host}:${port}/${admindb}) is not available,wait 60 seconds and check again"
+        sleep 60
+    fi
+done
+echo "Database(${host}:${port}/${admindb}) is available"
+
 #check whether the database exists
 has_data ${admindb} "select count(1) from pg_database where datname='${db}';"
 result=$?
