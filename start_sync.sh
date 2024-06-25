@@ -57,12 +57,12 @@ if [[ ! "$(cat ${BORG_STATE_HOME}/.hg/hgrc)" =~ "${SCRIPT_DIR}/slave_sync.py" ]]
     #the normal sync is not started.
     if [[ "${INITIAL_SYNC}" == "True" ]]; then
         #initial sync is required
-        echo "Pull the borg state repository"
-        cd ${BORG_STATE_HOME} && hg pull -e "${BORG_STATE_SSH}"
-
-        echo "Begin to perform the initial sync."
         while true
         do
+            echo "Pull the borg state repository"
+            cd ${BORG_STATE_HOME} && hg pull -e "${BORG_STATE_SSH}"
+
+            echo "Begin to perform the initial sync."
             cd ${SCRIPT_DIR} && git pull && python slave_sync.py
             if [[ $? -ne 0 ]]; then
                 echo "Failed to perform the initial sync"
