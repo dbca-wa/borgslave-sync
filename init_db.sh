@@ -92,8 +92,10 @@ function execute_sql() {
 #wait until the database is available
 result=1
 while [[ ${result} -ne 0 ]]; do
+    echo "check whether the database is available"
     execute_sql ${admindb} "select now();"
     result=$?
+    echo "=========${result}"
     if [[ ${result} -ne 0 ]]; then
         echo "Database(${host}:${port}/${admindb}) is not available,wait 60 seconds and check again"
         sleep 60
