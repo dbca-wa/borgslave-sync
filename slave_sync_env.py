@@ -185,8 +185,8 @@ def remotepath_to_localpath(remote_path):
         return remote_path
 
 def apply_to_geoservers(sync_job,task_metadata,task_status,func,start=0,end=1 if GEOSERVER_CLUSTERING else len(GEOSERVER_URL)):
-    if len(GEOSERVER_URL[start:end]) == 1:
-        func(GEOSERVER_URL[0],GEOSERVER_USERNAME[0],GEOSERVER_PASSWORD[0],sync_job,task_metadata,task_status)
+    if end - start == 1:
+        func(GEOSERVER_URL[start],GEOSERVER_USERNAME[start],GEOSERVER_PASSWORD[start],sync_job,task_metadata,task_status)
     else:
         exceptions = []
         for i in range(start,end):
