@@ -218,21 +218,21 @@ def sync():
                             execute_tasks[shared_task[0]['job_file']].append((task_type,task_name,True,shared_task))
                         else:
                             execute_tasks[shared_task[0]['job_file']] = [(task_type,task_name,True,shared_task)]
-                            job_files.append(shared_task[0]['job_file'])
+                            job_files.append((shared_task[0]['job_file'],shared_task[0]["status"].is_delete_action()))
                 else:
                     #unshared task
                     if task[0]['job_file'] in execute_tasks:
                         execute_tasks[task[0]['job_file']].append((task_type,task_name,False,task))
                     else:
                         execute_tasks[task[0]['job_file']] = [(task_type,task_name,False,task)]
-                        job_files.append(task[0]['job_file'])
+                        job_files.append((task[0]['job_file'],task[0]["status"].is_delete_action()))
 
             #order the job_files
-            job_files.sort()
+            job_files.sort(key=lambda o:"{}.{}".format(0 if o[1] else 1,o[0]))
             for f in job_files:
-                tasks = execute_tasks[f]
-                del execute_tasks[f]
-                execute_tasks[f] = tasks
+                tasks = execute_tasks[f[0]]
+                del execute_tasks[f[0]]
+                execute_tasks[f[0]] = tasks
 
 
         for job_file,tasks in execute_tasks.items():

@@ -89,7 +89,14 @@ class SlaveSyncStatus(object):
 
     @property
     def file(self):
-        return s._info["file"]
+        return self._info["file"]
+
+    @property
+    def action(self):
+        return self._info["action"]
+
+    def is_delete_action(self):
+        return self._info["action"] in ("remove","delete")
 
     @property
     def tasks(self):
