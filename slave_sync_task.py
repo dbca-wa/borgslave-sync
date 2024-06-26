@@ -93,7 +93,7 @@ ordered_sync_task_type = [
             "create_datastore",
             "update_wmsstore","update_wmslayer","update_layergroup",
             "create_feature","create_style","set_feature_styles",
-            "empty_gwc","update_gwc"
+            "empty_gwc","update_gwc",
             "reload_geoserver",
             "purge_fastly_cache",
             "get_layer_preview",
