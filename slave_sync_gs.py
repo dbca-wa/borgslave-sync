@@ -315,6 +315,8 @@ def _reload_geoserver(geoserver_url,username,password,sync_job,task_metadata,tas
     always succeed, even failed.
     """
     gs.reload(geoserver_url,username,password)
+    task_status.set_message("message","Reload geoserver({}) successfully.".format(geoserver_url),stage=stage)
+
 
 def reload_geoserver(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_reload_geoserver)
