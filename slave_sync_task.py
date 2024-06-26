@@ -89,10 +89,11 @@ ordered_sync_task_type = [
             "create_workspace",
             "delete_feature",
             "delete_datastore",
+            "remove_layergroup","remove_wmslayer","remove_wmsstore",
             "create_datastore",
-            "update_wmsstore","update_wmslayer","update_layergroup","remove_layergroup","remove_wmslayer","remove_wmsstore",
+            "update_wmsstore","update_wmslayer","update_layergroup",
             "create_feature","create_style","set_feature_styles",
-            "update_gwc","empty_gwc",
+            "empty_gwc","update_gwc"
             "reload_geoserver",
             "purge_fastly_cache",
             "get_layer_preview",
