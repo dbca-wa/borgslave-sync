@@ -517,6 +517,8 @@ def get_layer_styles(geoserver_url,username,password,workspace,layername):
     if r.status_code == 200:
         r = r.json()
         return (r.get("defaultStyle",{}).get("name",None), [d["name"] for d in r.get("styles",{}).get("style",[])])
+    elif r.status_code == 404:
+        return (None,None)
     else:
         raise Exception("Failed to get styles of the featuretype({}:{}). code = {} , message = {}".format(workspace,layername,r.status_code, r.content))
 
