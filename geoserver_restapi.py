@@ -375,7 +375,7 @@ def publish_featuretype(geoserver_url,username,password,workspace,storename,laye
     workspace,
     storename,
     layername,
-    "<title>{}</title>".format(encode_xmltext(parameters.get("title"))) if parameters.get("title") else "", 
+    "<title>{}</title>".format(encode_xmltext(parameters.get("title",layername))), 
     "<abstract>{}</abstract>".format(encode_xmltext(parameters.get("abstract"))) if parameters.get("abstract") else "",
     os.linesep.join("<string>{}</string>".format(k) for k in  parameters.get('keywords', [])) if parameters.get('keywords') else "", 
     parameters.get("srs","EPSG:4326"),
