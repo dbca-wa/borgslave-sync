@@ -45,8 +45,8 @@ def update_gwc_feature(sync_job,task_metadata,task_status):
     All features are backed by postgis database which is readonly. so the data should be never expired
     """
     if "geoserver_setting" in sync_job and sync_job["geoserver_setting"].get("create_cache_layer",False):
-        parameters["geoserver_setting"]["server_cache_expire"] = -1
-        parameters["geoserver_setting"]["client_cache_expire"] = -1
+        sync_job["geoserver_setting"]["server_cache_expire"] = -1
+        sync_job["geoserver_setting"]["client_cache_expire"] = -1
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_gwc)
 
 
