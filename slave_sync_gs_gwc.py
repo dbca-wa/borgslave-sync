@@ -40,6 +40,15 @@ def _update_gwc(geoserver_url,username,password,sync_job,task_metadata,task_stat
 def update_gwc(sync_job,task_metadata,task_status):
     settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_gwc)
 
+def update_gwc_feature(sync_job,task_metadata,task_status):
+    """
+    All features are backed by postgis database which is readonly. so the data should be never expired
+    """
+    if "geoserver_setting" in sync_job and sync_job["geoserver_setting"].get("create_cache_layer",False):
+        parameters["geoserver_setting"]["server_cache_expire"] = -1
+        parameters["geoserver_setting"]["client_cache_expire"] = -1
+    settings.apply_to_geoservers(sync_job,task_metadata,task_status,_update_gwc)
+
 
 def _empty_gwc(geoserver_url,username,password,sync_job,task_metadata,task_status,stage=None):
     """
@@ -60,9 +69,9 @@ def empty_gwc(sync_job,task_metadata,task_status):
 tasks_metadata = {
                 ("update_gwc", update_wmslayer_job  , gs_task_filter        , task_name, update_gwc),
                 ("update_gwc", update_layergroup_job, gs_task_filter        , task_name, update_gwc),
-                ("update_gwc", update_feature_job   , gs_spatial_task_filter, task_name, update_gwc),
+                ("update_gwc_feature", update_feature_job   , gs_spatial_task_filter, task_name, update_gwc),
+                ("update_gwc_feature", update_feature_metadata_job   , gs_spatial_task_filter, task_name, update_gwc),
                 ("update_gwc", update_livelayer_job   , gs_spatial_task_filter, task_name, update_gwc),
-                ("update_gwc", update_feature_metadata_job   , gs_spatial_task_filter, task_name, update_gwc),
                 ("empty_gwc", empty_gwc_layer_job  , gs_task_filter        , task_name, empty_gwc),
                 ("empty_gwc", empty_gwc_group_job  , gs_task_filter        , task_name, empty_gwc),
                 ("empty_gwc", empty_gwc_feature_job  , gs_task_filter        , task_name, empty_gwc),
