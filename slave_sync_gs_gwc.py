@@ -69,8 +69,8 @@ def empty_gwc(sync_job,task_metadata,task_status):
 tasks_metadata = {
                 ("update_gwc", update_wmslayer_job  , gs_task_filter        , task_name, update_gwc),
                 ("update_gwc", update_layergroup_job, gs_task_filter        , task_name, update_gwc),
-                ("update_gwc_feature", update_feature_job   , gs_spatial_task_filter, task_name, update_gwc),
-                ("update_gwc_feature", update_feature_metadata_job   , gs_spatial_task_filter, task_name, update_gwc),
+                ("update_gwc", update_feature_job   , gs_spatial_task_filter, task_name, update_gwc_feature),
+                ("update_gwc", update_feature_metadata_job   , gs_spatial_task_filter, task_name, update_gwc_feature),
                 ("update_gwc", update_livelayer_job   , gs_spatial_task_filter, task_name, update_gwc),
                 ("empty_gwc", empty_gwc_layer_job  , gs_task_filter        , task_name, empty_gwc),
                 ("empty_gwc", empty_gwc_group_job  , gs_task_filter        , task_name, empty_gwc),
