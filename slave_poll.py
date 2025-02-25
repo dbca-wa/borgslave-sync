@@ -32,6 +32,9 @@ if __name__ == "__main__":
                     os.remove(file)
                 except Exception as ex:
                     logger.error("Failed to remove lock file({})".format(file,str(ex)))
+            else:
+                logger.error("The lock file({}) doesn't exist".format(file))
+
 
         os.chdir(BORG_STATE_HOME)
         pull_status_file = os.path.join(SYNC_STATUS_PATH,'bitbucket')
