@@ -25,8 +25,8 @@ if __name__ == "__main__":
         #sync file
         #delete lock files if exists
         for f in (".hg/wlock",".hg/store/lock"):
-            logger.error("Try to remove lock file({}) if exists".format(file))
             file = os.path.join(BORG_STATE_HOME,f)
+            logger.error("Try to remove lock file({}) if exists".format(file))
             if os.path.exists(file):
                 try:
                     os.remove(file)
