@@ -23,6 +23,15 @@ if __name__ == "__main__":
         SlaveServerSyncNotify.exec_failed_sql()
 
         #sync file
+        #delete lock files if exists
+        for f in (".hg/wlock",".hg/store/lock"):
+            file = os.path.join(BORG_STATE_HOME,f)
+            if os.path.exists(file):
+                try:
+                    os.remove(file)
+                except Exception as ex:
+                    logger.error("Failed to remove lock file({})".format(file,str(ex)))
+
         os.chdir(BORG_STATE_HOME)
         pull_status_file = os.path.join(SYNC_STATUS_PATH,'bitbucket')
         last_pull_time = None
