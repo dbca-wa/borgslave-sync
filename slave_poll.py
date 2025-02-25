@@ -26,14 +26,11 @@ if __name__ == "__main__":
         #delete lock files if exists
         for f in (".hg/wlock",".hg/store/lock"):
             file = os.path.join(BORG_STATE_HOME,f)
-            logger.error("Try to remove lock file({}) if exists".format(file))
-            if os.path.exists(file):
+            if os.path.islink(file):
                 try:
                     os.remove(file)
                 except Exception as ex:
                     logger.error("Failed to remove lock file({})".format(file,str(ex)))
-            else:
-                logger.error("The lock file({}) doesn't exist".format(file))
 
 
         os.chdir(BORG_STATE_HOME)
