@@ -266,12 +266,12 @@ def _create_style(geoserver_url,username,password,sync_job,task_metadata,task_st
         sldversion = "1.1.0" if "version=\"1.1.0\"" in slddata else "1.0.0"
         try:
             gs.update_style(geoserver_url,username,password,workspace,stylename,sldversion,slddata)
-            created_styles.append(task_style_name(sync_job))
+            created_styles.append(stylename)
         except:
             if sync_job.get("default_style","") == name:
                 raise
             else:
-                failed_styles.append(task_style_name(sync_job))
+                failed_styles.append(stylename)
                 
     if created_styles and failed_styles:
         messages.append("Succeed to create styles ({}), Failed to create styles({})".format(" , ".join(created_styles)," , ".join(failed_styles)))
